@@ -10,6 +10,52 @@
 #define WINDOW_W 1280
 #define WINDOW_H 720
 
+//testing DynamicArrays
+struct entityArray{
+    Entity **entities;
+    size_t size;
+    size_t capacity;
+};typedef struct entityArray EntityArray;
+
+EntityArray initEntityArray(){
+    EntityArray array;
+
+    array.entities = malloc(3 * sizeof(Entity*));
+    if(!array.entities){
+        printf("Error failed allocation of memory for array\n");
+        exit(1);
+    }
+    array.size = 0;
+    array.capacity = 3;
+    return array;
+}
+
+void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture)
+{
+    if(array->size == array->capacity){
+        array->capacity *=2;
+        array->entities = realloc(array->entities, array->capacity * sizeof(Entity*));
+        if(!array->entities){
+            printf("Error failed to reallocate memory for array\n");
+            return;
+        }
+    }
+
+    array->entities[array->size] = createEntiy(x, y, texture);
+    array->size++;
+}
+
+void freeEntityArray(EntityArray *array)
+{
+    for (size_t i = 0; i < array->size; i++) {
+        free(array->entities[i]);
+    }
+    free(array->entities);
+    array->entities = NULL;
+    array->size = 0;
+    array->capacity = 0;
+}
+//End of DynamicArrays
 
 int main(int argv, char** args)
 {    
@@ -24,15 +70,12 @@ int main(int argv, char** args)
     //laddar Entitys med pekare till texturer
     //Entity *platform0 = createEntiy(100, 50, grassTexture);
 
-    //ladda flera entity till array för snabbare distributering
-    Entity *platforms[3] = {createEntiy(0, 0, grassTexture),
-                            createEntiy(32, 0, grassTexture),
-                            createEntiy(32, 32, grassTexture)};
-    
-
-    //Testar andra entitet Texturer!
-    //SDL_Texture *playerTexture = loadTexture("resources/player1.png", window);
-    //Entity *player = createEntiy(100, 60, playerTexture);
+    //DynamicArray
+    EntityArray platformArray = initEntityArray();
+    for(int i = 0; i < ((WINDOW_W/32*4) * 32); i+=32)
+    {
+        addEntity(&platformArray, i, 94, grassTexture);
+    }
 
 
     bool gameRunning = true;
@@ -46,15 +89,17 @@ int main(int argv, char** args)
             }
         }
         clearWindow(window);
-
-        for(int i = 0; i < 3; i++){
-            render(window, platforms[i]);
+        
+        for(int i = 0; i < platformArray.size; i++)
+        {
+            render(window, platformArray.entities[i]);
         }
-        //render(window, platform0);
 
-        //render(window, player); //Testar andra!
+
         display(window);
     }
+
+    freeEntityArray(&platformArray); //DynamicArrayFree data
 
     SDL_DestroyTexture(grassTexture);
     //cleanup är egentligen bara destroy window
