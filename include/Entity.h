@@ -2,13 +2,17 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+
+#include "Vmath.h"
+
 typedef struct entity Entity;
 
 
-Entity *createEntiy(float p_x, float p_y, SDL_Texture *p_tex);
+Entity *createEntiy(Vector2f p_pos, SDL_Texture *p_tex);
 
-float getX(Entity *pEntity);
-float getY(Entity *pEntity);
+Vector2f getPos(Entity *pEntity);
+//float getX(Entity *pEntity);
+//float getY(Entity *pEntity);
 
 SDL_Texture *getTex(Entity *pEntity);
 SDL_Rect getCurrentFrame(Entity *pEntity);

@@ -5,12 +5,14 @@
 
 #include "RenderWindow.h" 
 #include "Entity.h"
+#include "Vmath.h"
+
 
 
 #define WINDOW_W 1280
 #define WINDOW_H 720
 
-//testing DynamicArrays
+//DynamicArray
 struct entityArray{
     Entity **entities;
     size_t size;
@@ -32,6 +34,9 @@ EntityArray initEntityArray(){
 
 void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture)
 {
+    Vector2f v; 
+    initVec(&v, x, y);
+
     if(array->size == array->capacity){
         array->capacity *=2;
         array->entities = realloc(array->entities, array->capacity * sizeof(Entity*));
@@ -41,7 +46,7 @@ void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture)
         }
     }
 
-    array->entities[array->size] = createEntiy(x, y, texture);
+    array->entities[array->size] = createEntiy(v, texture);
     array->size++;
 }
 
@@ -55,7 +60,7 @@ void freeEntityArray(EntityArray *array)
     array->size = 0;
     array->capacity = 0;
 }
-//End of DynamicArrays
+//End of DynamicArray
 
 int main(int argv, char** args)
 {    
@@ -63,7 +68,7 @@ int main(int argv, char** args)
         printf("Error: %s\n",SDL_GetError());
         return 1;
     }
-    //rendera ett fönster (The fönster)
+    //rendera ett fönster  
     RenderWindow *window = create_renderWindow("Scratch", 1280, 720);
     //rendera in Texturer för sig
     SDL_Texture *grassTexture = loadTexture("resources/purpg.png", window);
@@ -77,6 +82,8 @@ int main(int argv, char** args)
         addEntity(&platformArray, i, 94, grassTexture);
     }
 
+    addEntity(&platformArray, 32, 32, grassTexture);
+    
 
     bool gameRunning = true;
 
@@ -95,10 +102,10 @@ int main(int argv, char** args)
             render(window, platformArray.entities[i]);
         }
 
-
         display(window);
     }
 
+    
     freeEntityArray(&platformArray); //DynamicArrayFree data
 
     SDL_DestroyTexture(grassTexture);

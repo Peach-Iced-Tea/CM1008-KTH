@@ -3,18 +3,23 @@
 
 #include "Entity.h"
 
+#include "Vmath.h"
+
 struct entity{
-    float x, y;
+    Vector2f pos;
+    //float x, y;
     SDL_Rect currentFrame;
     SDL_Texture* tex;
 };
 
 
-Entity *createEntiy(float p_x, float p_y, SDL_Texture *p_tex)
+Entity *createEntiy(Vector2f p_pos, SDL_Texture *p_tex)
 {
     Entity *pEntity = malloc(sizeof(Entity));
-    pEntity->x = p_x;
-    pEntity->y = p_y;
+    //pEntity->x = p_x;
+    //pEntity->y = p_y;
+    pEntity->pos = p_pos;
+
     pEntity->tex = p_tex;
 
     pEntity->currentFrame.x = 0;
@@ -23,9 +28,9 @@ Entity *createEntiy(float p_x, float p_y, SDL_Texture *p_tex)
     pEntity->currentFrame.h = 32;
     return pEntity;
 }
-
+/*
 //Get X of entity
-float getX(Entity *pEntity)
+ float getX(Entity *pEntity)
 {
     return pEntity->x;
 }
@@ -33,7 +38,14 @@ float getX(Entity *pEntity)
 float getY(Entity *pEntity)
 {
     return pEntity->y;
+} */
+
+Vector2f getPos(Entity *pEntity)
+{
+    //Vector2f *vector = malloc(sizeof(Vector2f*));
+    return pEntity->pos;
 }
+
 
 //returns texture of given Entity
 SDL_Texture *getTex(Entity *pEntity)
