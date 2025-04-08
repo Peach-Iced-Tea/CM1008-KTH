@@ -7,7 +7,7 @@ CFLAGS = -g $(INCLUDE) -c
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -mwindows -lm -mconsole
 
 
-TARGET = fromscratch
+TARGET = collisionengine
 
 
 
