@@ -62,6 +62,7 @@ void freeEntityArray(EntityArray *array)
 }
 //End of DynamicArray
 
+
 int main(int argv, char** args)
 {    
     if(SDL_Init(SDL_INIT_VIDEO)!=0){
@@ -74,6 +75,8 @@ int main(int argv, char** args)
     SDL_Texture *grassTexture = loadTexture("resources/purpg.png", window);
     //laddar Entitys med pekare till texturer
     //Entity *platform0 = createEntiy(100, 50, grassTexture);
+    SDL_Texture *player1 = loadTexture("resources/player1.png", window);
+
 
     //DynamicArray
     EntityArray platformArray = initEntityArray();
@@ -82,21 +85,103 @@ int main(int argv, char** args)
         addEntity(&platformArray, i, 94, grassTexture);
     }
 
-    addEntity(&platformArray, 32, 32, grassTexture);
+    addEntity(&platformArray, 94, 32, grassTexture);
+
+    Vector2f playerV;
+    initVec(&playerV, 32, 32);
     
+    Entity *player = createEntiy(playerV, player1);
+
+
 
     bool gameRunning = true;
 
     SDL_Event event;
 
+
+    const float timestep = 1.0f/60.0f; //Fixed timestep (60 Updates per second)
+    Uint32 lastTime = SDL_GetTicks();
+    float deltaTime = 0.0f;
+    float accumulator = 0.0f;
+    bool up, down, left, right;
+    up = down = left = right = false;
+    int timer = 0;
+
+
+
+
     while(gameRunning){
+
+        Uint32 currentTime = SDL_GetTicks();
+        deltaTime = (currentTime - lastTime) / 1000.0f; // ms till sekunder
+        lastTime = currentTime;
+        accumulator += deltaTime;
+        timer++;
+
+        while(accumulator >= timestep){
+            // Lägg till physics här
+            accumulator -= timestep;
+        }
+
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 gameRunning = false;
             }
+            else if(event.type == SDL_KEYDOWN)
+            {
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W: 
+                        up = true;
+                        break;
+                    case SDL_SCANCODE_S:
+                        down = true;
+                        break;
+                    case SDL_SCANCODE_A: 
+                        left = true;
+                        break;
+                    case SDL_SCANCODE_D: 
+                        right = true;
+                        break;
+                    case SDL_SCANCODE_T:
+                        printf("dT: %f\n", deltaTime);
+                        printf("timer: %d\n", timer);
+                        break;
+                }
+            }
+            else if(event.type == SDL_KEYUP)
+            {
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W:
+                        up = false;
+                        break;
+                    case SDL_SCANCODE_S: 
+                        down = false;
+                        break;
+                    case SDL_SCANCODE_A:
+                        left = false;
+                        break;
+                    case SDL_SCANCODE_D: 
+                        right = false;
+                        break;
+                }
+            }
         }
+
+        float dx = 0.0f, dy = 0.0f;
+        if (up && !down) { dy = -1.0 * 100 * deltaTime; }
+        if (down && !up) { dy = 1.0 * 100 * deltaTime; }
+        if (left && !right) { dx = -1.0 * 100 * deltaTime; }
+        if (right && !left) { dx = 1.0 * 100 * deltaTime; }
+        movePlayer(player, dx, dy);
+        //updateEntity(player);
+        
+
         clearWindow(window);
         
+        render(window, player);
+
         for(int i = 0; i < platformArray.size; i++)
         {
             render(window, platformArray.entities[i]);
@@ -107,7 +192,7 @@ int main(int argv, char** args)
 
     
     freeEntityArray(&platformArray); //DynamicArrayFree data
-
+    SDL_DestroyTexture(player1);
     SDL_DestroyTexture(grassTexture);
     //cleanup är egentligen bara destroy window
     cleanUp(window);

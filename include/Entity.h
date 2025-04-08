@@ -16,3 +16,10 @@ Vector2f getPos(Entity *pEntity);
 
 SDL_Texture *getTex(Entity *pEntity);
 SDL_Rect getCurrentFrame(Entity *pEntity);
+
+
+
+
+void movePlayer(Entity *pEntity, float x, float y);
+//void movement(Entity *pEntity);
+void updateEntity(Entity *pEntity);

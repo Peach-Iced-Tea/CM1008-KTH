@@ -57,3 +57,23 @@ SDL_Rect getCurrentFrame(Entity *pEntity)
 {
     return  pEntity->currentFrame;
 }
+
+
+void movePlayer(Entity *pEntity, float x, float y)
+{
+    //printf("x: %f || y: %f\n", x, y);
+    //pEntity->pos.vx = x;
+    //pEntity->pos.vy = y;
+    pEntity->pos.y +=y;
+    pEntity->pos.x +=x;
+}
+
+
+void updateEntity(Entity *pEntity)
+{
+    //printf("x: %f || y: %f\n", pEntity->pos.vx, pEntity->pos.vy);
+    pEntity->pos.y +=pEntity->pos.vy;
+    pEntity->pos.x +=pEntity->pos.vx;
+    //pEntity->pos.vx = 0;
+    //pEntity->pos.vy = 0;
+}
