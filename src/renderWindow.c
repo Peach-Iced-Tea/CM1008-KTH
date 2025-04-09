@@ -11,7 +11,7 @@ struct renderWindow {
 
 RenderWindow *create_renderWindow(const char* p_title, int p_w, int p_h) {
     RenderWindow *rw = malloc(sizeof(RenderWindow));
-    rw->pWindow = SDL_CreateWindow(p_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, p_w, p_h, 0);
+    rw->pWindow = SDL_CreateWindow(p_title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, p_w, p_h, 0);
     if(!rw->pWindow) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
@@ -53,8 +53,8 @@ void render(RenderWindow *pRenderWindow, Entity *p_entity) {
     src.h = getCurrentFrame(p_entity).h;
 
     SDL_Rect dst;
-    dst.x = round(getPos(p_entity).x) * 4;
-    dst.y = round(getPos(p_entity).y) * 4;
+    dst.x = round(entityGetX(p_entity)) * 4;
+    dst.y = round(entityGetY(p_entity)) * 4;
     dst.w = getCurrentFrame(p_entity).w * 4;
     dst.h = getCurrentFrame(p_entity).h * 4;
 

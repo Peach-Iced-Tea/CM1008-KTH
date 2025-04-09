@@ -2,14 +2,17 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "RenderWindow.h"
+#include "RenderWindow.h" 
 #include "Entity.h"
 #include "Vmath.h"
 
-#define WINDOW_W 1920
-#define WINDOW_H 1080
+#define WINDOW_W 1280
+#define WINDOW_H 720
 
 #define PLAYERSPEED 150
+#define JUMPSPEED 400
+#define GRAVITYSPEED 98
+#define MAX_GRAVITY_SPEED 3.5f
 
 //DynamicArray
 struct entityArray {
@@ -21,19 +24,19 @@ struct entityArray {
 EntityArray initEntityArray() {
     EntityArray array;
 
-    array.entities = malloc(3 * sizeof(Entity*));
+    array.entities = malloc(4 * sizeof(Entity*));
     if(!array.entities) {
         printf("Error failed allocation of memory for array\n");
         exit(1);
     }
     array.size = 0;
-    array.capacity = 3;
+    array.capacity = 4;
     return array;
 }
 
 void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture, int hitboxType) {
-    Vector2f v; 
-    initVec(&v, x, y);
+    Vec2 *tmp = createVector();
+    initVec(tmp, x, y);
 
     if(array->size == array->capacity) {
         array->capacity *=2;
@@ -43,7 +46,7 @@ void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture, int h
             return;
         }
     }
-    array->entities[array->size] = createEntiy(v, texture, hitboxType);
+    array->entities[array->size] = createEntiy(tmp, texture, hitboxType);
     array->size++;
 }
 
@@ -58,36 +61,35 @@ void freeEntityArray(EntityArray *array) {
 }
 //End of DynamicArray
 
-
-
 int main(int argv, char** args) {
     if(SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
         return 1;
     }
     //rendera ett fönster  
-    RenderWindow *window = create_renderWindow("TTT", 1920, 1080);
+    RenderWindow *window = create_renderWindow("TTT", WINDOW_W, WINDOW_H);
     //rendera in Texturer för sig
     SDL_Texture *grassTexture = loadTexture("resources/purpg.png", window);
     //laddar Entitys med pekare till texturer
     //Entity *platform0 = createEntiy(100, 50, grassTexture);
     SDL_Texture *player1 = loadTexture("resources/player1.png", window);
 
-
     //DynamicArray
     EntityArray platformArray = initEntityArray();
-    for(int i = 0; i < ((WINDOW_W/(32*4)) * 32); i+=32) {
-        addEntity(&platformArray, i, 94, grassTexture, HITBOX_32BLOCK);
+    for(int i = 0; i < (WINDOW_W/(32*4) * 32); i+=32) {
+        addEntity(&platformArray, i, 160, grassTexture, HITBOX_32BLOCK);
     }
-    addEntity(&platformArray, 0, 62, grassTexture, HITBOX_32BLOCK);
 
-    addEntity(&platformArray, 128, 62, grassTexture, HITBOX_32BLOCK);
+    /*for(int i = 0; i < (WINDOW_W/(32*4) * 32); i+=32) {
+        addEntity(&platformArray, i, WINDOW_H-32, grassTexture, HITBOX_32BLOCK);
+    }*/
 
-    Vector2f playerV;
-    initVec(&playerV, 32, 32);
+    addEntity(&platformArray, 0, 32, grassTexture, HITBOX_32BLOCK);
+    //addEntity(&platformArray, WINDOW_W-32, 64, grassTexture, HITBOX_32BLOCK);
+
+    Vec2 *playerV = createVector();
+    initVec(playerV, 32, 32);
     Entity *player = createEntiy(playerV, player1, HITBOX_PLAYER);
-
-
 
     bool gameRunning = true;
 
@@ -97,26 +99,20 @@ int main(int argv, char** args) {
     Uint32 lastTime = SDL_GetTicks();
     float deltaTime = 0.0f;
     float accumulator = 0.0f;
+    float dy = 0.0f;
    
-
-
-    int blockVertical = 0;  // BlockVertical: 0 = no block, 1 = block up movement, 2 = block down movement
-    int blockHorizontal = 0; // BlockHorizontal: 0 = no block, 1 = block left movement, 2 = block right movement
-    bool up, down, left, right;
-    up = down = left = right = false;
-
-
+    int jumpTimer = 8;
+    bool up, down, left, right, jump;
+    up = down = left = right = jump = false;
+    bool godMode = false, applyGravity = true, jumpLock = true;
+    Vec2 *deltaVelocity = createVector();
+    float gravityModifier = 1.0f;
 
     while(gameRunning) {
         Uint32 currentTime = SDL_GetTicks();
         deltaTime = (currentTime - lastTime) / 1000.0f; // ms till sekunder
         lastTime = currentTime;
         accumulator += deltaTime;
-        
-        while(accumulator >= timestep) {    
-            // Add physics related calculations here...
-            accumulator -= timestep;
-        }
 
         while(SDL_PollEvent(&event)) {
             if(event.type == SDL_QUIT) {
@@ -125,51 +121,38 @@ int main(int argv, char** args) {
             else if(event.type == SDL_KEYDOWN) {
                 switch(event.key.keysym.scancode) {
                     case SDL_SCANCODE_W:
-                        // Only set up to 'true' if up movement isn't blocked.
-                        if (blockVertical!=BLOCK_UP || 1) {
-                            up = true;
-                            blockVertical = blockHorizontal = 0;
-                        } else {
-                            up = false;
-                        }
+                        if (godMode) { up = true; }
                         break;
                     case SDL_SCANCODE_S:
-                        // Only set down to 'true' if down movement isn't blocked.
-                        if (blockVertical!=BLOCK_DOWN || 1) {
-                            down = true;
-                            blockVertical = blockHorizontal = 0;
-                        } else {
-                            down = false;
-                        }
+                        if (godMode) { down = true; }
                         break;
-                    case SDL_SCANCODE_A: 
-                        // Only set left to 'true' if left movement isn't blocked.
-                        if (blockHorizontal!=BLOCK_LEFT || 1) {
-                            left = true;
-                            blockVertical = blockHorizontal = 0;
-                        } else {
-                            left = false;
-                        }
+                    case SDL_SCANCODE_A:
+                        left = true;
                         break;
                     case SDL_SCANCODE_D:
-                        // Only set right to 'true' if right movement isn't blocked.
-                        if (blockHorizontal!=BLOCK_RIGHT || 1) {
-                            right = true;
-                            blockVertical = blockHorizontal = 0;
-                        } else {
-                            right = false;
-                        }
+                        right = true;
                         break;
                     case SDL_SCANCODE_T:
                         printf("dT: %f\n", deltaTime);
-                        printf("PlayerRect: x=%f, y=%f\n", getPos(player).x, getPos(player).y );
-                        printf("PlatformRect: x=%f, y=%f\n", getPos(platformArray.entities[0]).x, getPos(platformArray.entities[0]).y);
+                        printf("PlayerPos: x=%f, y=%f\n", entityGetX(player), entityGetY(player));
+                        printf("PlatformPos: x=%f, y=%f\n", entityGetX(platformArray.entities[0]), entityGetY(platformArray.entities[0]));
                         printf("playerHbox: x=%f, y=%f\n", getHPos(player).x , getHPos(player).y);
                         printf("PlatformHbox: x=%f, y=%f\n", getHPos(platformArray.entities[0]).x, getHPos(platformArray.entities[0]).y);
-                        printf("Blocks: %d\n", platformArray.size);
+                        printf("PlatformArray.size: %ld\n", platformArray.size);
                         break;
                     case SDL_SCANCODE_F:
                         updateEntity(player);
+                        break;
+                    case SDL_SCANCODE_G:
+                        if (!godMode) { godMode = true; } else { godMode = false; }
+                        break;
+                    case SDL_SCANCODE_SPACE:
+                        if (!jumpLock) {
+                            dy = -1.0 * JUMPSPEED * timestep;
+                            gravityModifier = 0.25f;
+                            jump = true;
+                            jumpLock = true;
+                        }
                         break;
                 }
             }
@@ -187,32 +170,63 @@ int main(int argv, char** args) {
                     case SDL_SCANCODE_D: 
                         right = false;
                         break;
+                    case SDL_SCANCODE_SPACE:
+                        jump = false;
+                        jumpTimer = 8;
+                        gravityModifier = 1.0f;
+                        break;
                 }
             }
         }
 
-        float dx = 0.0f, dy = 0.0f;
-        if (up && !down) { dy = -1.0 * PLAYERSPEED * deltaTime; }
+        //if (jump) { printf("Start jumping!\n"); }
+        //else if (!jump && jumpLock) { printf("Stop jumping!\n"); }
+        if (accumulator >= timestep) {    
+            // Add physics related calculations here...
+            if (applyGravity && dy<MAX_GRAVITY_SPEED && !godMode) {
+                dy += GRAVITYSPEED * gravityModifier * deltaTime;
+            }
+
+            if (jumpTimer>0 && jump) {
+                jumpTimer--;
+                if (jumpTimer==0) { gravityModifier = 1.0f; }
+            }
+            
+            accumulator = 0;
+        }
+
+        if (godMode || (!applyGravity && !jump)) { dy = 0.0f; }
+
+        if (up && !down && !jump) { dy = -1.0 * PLAYERSPEED * deltaTime; }
         if (down && !up) { dy = 1.0 * PLAYERSPEED * deltaTime; }
-        movePlayer(player, 0.0f, dy);
+        initVec(deltaVelocity, 0.0f, dy);
+        movePlayer(player, deltaVelocity);
         //blockVertical = checkIntersection(player, platformArray.entities[4], 0, dy);
         // Only check collision if there has been any vertical movement.
-        if (dy<0 || dy>0) {
-            for(int i = 0; i < platformArray.size; i++) {
-                blockVertical = checkIntersection(player, platformArray.entities[i], 0, dy);
-                if (blockVertical) { break; }
+        applyGravity = true;
+        jumpLock = true;
+        for(int i = 0; i < platformArray.size; i++) {
+            int toggleBlock = checkIntersection(player, platformArray.entities[i], 0.0f, dy);
+            if (toggleBlock==2) {
+                applyGravity=false;
+                jumpLock=false;
+                break;
+            }
+            else if (toggleBlock) {
+                break;
             }
         }
 
+        float dx = 0.0f;
         if (left && !right) { dx = -1.0 * PLAYERSPEED * deltaTime; }
         if (right && !left) { dx = 1.0 * PLAYERSPEED * deltaTime; }
-        movePlayer(player, dx, 0.0f);
+        initVec(deltaVelocity, dx, 0.0f);
+        movePlayer(player, deltaVelocity);
         //blockHorizontal = checkIntersection(player, platformArray.entities[4], dx, 0);
         // Only check collision if there has been any horizontal movement.
-        if (dx<0 || dx>0) {
+        if (dx!=0) {
             for(int i = 0; i < platformArray.size; i++) {
-                blockHorizontal = checkIntersection(player, platformArray.entities[i], dx, 0);
-                if (blockHorizontal) { break; }
+                if (checkIntersection(player, platformArray.entities[i], dx, 0.0f)) { break; }
             }
         }
         
@@ -222,6 +236,8 @@ int main(int argv, char** args) {
             render(window, platformArray.entities[i]);
         }
         
+        
+
         display(window);
     }
     
