@@ -1,15 +1,15 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#include "RenderWindow.h"
-#include "Entity.h"
+#include "renderWindow.h"
+#include "entity.h"
 
 struct renderWindow {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
 };
 
-RenderWindow *create_renderWindow(const char* p_title, int p_w, int p_h) {
+RenderWindow *createRenderWindow(const char* p_title, int p_w, int p_h) {
     RenderWindow *rw = malloc(sizeof(RenderWindow));
     rw->pWindow = SDL_CreateWindow(p_title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, p_w, p_h, 0);
     if(!rw->pWindow) {
@@ -45,7 +45,7 @@ void clearWindow(RenderWindow *pRenderWindow) {
     SDL_RenderClear(pRenderWindow->pRenderer);
 }
 
-void render(RenderWindow *pRenderWindow, Entity *p_entity) {
+void renderEntity(RenderWindow *pRenderWindow, Entity *p_entity) {
     SDL_Rect src;
     src.x = getCurrentFrame(p_entity).x;
     src.y = getCurrentFrame(p_entity).y;
@@ -53,18 +53,18 @@ void render(RenderWindow *pRenderWindow, Entity *p_entity) {
     src.h = getCurrentFrame(p_entity).h;
 
     SDL_Rect dst;
-    dst.x = round(entityGetX(p_entity)) * 4;
-    dst.y = round(entityGetY(p_entity)) * 4;
-    dst.w = getCurrentFrame(p_entity).w * 4;
-    dst.h = getCurrentFrame(p_entity).h * 4;
+    dst.x = round(getPosition(p_entity).x) * GLOBAL_SCALER;
+    dst.y = round(getPosition(p_entity).y) * GLOBAL_SCALER;
+    dst.w = getCurrentFrame(p_entity).w * GLOBAL_SCALER;
+    dst.h = getCurrentFrame(p_entity).h * GLOBAL_SCALER;
 
     //printf("entity.x: %f, entity.y: %f\n", getPos(p_entity).x, getPos(p_entity).y);
     //printf("dst.x: %d, dst.y %d\n", dst.x, dst.y);
 
-    SDL_RenderCopy(pRenderWindow->pRenderer, getTex(p_entity), NULL, &dst);
+    SDL_RenderCopy(pRenderWindow->pRenderer, getTexture(p_entity), NULL, &dst);
 }
 
-void display(RenderWindow *pRenderWindow) {
+void displayWindow(RenderWindow *pRenderWindow) {
     SDL_RenderPresent(pRenderWindow->pRenderer);
 }
 

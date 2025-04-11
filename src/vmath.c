@@ -1,73 +1,45 @@
 #include <stdio.h>
 
-#include "Vmath.h"
+#include "vmath.h"
 
-
-struct vec2 {
-    float x, y;
-};
-
-Vec2 *createVector() {
-    Vec2 *vector = malloc(sizeof(Vec2));
-    vector->x = 0.0f;
-    vector->y = 0.0f;
+Vec2 createVector(float x, float y) {
+    Vec2 vector;
+    vector.x = x;
+    vector.y = y;
     return vector;
 }
 
-// Initiate a vector with specified x and y coordinates.
-void initVec(Vec2 *vector, float p_x, float p_y) {
-    vector->x = p_x;
-    vector->y = p_y;
+void vectorAdd(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2) {
+    vectorResult->x = vector1.x + vector2.x;
+    vectorResult->y = vector1.y + vector2.y;
+    return;
 }
 
-// Add vector2 to vector1.
-void vectorAdd(Vec2 *vectorOut, Vec2 *vector1, Vec2 *vector2) {
-    vectorOut->x = vector1->x + vector2->x;
-    vectorOut->y = vector1->y + vector2->y;
+void vectorSub(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2) {
+    vectorResult->x = vector1.x - vector2.x;
+    vectorResult->y = vector1.y - vector2.y;
+    return;
 }
 
-// Subtract vector2 from vector1.
-void vectorSub(Vec2 *vectorOut, Vec2 *vector1, Vec2 *vector2) {
-    vectorOut->x = vector1->x - vector2->x;
-    vectorOut->y = vector1->y - vector2->y;
-}
-
-// Multiply two vectors with each other.
-float vectorMulti(Vec2 *vectorOut, Vec2 *vector1, Vec2 *vector2) {
+float vectorMulti(Vec2 const vector1, Vec2 const vector2) {
     float dotProduct = 0.0f;
-    dotProduct += vector1->x * vector2->x;
-    dotProduct += vector1->y * vector2->y;
+    dotProduct += vector1.x * vector2.x;
+    dotProduct += vector1.y * vector2.y;
     return dotProduct;
 }
 
-// Multiply the vector with a scalar.
-void vectorScale(Vec2 *vectorOut, float scalar) {
-    vectorOut->x *= scalar;
-    vectorOut->y *= scalar;
+void vectorScale(Vec2 *vector, float scalar) {
+    vector->x *= scalar;
+    vector->y *= scalar;
+    return;
 }
 
-// Get the length of the magnitude/length.
-float vectorLength(Vec2 *vector) {
-    float x = pow(vector->x, 2);
-    float y = pow(vector->y, 2);
+float vectorLength(Vec2 const vector) {
+    float x = pow(vector.x, 2);
+    float y = pow(vector.y, 2);
     return sqrtf(x+y);
 }
 
-void vectorAccel(Vec2 *vector, float a_x, float a_y) {
-    vector->x *= a_x;
-    vector->x *= a_y;
-}
-
-// Get the x coordinate of a vector.
-float vectorGetX(Vec2 *vector) {
-    return vector->x;
-}
-
-// Get the y coordinate of a vector.
-float vectorGetY(Vec2 *vector) {
-    return vector->y;
-}
-
-void printVector(Vec2 *vector) {
+void printVector(Vec2 const *vector) {
     printf("%f, %f\n", vector->x, vector->y);
 }

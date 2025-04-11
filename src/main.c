@@ -2,19 +2,16 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "RenderWindow.h" 
-#include "Entity.h"
-#include "Vmath.h"
+#include "renderWindow.h" 
+#include "entity.h"
+#include "vmath.h"
+#include "physics.h"
 
-#define WINDOW_W 1280
-#define WINDOW_H 720
+// Change GLOBAL_SCALER inside renderWindow.h to change the scaling of the window.
+#define WINDOW_W 1920
+#define WINDOW_H 1080
 
-#define PLAYERSPEED 150
-#define JUMPSPEED 400
-#define GRAVITYSPEED 98
-#define MAX_GRAVITY_SPEED 3.5f
-
-//DynamicArray
+// DynamicArray     Turn these dynamicArray related functions into its own .c and .h files.
 struct entityArray {
     Entity **entities;
     size_t size;
@@ -35,18 +32,16 @@ EntityArray initEntityArray() {
 }
 
 void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture, int hitboxType) {
-    Vec2 *tmp = createVector();
-    initVec(tmp, x, y);
-
     if(array->size == array->capacity) {
         array->capacity *=2;
         array->entities = realloc(array->entities, array->capacity * sizeof(Entity*));
-        if(!array->entities){
+        if(!array->entities) {
             printf("Error failed to reallocate memory for array\n");
             return;
         }
     }
-    array->entities[array->size] = createEntiy(tmp, texture, hitboxType);
+
+    array->entities[array->size] = createEntity(createVector(x, y), texture, hitboxType);
     array->size++;
 }
 
@@ -59,100 +54,136 @@ void freeEntityArray(EntityArray *array) {
     array->size = 0;
     array->capacity = 0;
 }
-//End of DynamicArray
+// End of DynamicArray
 
 int main(int argv, char** args) {
     if(SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
         return 1;
     }
-    //rendera ett fönster  
-    RenderWindow *window = create_renderWindow("TTT", WINDOW_W, WINDOW_H);
-    //rendera in Texturer för sig
+
+    // Get information about the main display, such as pixel width and pixel height.
+    SDL_DisplayMode mainDisplay;
+    SDL_GetDesktopDisplayMode(0, &mainDisplay);
+
+    // rendera ett fönster
+    RenderWindow *window = createRenderWindow("ToTheTop", WINDOW_W, WINDOW_H);
+    // rendera in Texturer för sig
     SDL_Texture *grassTexture = loadTexture("resources/purpg.png", window);
-    //laddar Entitys med pekare till texturer
+    // laddar Entitys med pekare till texturer
     //Entity *platform0 = createEntiy(100, 50, grassTexture);
     SDL_Texture *player1 = loadTexture("resources/player1.png", window);
 
-    //DynamicArray
+    // DynamicArray
     EntityArray platformArray = initEntityArray();
-    for(int i = 0; i < (WINDOW_W/(32*4) * 32); i+=32) {
-        addEntity(&platformArray, i, 160, grassTexture, HITBOX_32BLOCK);
-    }
+    // Add blocks along the top of the screen.
+    //for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
+    //    addEntity(&platformArray, i, 0.0f, grassTexture, HITBOX_FULL_BLOCK);
+    //}
 
-    /*for(int i = 0; i < (WINDOW_W/(32*4) * 32); i+=32) {
-        addEntity(&platformArray, i, WINDOW_H-32, grassTexture, HITBOX_32BLOCK);
+    // Add blocks along the middle of the y-axis.
+    /*for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
+        addEntity(&platformArray, i, (WINDOW_H*0.5f-32*GLOBAL_SCALER*0.5f)/GLOBAL_SCALER, grassTexture, HITBOX_FULL_BLOCK);
     }*/
 
-    addEntity(&platformArray, 0, 32, grassTexture, HITBOX_32BLOCK);
-    //addEntity(&platformArray, WINDOW_W-32, 64, grassTexture, HITBOX_32BLOCK);
+    // Add blocks along the bottom of the screen.
+    for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
+        addEntity(&platformArray, i, (WINDOW_H-32*GLOBAL_SCALER)/GLOBAL_SCALER, grassTexture, HITBOX_FULL_BLOCK);
+    }
 
-    Vec2 *playerV = createVector();
-    initVec(playerV, 32, 32);
-    Entity *player = createEntiy(playerV, player1, HITBOX_PLAYER);
+    for (int i = 0; i < 6*32; i+=32) {
+        addEntity(&platformArray, i, 96, grassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i, 128, grassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i, 160, grassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i+6*32, 192, grassTexture, HITBOX_FULL_BLOCK);
+    }
+
+    for (int i = 0; i < 4*32; i+=32) {
+        addEntity(&platformArray, i+7*32, 96, grassTexture, HITBOX_FULL_BLOCK);
+    }
+
+    addEntity(&platformArray, 0, 32, grassTexture, HITBOX_HALF_BLOCK);
+    addEntity(&platformArray, (WINDOW_W-32*GLOBAL_SCALER)/GLOBAL_SCALER, 32, grassTexture, HITBOX_FULL_BLOCK);
+
+    Entity *player = createEntity(createVector(32, 32), player1, HITBOX_PLAYER);
 
     bool gameRunning = true;
 
     SDL_Event event;
 
-    const float timestep = 1.0f/60.0f; //Fixed timestep (60 Updates per second)
+    const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
     Uint32 lastTime = SDL_GetTicks();
     float deltaTime = 0.0f;
     float accumulator = 0.0f;
-    float dy = 0.0f;
    
-    int jumpTimer = 8;
+    int jumpTimer = 0;
     bool up, down, left, right, jump;
     up = down = left = right = jump = false;
-    bool godMode = false, applyGravity = true, jumpLock = true;
-    Vec2 *deltaVelocity = createVector();
-    float gravityModifier = 1.0f;
+    bool godMode = false, jumpLock = true, applyVelocity = false;
+    float gravityModifier = 1.0f;   // Changes how much of GRAVITY_ACCELERATION that is applied to a player.
+    Vec2 currentDirection = createVector(0.0f, 0.0f); // Contains the current direction the player should move.
 
     while(gameRunning) {
         Uint32 currentTime = SDL_GetTicks();
-        deltaTime = (currentTime - lastTime) / 1000.0f; // ms till sekunder
+        deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
         lastTime = currentTime;
         accumulator += deltaTime;
 
-        while(SDL_PollEvent(&event)) {
+        currentDirection.x = 0.0f;
+        currentDirection.y = 0.0f;
+        while(SDL_PollEvent(&event)) {  // Turn this into a function, maybe add a struct containing a Vec2* and some other variables.
             if(event.type == SDL_QUIT) {
                 gameRunning = false;
             }
             else if(event.type == SDL_KEYDOWN) {
                 switch(event.key.keysym.scancode) {
                     case SDL_SCANCODE_W:
-                        if (godMode) { up = true; }
+                        if (godMode && !up) {
+                            up = true;
+                            applyVelocity = true;
+                        }
                         break;
                     case SDL_SCANCODE_S:
-                        if (godMode) { down = true; }
+                        if (godMode && !down) {
+                            down = true;
+                            applyVelocity = true;
+                        }
                         break;
                     case SDL_SCANCODE_A:
-                        left = true;
+                        if (!left) {
+                            left = true;
+                            applyVelocity = true;
+                        }
                         break;
                     case SDL_SCANCODE_D:
-                        right = true;
+                        if (!right) {
+                            right = true;
+                            applyVelocity = true;
+                        }
                         break;
                     case SDL_SCANCODE_T:
                         printf("dT: %f\n", deltaTime);
-                        printf("PlayerPos: x=%f, y=%f\n", entityGetX(player), entityGetY(player));
-                        printf("PlatformPos: x=%f, y=%f\n", entityGetX(platformArray.entities[0]), entityGetY(platformArray.entities[0]));
-                        printf("playerHbox: x=%f, y=%f\n", getHPos(player).x , getHPos(player).y);
-                        printf("PlatformHbox: x=%f, y=%f\n", getHPos(platformArray.entities[0]).x, getHPos(platformArray.entities[0]).y);
+                        printf("PlayerPos: x=%f, y=%f\n", getPosition(player).x, getPosition(player).y);
+                        printf("PlatformPos: x=%f, y=%f\n", getPosition(platformArray.entities[0]).x, getPosition(platformArray.entities[0]).y);
+                        printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(player)).x , getHitboxPosition(getHitbox(player)).y);
+                        printf("PlatformHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(platformArray.entities[0])).x, getHitboxPosition(getHitbox(platformArray.entities[0])).y);
                         printf("PlatformArray.size: %ld\n", platformArray.size);
-                        break;
-                    case SDL_SCANCODE_F:
-                        updateEntity(player);
+                        printf("playerVelocity.x: %f\n", getVelocity(player).x);
+                        printf("playerVelocity.y: %f\n", getVelocity(player).y);
                         break;
                     case SDL_SCANCODE_G:
-                        if (!godMode) { godMode = true; } else { godMode = false; }
+                        if (!godMode) {
+                            applyVelocity = true;
+                            gravityModifier = 0.0f;
+                            godMode = true;
+                        }
+                        else {
+                            applyVelocity = true;
+                            godMode = false;
+                        }
                         break;
                     case SDL_SCANCODE_SPACE:
-                        if (!jumpLock) {
-                            dy = -1.0 * JUMPSPEED * timestep;
-                            gravityModifier = 0.25f;
-                            jump = true;
-                            jumpLock = true;
-                        }
+                        if (!godMode) { jump = true; }
                         break;
                 }
             }
@@ -160,87 +191,108 @@ int main(int argv, char** args) {
                 switch(event.key.keysym.scancode) {
                     case SDL_SCANCODE_W:
                         up = false;
+                        if (godMode) {
+                            applyVelocity = true;
+                        }
                         break;
-                    case SDL_SCANCODE_S: 
+                    case SDL_SCANCODE_S:
                         down = false;
+                        if (godMode) {
+                            applyVelocity = true;
+                        }
                         break;
                     case SDL_SCANCODE_A:
                         left = false;
+                        applyVelocity = true;
                         break;
-                    case SDL_SCANCODE_D: 
+                    case SDL_SCANCODE_D:
                         right = false;
+                        applyVelocity = true;
                         break;
                     case SDL_SCANCODE_SPACE:
                         jump = false;
-                        jumpTimer = 8;
-                        gravityModifier = 1.0f;
                         break;
                 }
             }
         }
 
-        //if (jump) { printf("Start jumping!\n"); }
-        //else if (!jump && jumpLock) { printf("Stop jumping!\n"); }
+        if (up && godMode) { currentDirection.y = -1.0f; }
+        if (down && godMode) { currentDirection.y += 1.0f; }
+        if (left) { currentDirection.x = -1.0f; }
+        if (right) { currentDirection.x += 1.0f; }
+
+        if (jump && !jumpLock) {
+            jumpTimer = 20;
+            gravityModifier = 0.50f;
+            setVelocityY(player, -JUMP_VELOCITY);
+        }
+        else if (!jump && jumpTimer > 0) {
+            jumpTimer = 0;
+            gravityModifier = 1.0f;
+            if (getVelocity(player).y<=0.0f) { setVelocityY(player, PLAYER_VELOCITY*0.25f); }
+        }
+
+        if (applyVelocity) {
+            if (godMode) {
+                setVelocityY(player, currentDirection.y*MAX_PLAYER_VELOCITY*0.75f);
+            }
+
+            setVelocityX(player, currentDirection.x*(PLAYER_VELOCITY*!godMode + MAX_PLAYER_VELOCITY*0.75f*godMode));
+            setAccelerationX(player, currentDirection.x*PLAYER_ACCELERATION*!godMode);
+
+            applyVelocity = false;
+        }
+
         if (accumulator >= timestep) {    
             // Add physics related calculations here...
-            if (applyGravity && dy<MAX_GRAVITY_SPEED && !godMode) {
-                dy += GRAVITYSPEED * gravityModifier * deltaTime;
-            }
-
-            if (jumpTimer>0 && jump) {
+            if (jumpTimer > 0) {
                 jumpTimer--;
-                if (jumpTimer==0) { gravityModifier = 1.0f; }
+                if (jumpTimer == 0) { gravityModifier = 1.0f; }
             }
-            
-            accumulator = 0;
+
+            if (!godMode) {
+                if (gravityModifier == 0.0f) { setVelocityY(player, 0.0f); }
+                float gravity = GRAVITY_ACCELERATION*gravityModifier;
+                if (getAcceleration(player).y != gravity) {
+                    setAccelerationY(player, gravity);
+                }
+            }
+
+            updateVelocity(player, timestep);
+            accumulator -= timestep;
         }
 
-        if (godMode || (!applyGravity && !jump)) { dy = 0.0f; }
-
-        if (up && !down && !jump) { dy = -1.0 * PLAYERSPEED * deltaTime; }
-        if (down && !up) { dy = 1.0 * PLAYERSPEED * deltaTime; }
-        initVec(deltaVelocity, 0.0f, dy);
-        movePlayer(player, deltaVelocity);
-        //blockVertical = checkIntersection(player, platformArray.entities[4], 0, dy);
-        // Only check collision if there has been any vertical movement.
-        applyGravity = true;
+        updatePosition(player, deltaTime);
+        gravityModifier = 1.0f;
         jumpLock = true;
+
+        Hitbox *playerHitbox = getHitbox(player);
         for(int i = 0; i < platformArray.size; i++) {
-            int toggleBlock = checkIntersection(player, platformArray.entities[i], 0.0f, dy);
-            if (toggleBlock==2) {
-                applyGravity=false;
-                jumpLock=false;
-                break;
-            }
-            else if (toggleBlock) {
-                break;
+            Hitbox *entityHitbox = getHitbox(platformArray.entities[i]);
+            if (checkCollision(playerHitbox, entityHitbox)) {
+                Vec2 correction = rectVsRect(playerHitbox, entityHitbox);
+                collisionResponse(player, correction);
+                if (correction.y>0.0f) { continue; }
+
+                if (correction.x!=0.0f) { continue; }
+
+                if (hitboxIsAbove(playerHitbox, entityHitbox)) {
+                    gravityModifier = 0.0f;
+                    jumpLock = false;
+                }
             }
         }
 
-        float dx = 0.0f;
-        if (left && !right) { dx = -1.0 * PLAYERSPEED * deltaTime; }
-        if (right && !left) { dx = 1.0 * PLAYERSPEED * deltaTime; }
-        initVec(deltaVelocity, dx, 0.0f);
-        movePlayer(player, deltaVelocity);
-        //blockHorizontal = checkIntersection(player, platformArray.entities[4], dx, 0);
-        // Only check collision if there has been any horizontal movement.
-        if (dx!=0) {
-            for(int i = 0; i < platformArray.size; i++) {
-                if (checkIntersection(player, platformArray.entities[i], dx, 0.0f)) { break; }
-            }
-        }
-        
         clearWindow(window);
-        render(window, player);
+        renderEntity(window, player);
         for(int i = 0; i < platformArray.size; i++) {
-            render(window, platformArray.entities[i]);
+            renderEntity(window, platformArray.entities[i]);
         }
         
-        
-
-        display(window);
+        displayWindow(window);
     }
     
+    free(player);
     freeEntityArray(&platformArray); //DynamicArrayFree data
     SDL_DestroyTexture(player1);
     SDL_DestroyTexture(grassTexture);
