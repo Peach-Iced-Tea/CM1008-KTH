@@ -8,7 +8,7 @@
 
 typedef struct entity Entity;
 
-Entity *createEntity(Vec2 position, SDL_Texture *pTex, int hitboxType);
+Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int hitboxType);
 
 /*
 Returns the SDL_Texture* of the given Entity.
@@ -22,7 +22,7 @@ SDL_Rect getCurrentFrame(Entity const *pEntity);
 
 /*
 Correct the position of the given Entity in case of a collision with another object.
-Expects a Vec2* containing the correctional values for the x-axis and y-axis.
+Expects a Vec2 containing the correctional values for the x-axis and y-axis.
 */
 void collisionResponse(Entity *pEntity, Vec2 const correction);
 
@@ -67,17 +67,17 @@ Use "deltaTime" to modulate how much acceleration is applied on each updateVeloc
 void updateVelocity(Entity *pEntity, float deltaTime);
 
 /*
-Get the current position on the x-axis for the given Entity.
+Get the current position on both the x-axis and y-axis for the given Entity.
 */
 Vec2 getPosition(Entity const *pEntity);
 
 /*
-Get the current velocity on the x-axis for the given Entity.
+Get the current velocity on both the x-axis and y-axis for the given Entity.
 */
 Vec2 getVelocity(Entity const *pEntity);
 
 /*
-Get the current acceleration on the x-axis for the given Entity.
+Get the current acceleration on both the x-axis and y-axis for the given Entity.
 */
 Vec2 getAcceleration(Entity const *pEntity);
 
@@ -85,3 +85,8 @@ Vec2 getAcceleration(Entity const *pEntity);
 Returns the Hitbox of the given Entity.
 */
 Hitbox *getHitbox(Entity const *pEntity);
+
+/*
+Use this function to destroy the given Entity pointer and free up memory.
+*/
+void destroyEntity(Entity *pEntity);

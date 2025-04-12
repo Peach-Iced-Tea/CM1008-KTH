@@ -26,10 +26,3 @@ void vectorScale(Vec2 *vector, float scalar);
 
 // Get the length/magnitude of the given vector.
 float vectorLength(Vec2 const vector);
-
-//void vectorMin(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2);
-
-//void vectorMax(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2);
-
-void printVector(Vec2 const *vector);
-

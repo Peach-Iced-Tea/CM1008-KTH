@@ -1,8 +1,10 @@
 #pragma once
 #include <math.h>
 #include <stdbool.h>
+
 #include "vmath.h"
 
+#define HITBOX_NONE 0
 #define HITBOX_PLAYER 1 // Create a hitbox specifically designated for a player Entity.
 #define HITBOX_FULL_BLOCK 2 // Create a hitbox that is exactly the same size as the sprite/image.
 #define HITBOX_HALF_BLOCK 3 // Create a hitbox that is half the height of the sprite/image height.
@@ -38,7 +40,7 @@ void hitboxPositionSub(Hitbox *pHitbox, Vec2 const vector);
 /*
 Get the position of the given Hitbox.
 
-Returns a Vec2* containing the x and y coordinates.
+Returns a Vec2 containing the x and y coordinates.
 */
 Vec2 getHitboxPosition(Hitbox const *pHitbox);
 
@@ -58,18 +60,23 @@ Returns 'false' if no collision has been detected.
 bool checkCollision(Hitbox const *pObject1, Hitbox const *pObject2);
 
 // Change this function to have it return the relative position of Object1 compared to Object2.
-bool hitboxIsAbove(Hitbox const *pObject1, Hitbox const *pObject2);
+bool hitboxIsAbove(Hitbox const *pObject, Hitbox const *pReference);
 
 /*
 Compare two rectangles to see how they have collided.
 
-Returns a 'Vec2' containing the response to correct the collision.
+Returns a Vec2 containing the response to correct the collision.
 */
-Vec2 rectVsRect(Hitbox const *pObject1, Hitbox const *pObject2);
+Vec2 rectVsRect(Hitbox const *pObject, Hitbox const *pReference);
 
 /*
 Check if a ray has any intersection along its trajectory.
 
-Returns a 'float' containing the amount of "time" until collision.
+Returns a float containing the amount of "time" until collision.
 */
-float rayVsRect(Hitbox const *pObject1, Hitbox const *pObject2);
+float rayVsRect(Hitbox const *pObject, Hitbox const *pReference);
+
+/*
+Use this function to destroy the given Hitbox pointer and free up memory.
+*/
+void destroyHitbox(Hitbox *pHitbox);

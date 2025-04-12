@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "vmath.h"
 
 Vec2 createVector(float x, float y) {
@@ -38,8 +36,4 @@ float vectorLength(Vec2 const vector) {
     float x = pow(vector.x, 2);
     float y = pow(vector.y, 2);
     return sqrtf(x+y);
-}
-
-void printVector(Vec2 const *vector) {
-    printf("%f, %f\n", vector->x, vector->y);
 }

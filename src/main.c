@@ -45,10 +45,11 @@ void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture, int h
     array->size++;
 }
 
-void freeEntityArray(EntityArray *array) {
+void destroyEntityArray(EntityArray *array) {
     for (size_t i = 0; i < array->size; i++) {
-        free(array->entities[i]);
+        destroyEntity(array->entities[i]);
     }
+
     free(array->entities);
     array->entities = NULL;
     array->size = 0;
@@ -67,12 +68,12 @@ int main(int argv, char** args) {
     SDL_GetDesktopDisplayMode(0, &mainDisplay);
 
     // rendera ett fönster
-    RenderWindow *window = createRenderWindow("ToTheTop", WINDOW_W, WINDOW_H);
+    RenderWindow *pWindow = createRenderWindow("ToTheTop", WINDOW_W, WINDOW_H);
     // rendera in Texturer för sig
-    SDL_Texture *grassTexture = loadTexture("resources/purpg.png", window);
+    SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
     // laddar Entitys med pekare till texturer
     //Entity *platform0 = createEntiy(100, 50, grassTexture);
-    SDL_Texture *player1 = loadTexture("resources/player1.png", window);
+    SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/player1.png");
 
     // DynamicArray
     EntityArray platformArray = initEntityArray();
@@ -88,24 +89,24 @@ int main(int argv, char** args) {
 
     // Add blocks along the bottom of the screen.
     for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
-        addEntity(&platformArray, i, (WINDOW_H-32*GLOBAL_SCALER)/GLOBAL_SCALER, grassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i, (WINDOW_H-32*GLOBAL_SCALER)/GLOBAL_SCALER, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
     for (int i = 0; i < 6*32; i+=32) {
-        addEntity(&platformArray, i, 96, grassTexture, HITBOX_FULL_BLOCK);
-        addEntity(&platformArray, i, 128, grassTexture, HITBOX_FULL_BLOCK);
-        addEntity(&platformArray, i, 160, grassTexture, HITBOX_FULL_BLOCK);
-        addEntity(&platformArray, i+6*32, 192, grassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i, 96, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i, 128, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i, 160, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i+6*32, 192, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
     for (int i = 0; i < 4*32; i+=32) {
-        addEntity(&platformArray, i+7*32, 96, grassTexture, HITBOX_FULL_BLOCK);
+        addEntity(&platformArray, i+7*32, 96, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
-    addEntity(&platformArray, 0, 32, grassTexture, HITBOX_HALF_BLOCK);
-    addEntity(&platformArray, (WINDOW_W-32*GLOBAL_SCALER)/GLOBAL_SCALER, 32, grassTexture, HITBOX_FULL_BLOCK);
+    addEntity(&platformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
+    addEntity(&platformArray, (WINDOW_W-32*GLOBAL_SCALER)/GLOBAL_SCALER, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
-    Entity *player = createEntity(createVector(32, 32), player1, HITBOX_PLAYER);
+    Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
 
     bool gameRunning = true;
 
@@ -119,7 +120,7 @@ int main(int argv, char** args) {
     int jumpTimer = 0;
     bool up, down, left, right, jump;
     up = down = left = right = jump = false;
-    bool godMode = false, jumpLock = true, applyVelocity = false;
+    bool godMode = false, applyVelocity = false;
     float gravityModifier = 1.0f;   // Changes how much of GRAVITY_ACCELERATION that is applied to a player.
     Vec2 currentDirection = createVector(0.0f, 0.0f); // Contains the current direction the player should move.
 
@@ -137,6 +138,9 @@ int main(int argv, char** args) {
             }
             else if(event.type == SDL_KEYDOWN) {
                 switch(event.key.keysym.scancode) {
+                    case SDL_SCANCODE_ESCAPE:
+                        gameRunning = false;
+                        break;
                     case SDL_SCANCODE_W:
                         if (godMode && !up) {
                             up = true;
@@ -163,13 +167,13 @@ int main(int argv, char** args) {
                         break;
                     case SDL_SCANCODE_T:
                         printf("dT: %f\n", deltaTime);
-                        printf("PlayerPos: x=%f, y=%f\n", getPosition(player).x, getPosition(player).y);
+                        printf("PlayerPos: x=%f, y=%f\n", getPosition(pPlayer).x, getPosition(pPlayer).y);
                         printf("PlatformPos: x=%f, y=%f\n", getPosition(platformArray.entities[0]).x, getPosition(platformArray.entities[0]).y);
-                        printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(player)).x , getHitboxPosition(getHitbox(player)).y);
+                        printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(pPlayer)).x , getHitboxPosition(getHitbox(pPlayer)).y);
                         printf("PlatformHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(platformArray.entities[0])).x, getHitboxPosition(getHitbox(platformArray.entities[0])).y);
                         printf("PlatformArray.size: %ld\n", platformArray.size);
-                        printf("playerVelocity.x: %f\n", getVelocity(player).x);
-                        printf("playerVelocity.y: %f\n", getVelocity(player).y);
+                        printf("playerVelocity.x: %f\n", getVelocity(pPlayer).x);
+                        printf("playerVelocity.y: %f\n", getVelocity(pPlayer).y);
                         break;
                     case SDL_SCANCODE_G:
                         if (!godMode) {
@@ -221,24 +225,24 @@ int main(int argv, char** args) {
         if (left) { currentDirection.x = -1.0f; }
         if (right) { currentDirection.x += 1.0f; }
 
-        if (jump && !jumpLock) {
+        if (jump && gravityModifier == 0.0f) {
             jumpTimer = 20;
             gravityModifier = 0.50f;
-            setVelocityY(player, -JUMP_VELOCITY);
+            setVelocityY(pPlayer, -JUMP_VELOCITY);
         }
         else if (!jump && jumpTimer > 0) {
             jumpTimer = 0;
             gravityModifier = 1.0f;
-            if (getVelocity(player).y<=0.0f) { setVelocityY(player, PLAYER_VELOCITY*0.25f); }
+            if (getVelocity(pPlayer).y<=0.0f) { setVelocityY(pPlayer, PLAYER_VELOCITY*0.25f); }
         }
 
         if (applyVelocity) {
             if (godMode) {
-                setVelocityY(player, currentDirection.y*MAX_PLAYER_VELOCITY*0.75f);
+                setVelocityY(pPlayer, currentDirection.y*MAX_PLAYER_VELOCITY*0.75f);
             }
 
-            setVelocityX(player, currentDirection.x*(PLAYER_VELOCITY*!godMode + MAX_PLAYER_VELOCITY*0.75f*godMode));
-            setAccelerationX(player, currentDirection.x*PLAYER_ACCELERATION*!godMode);
+            setVelocityX(pPlayer, currentDirection.x*(PLAYER_VELOCITY*!godMode + MAX_PLAYER_VELOCITY*0.75f*godMode));
+            setAccelerationX(pPlayer, currentDirection.x*PLAYER_ACCELERATION*!godMode);
 
             applyVelocity = false;
         }
@@ -251,53 +255,46 @@ int main(int argv, char** args) {
             }
 
             if (!godMode) {
-                if (gravityModifier == 0.0f) { setVelocityY(player, 0.0f); }
+                if (gravityModifier == 0.0f) { setVelocityY(pPlayer, 0.0f); }
                 float gravity = GRAVITY_ACCELERATION*gravityModifier;
-                if (getAcceleration(player).y != gravity) {
-                    setAccelerationY(player, gravity);
+                if (getAcceleration(pPlayer).y != gravity) {
+                    setAccelerationY(pPlayer, gravity);
                 }
             }
 
-            updateVelocity(player, timestep);
+            updateVelocity(pPlayer, timestep);
             accumulator -= timestep;
         }
 
-        updatePosition(player, deltaTime);
-        gravityModifier = 1.0f;
-        jumpLock = true;
+        updatePosition(pPlayer, deltaTime);
+        if (!godMode) { gravityModifier = 1.0f; }
 
-        Hitbox *playerHitbox = getHitbox(player);
+        Hitbox *playerHitbox = getHitbox(pPlayer);
         for(int i = 0; i < platformArray.size; i++) {
             Hitbox *entityHitbox = getHitbox(platformArray.entities[i]);
             if (checkCollision(playerHitbox, entityHitbox)) {
                 Vec2 correction = rectVsRect(playerHitbox, entityHitbox);
-                collisionResponse(player, correction);
-                if (correction.y>0.0f) { continue; }
-
-                if (correction.x!=0.0f) { continue; }
-
+                collisionResponse(pPlayer, correction);
                 if (hitboxIsAbove(playerHitbox, entityHitbox)) {
                     gravityModifier = 0.0f;
-                    jumpLock = false;
                 }
             }
         }
 
-        clearWindow(window);
-        renderEntity(window, player);
+        clearWindow(pWindow);
+        renderEntity(pWindow, pPlayer);
         for(int i = 0; i < platformArray.size; i++) {
-            renderEntity(window, platformArray.entities[i]);
+            renderEntity(pWindow, platformArray.entities[i]);
         }
         
-        displayWindow(window);
+        displayWindow(pWindow);
     }
     
-    free(player);
-    freeEntityArray(&platformArray); //DynamicArrayFree data
-    SDL_DestroyTexture(player1);
-    SDL_DestroyTexture(grassTexture);
-    //cleanup är egentligen bara destroy window
-    cleanUp(window);
+    destroyEntity(pPlayer);
+    destroyEntityArray(&platformArray);
+    SDL_DestroyTexture(pPlayerTexture);
+    SDL_DestroyTexture(pGrassTexture);
+    destroyRenderWindow(pWindow);
     SDL_Quit();
 
     return 0;

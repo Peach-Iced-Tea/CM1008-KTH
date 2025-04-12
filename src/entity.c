@@ -4,19 +4,19 @@ struct entity {
     Vec2 position;
     Vec2 velocity;
     Vec2 acceleration;
-    Hitbox *hitbox;
+    Hitbox *pHitbox;
     SDL_Rect currentFrame;
-    SDL_Texture* texture;
+    SDL_Texture *pTexture;
 };
 
-Entity *createEntity(Vec2 position, SDL_Texture *pTex, int hitboxType) {
+Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int hitboxType) {
     Entity *pEntity = malloc(sizeof(Entity));
 
     pEntity->position = position;
     pEntity->velocity = createVector(0.0f, 0.0f);
     pEntity->acceleration = createVector(0.0f, 0.0f);
 
-    pEntity->texture = pTex;
+    pEntity->pTexture = pTexture;
 
     pEntity->currentFrame.x = 0;//pPos->x;
     pEntity->currentFrame.y = 0;//pPos->y;
@@ -25,13 +25,13 @@ Entity *createEntity(Vec2 position, SDL_Texture *pTex, int hitboxType) {
 
     switch(hitboxType) {
         case HITBOX_PLAYER:
-            pEntity->hitbox = createPlayerHitbox(position, (float)pEntity->currentFrame.w, (float)pEntity->currentFrame.h);
+            pEntity->pHitbox = createPlayerHitbox(position, (float)pEntity->currentFrame.w, (float)pEntity->currentFrame.h);
             break;
         case HITBOX_FULL_BLOCK:
-            pEntity->hitbox = createFullBlockHitbox(position, (float)pEntity->currentFrame.w, (float)pEntity->currentFrame.h);
+            pEntity->pHitbox = createFullBlockHitbox(position, (float)pEntity->currentFrame.w, (float)pEntity->currentFrame.h);
             break;
         case HITBOX_HALF_BLOCK:
-            pEntity->hitbox = createHalfBlockHitbox(position, (float)pEntity->currentFrame.w, (float)pEntity->currentFrame.h);
+            pEntity->pHitbox = createHalfBlockHitbox(position, (float)pEntity->currentFrame.w, (float)pEntity->currentFrame.h);
             break;
     }
 
@@ -39,7 +39,7 @@ Entity *createEntity(Vec2 position, SDL_Texture *pTex, int hitboxType) {
 }
 
 SDL_Texture *getTexture(Entity const *pEntity) {
-    return pEntity->texture;
+    return pEntity->pTexture;
 }
 
 SDL_Rect getCurrentFrame(Entity const *pEntity) {
@@ -48,7 +48,7 @@ SDL_Rect getCurrentFrame(Entity const *pEntity) {
 
 void collisionResponse(Entity *pEntity, Vec2 const correction) {
     vectorAdd(&pEntity->position, pEntity->position, correction);
-    hitboxPositionAdd(pEntity->hitbox, correction);
+    hitboxPositionAdd(pEntity->pHitbox, correction);
     return;
 }
 
@@ -78,7 +78,7 @@ void updatePosition(Entity *pEntity, float const deltaTime) {
 
     // Update the current position of both the Sprite position and the Hitbox position.
     vectorAdd(&pEntity->position, pEntity->position, velocity);
-    hitboxPositionAdd(pEntity->hitbox, velocity);
+    hitboxPositionAdd(pEntity->pHitbox, velocity);
 
     return;
 }
@@ -120,5 +120,12 @@ Vec2 getAcceleration(Entity const *pEntity) {
 }
 
 Hitbox *getHitbox(Entity const *pEntity) {
-    return pEntity->hitbox;
+    return pEntity->pHitbox;
+}
+
+void destroyEntity(Entity *pEntity) {
+    if (pEntity == NULL) { return; }
+
+    destroyHitbox(pEntity->pHitbox);
+    free(pEntity);
 }
