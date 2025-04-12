@@ -18,7 +18,7 @@ SDL_Texture *getTexture(Entity const *pEntity);
 /*
 Returns the SDL_Rect of the given Entity.
 */
-SDL_Rect getCurrentFrame(Entity const *pEntity);
+SDL_FRect getCurrentFrame(Entity const *pEntity);
 
 /*
 Correct the position of the given Entity in case of a collision with another object.

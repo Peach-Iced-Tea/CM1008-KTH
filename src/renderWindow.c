@@ -38,19 +38,21 @@ void clearWindow(RenderWindow *pRenderWindow) {
 }
 
 void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity) {
-    SDL_Rect src;
-    src.x = getCurrentFrame(pEntity).x;
-    src.y = getCurrentFrame(pEntity).y;
-    src.w = getCurrentFrame(pEntity).w;
-    src.h = getCurrentFrame(pEntity).h;
+    SDL_FRect entity = getCurrentFrame(pEntity);
 
-    SDL_Rect dst;
-    dst.x = round(getPosition(pEntity).x) * GLOBAL_SCALER;
-    dst.y = round(getPosition(pEntity).y) * GLOBAL_SCALER;
-    dst.w = getCurrentFrame(pEntity).w * GLOBAL_SCALER;
-    dst.h = getCurrentFrame(pEntity).h * GLOBAL_SCALER;
+    SDL_FRect dst;
+    dst.w = entity.w * GLOBAL_SCALER;
+    dst.h = entity.h * GLOBAL_SCALER;
+    dst.x = entity.x * GLOBAL_SCALER;
+    dst.y = entity.y * GLOBAL_SCALER;
 
-    SDL_RenderCopy(pRenderWindow->pRenderer, getTexture(pEntity), NULL, &dst);
+    SDL_FRect src;
+    src.w = entity.w;
+    src.h = entity.h;
+    src.x = entity.x;
+    src.y = entity.y;
+    
+    SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), NULL, &dst);
 }
 
 void displayWindow(RenderWindow *pRenderWindow) {
