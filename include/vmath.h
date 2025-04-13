@@ -24,5 +24,8 @@ float vectorMulti(Vec2 const vector1, Vec2 const vector2);
 // Multiplies the two float values of the given vector with a scalar.
 void vectorScale(Vec2 *vector, float scalar);
 
-// Get the length/magnitude of the given vector.
-float vectorLength(Vec2 const vector);
+// Get the length/magnitude between the two given vectors.
+float vectorLength(Vec2 const vector1, Vec2 const vector2);
+
+// Get the point(x,y) that is in the middle between the two given vectors.
+void vectorMidPoint(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2);
