@@ -226,14 +226,14 @@ int main(int argv, char** args) {
         if (right) { currentDirection.x += 1.0f; }
 
         if (jump && gravityModifier == 0.0f) {
-            jumpTimer = 20;
+            jumpTimer = 10;
             gravityModifier = 0.50f;
             setVelocityY(pPlayer, -JUMP_VELOCITY);
         }
         else if (!jump && jumpTimer > 0) {
             jumpTimer = 0;
             gravityModifier = 1.0f;
-            if (getVelocity(pPlayer).y<=0.0f) { setVelocityY(pPlayer, PLAYER_VELOCITY*0.25f); }
+            if (getVelocity(pPlayer).y<=0.0f) { setVelocityY(pPlayer, 0.0f); }
         }
 
         if (applyVelocity) {
@@ -267,7 +267,7 @@ int main(int argv, char** args) {
         }
 
         updatePosition(pPlayer, deltaTime);
-        if (!godMode) { gravityModifier = 1.0f; }
+        if (!godMode && jumpTimer == 0) { gravityModifier = 1.0f; }
 
         Hitbox *playerHitbox = getHitbox(pPlayer);
         for(int i = 0; i < platformArray.size; i++) {

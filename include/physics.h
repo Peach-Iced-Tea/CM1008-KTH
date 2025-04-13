@@ -14,7 +14,7 @@
 
 #define PLAYER_VELOCITY 60.0f   // Initial velocity to be applied on a player upon moving.
 #define PLAYER_ACCELERATION 580.0f  // A constant for the acceleration of a player, this value gets modified by deltaTime before updating velocity.
-#define JUMP_VELOCITY 700.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
+#define JUMP_VELOCITY 550.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
 #define GRAVITY_ACCELERATION 1960.0f    // The simulation of gravity uses this constant.
 
 typedef struct hitbox Hitbox;
