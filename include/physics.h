@@ -19,11 +19,10 @@
 
 typedef struct hitbox Hitbox;
 
-// Add a new function that consolidates all the Hitbox types into one, that then calls the other specific functions based on hitboxType in-parameter.
-
-Hitbox *createPlayerHitbox(Vec2 const position, float w, float h);
-Hitbox *createFullBlockHitbox(Vec2 const position, float w, float h);
-Hitbox *createHalfBlockHitbox(Vec2 const position, float w, float h);
+/*
+Create a hitbox based on the type specified with hitboxType.
+*/
+Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType);
 
 /*
 Call this function to update the positional values of a hitbox.

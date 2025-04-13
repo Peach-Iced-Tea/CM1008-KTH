@@ -5,13 +5,6 @@ struct hitbox {
     Vec2 halfSize;
 };
 
-Hitbox *createHitbox(float p_x, float p_y, float w, float h) {
-    Hitbox *pHitbox = malloc(sizeof(Hitbox));
-    pHitbox->position = createVector(p_x, p_y);
-    pHitbox->halfSize = createVector(w, h);
-    return pHitbox;
-}
-
 Hitbox *createPlayerHitbox(Vec2 const position, float w, float h) {
     Hitbox *pHitbox = malloc(sizeof(Hitbox));
     w *= 0.25f;
@@ -36,6 +29,25 @@ Hitbox *createHalfBlockHitbox(Vec2 const position, float w, float h) {
     h *= 0.25f;
     pHitbox->position = createVector(position.x+w, position.y+h);
     pHitbox->halfSize = createVector(w, h);
+    return pHitbox;
+}
+
+Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType) {
+    Hitbox *pHitbox = NULL;
+    switch (hitboxType) {
+        case HITBOX_PLAYER:
+            pHitbox = createPlayerHitbox(position, w, h);
+            break;
+        case HITBOX_FULL_BLOCK:
+            pHitbox = createFullBlockHitbox(position, w, h);
+            break;
+        case HITBOX_HALF_BLOCK:
+            pHitbox = createHalfBlockHitbox(position, w, h);
+            break;
+        case HITBOX_NONE:
+            break;
+    }
+
     return pHitbox;
 }
 

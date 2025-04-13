@@ -19,18 +19,7 @@ Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int hitboxType) {
     pEntity->velocity = createVector(0.0f, 0.0f);
     pEntity->acceleration = createVector(0.0f, 0.0f);
 
-    switch(hitboxType) {
-        case HITBOX_PLAYER:
-            pEntity->pHitbox = createPlayerHitbox(position, pEntity->currentFrame.w, pEntity->currentFrame.h);
-            break;
-        case HITBOX_FULL_BLOCK:
-            pEntity->pHitbox = createFullBlockHitbox(position, pEntity->currentFrame.w, pEntity->currentFrame.h);
-            break;
-        case HITBOX_HALF_BLOCK:
-            pEntity->pHitbox = createHalfBlockHitbox(position, pEntity->currentFrame.w, pEntity->currentFrame.h);
-            break;
-    }
-
+    pEntity->pHitbox = createHitbox(position, pEntity->currentFrame.w, pEntity->currentFrame.h, hitboxType);
     pEntity->pTexture = pTexture;
 
     return pEntity;
