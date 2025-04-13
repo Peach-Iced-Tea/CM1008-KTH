@@ -9,6 +9,11 @@
 #define HITBOX_FULL_BLOCK 2 // Create a hitbox that is exactly the same size as the sprite/image.
 #define HITBOX_HALF_BLOCK 3 // Create a hitbox that is half the height of the sprite/image height.
 
+#define OBJECT_IS_NORTH 1   // The object is above the reference.
+#define OBJECT_IS_SOUTH 2   // The object is below the reference.
+#define OBJECT_IS_WEST 3    // The object is to the left of the reference.
+#define OBJECT_IS_EAST 4    // The object is to the right of the reference.
+
 #define MAX_PLAYER_VELOCITY 380.0f  // The absolute max value of the velocity a player can reach.
 #define MAX_GRAVITY_VELOCITY 660.0f // The absolute max value that the velocity of gravity can reach.
 
@@ -58,8 +63,10 @@ Returns 'false' if no collision has been detected.
 */
 bool checkCollision(Hitbox const *pObject1, Hitbox const *pObject2);
 
-// Change this function to have it return the relative position of Object1 compared to Object2.
-bool hitboxIsAbove(Hitbox const *pObject, Hitbox const *pReference);
+/*
+Returns the current orientation of pObject relative to pReference.
+*/
+int hitboxOrientation(Hitbox const *pObject, Hitbox const *pReference);
 
 /*
 Compare two rectangles to see how they have collided.

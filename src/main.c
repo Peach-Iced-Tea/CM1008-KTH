@@ -269,14 +269,22 @@ int main(int argv, char** args) {
         updatePosition(pPlayer, deltaTime);
         if (!godMode && jumpTimer == 0) { gravityModifier = 1.0f; }
 
-        Hitbox *playerHitbox = getHitbox(pPlayer);
+        Hitbox *pPlayerHitbox = getHitbox(pPlayer);
         for(int i = 0; i < platformArray.size; i++) {
-            Hitbox *entityHitbox = getHitbox(platformArray.entities[i]);
-            if (checkCollision(playerHitbox, entityHitbox)) {
-                Vec2 correction = rectVsRect(playerHitbox, entityHitbox);
+            Hitbox *pEntityHitbox = getHitbox(platformArray.entities[i]);
+            if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
+                Vec2 correction = rectVsRect(pPlayerHitbox, pEntityHitbox);
                 collisionResponse(pPlayer, correction);
-                if (hitboxIsAbove(playerHitbox, entityHitbox)) {
-                    gravityModifier = 0.0f;
+                switch (hitboxOrientation(pPlayerHitbox, pEntityHitbox)) {
+                    case OBJECT_IS_NORTH:
+                        gravityModifier = 0.0f;
+                        break;
+                    case OBJECT_IS_SOUTH:
+                        break;
+                    case OBJECT_IS_WEST:
+                        break;
+                    case OBJECT_IS_EAST:
+                        break;
                 }
             }
         }

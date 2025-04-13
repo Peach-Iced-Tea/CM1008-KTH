@@ -94,15 +94,20 @@ bool checkCollision(Hitbox const *pObject1, Hitbox const *pObject2) {
     return collisionDetected;
 }
 
-bool hitboxIsAbove(Hitbox const *pObject, Hitbox const *pReference) {
-    bool isAbove = false;
-    Vec2 max1;
-    Vec2 min2;
+int hitboxOrientation(Hitbox const *pObject, Hitbox const *pReference) {
+    Vec2 min1;  // Used to get the top and left edges of the hitbox of pObject.
+    Vec2 max1;  // Used to get the bottom and right edges of the hitbox of pObject.
+    vectorSub(&min1, pObject->position, pObject->halfSize);
     vectorAdd(&max1, pObject->position, pObject->halfSize);
-    vectorSub(&min2, pReference->position, pReference->halfSize);
-    if (max1.y <= min2.y) { isAbove = true; }
 
-    return isAbove;
+    Vec2 min2;  // Used to get the top and left edges of the hitbox of pReference.
+    Vec2 max2;  // Used to get the bottom and right edges of the hitbox of pReference.
+    vectorSub(&min2, pReference->position, pReference->halfSize);
+    vectorAdd(&max2, pReference->position, pReference->halfSize);
+    if (max1.y <= min2.y) { return OBJECT_IS_NORTH; }
+    else if (min1.y >= max2.y) { return OBJECT_IS_SOUTH; }
+    else if (max1.x <= min2.x) { return OBJECT_IS_WEST;}
+    else { return OBJECT_IS_EAST; }
 }
 
 Vec2 rectVsRect(Hitbox const *pObject, Hitbox const *pReference) {
