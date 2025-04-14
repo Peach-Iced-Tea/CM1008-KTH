@@ -80,16 +80,16 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
 void cameraScaleToTargets(Camera *pCamera) {
     if (pCamera == NULL) { return; }
 
-    Vec2 vector1 = createVector(getCurrentFrame(pCamera->pTarget1).x, getCurrentFrame(pCamera->pTarget1).y);
-    Vec2 vector2 = createVector(getCurrentFrame(pCamera->pTarget2).x, getCurrentFrame(pCamera->pTarget2).y);
+    Vec2 position1 = getMidPoint(pCamera->pTarget1);
+    Vec2 position2 = getMidPoint(pCamera->pTarget2);
     Vec2 middlePoint;
-    vectorMidPoint(&middlePoint, vector1, vector2);
+    vectorMidPoint(&middlePoint, position1, position2);
 
     pCamera->position.x = middlePoint.x;
     pCamera->position.y = middlePoint.y;
 
     Vec2 difference;
-    vectorSub(&difference, vector1, vector2);
+    vectorSub(&difference, position1, position2);
 
     float zoomX = pCamera->display.width/(fabsf(difference.x)*1.5f);
     float zoomY = pCamera->display.height/(fabsf(difference.y)*1.5f);
@@ -144,11 +144,11 @@ int cameraUpdate(Camera *pCamera) {
             break;
         case CAMERA_TRACKING_T1:
             if (pCamera->pTarget1 == NULL) { return CAMERA_MISSING_TARGET1; }
-            cameraTrackTarget(pCamera, getPosition(pCamera->pTarget1));
+            cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget1));
             break;
         case CAMERA_TRACKING_T2:
             if (pCamera->pTarget2 == NULL) { return CAMERA_MISSING_TARGET2; }
-            cameraTrackTarget(pCamera, getPosition(pCamera->pTarget2));
+            cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget2));
             break;
     }
     
