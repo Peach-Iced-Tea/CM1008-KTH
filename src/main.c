@@ -11,6 +11,8 @@
 #define WINDOW_W 1920
 #define WINDOW_H 1080
 
+#define ROTSPEED 100
+
 // DynamicArray     Turn these dynamicArray related functions into its own .c and .h files.
 struct entityArray {
     Entity **entities;
@@ -109,18 +111,29 @@ int main(int argv, char** args) {
     Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
 
 
+//--------------------------------------------------------------------------------------------------------------------//
 
-
-
+    //RotateObject
     Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, HITBOX_FULL_BLOCK);
 
     int x, y;
     Vec2 mouseVector = createVector(0.0f, 0.0f);
     
     bool clique = false;
+    bool rotation = false;
+    float radius = 0.0f;
+
+    float alpha = 0.0f;
+    float newAlpha = 0.0f;
+
+    Vec2 rotateVelocity = createVector(0.0f, 0.0f);
+    Vec2 newRotPos = createVector(0.0f, 0.0f);
+
+    bool rotateRight = false;
+    bool rotateLeft = false;
 
 
-
+//--------------------------------------------------------------------------------------------------------------------//
 
     bool gameRunning = true;
 
@@ -196,6 +209,8 @@ int main(int argv, char** args) {
                         printf("PlatformArray.size: %ld\n", platformArray.size);
                         printf("playerVelocity.x: %f\n", getVelocity(pPlayer).x);
                         printf("playerVelocity.y: %f\n", getVelocity(pPlayer).y);
+                        printf("Distans_PlayerToObject: %f\n", vectorLength(getMidPoint(pPlayer), getMidPoint(pMObject)));
+                        printf("Alpha: %f\n", alpha);
                         break;
                     case SDL_SCANCODE_G:
                         if (!godMode) {
@@ -210,6 +225,16 @@ int main(int argv, char** args) {
                         break;
                     case SDL_SCANCODE_SPACE:
                         if (!godMode) { jump = true; }
+                        break;
+                    case SDL_SCANCODE_E:
+                        if(rotation) {
+                            rotateRight = true;
+                        }   
+                        break;
+                    case SDL_SCANCODE_Q:
+                        if(rotation) {
+                            rotateLeft = true;
+                        }   
                         break;
                     
                 }
@@ -239,6 +264,12 @@ int main(int argv, char** args) {
                     case SDL_SCANCODE_SPACE:
                         jump = false;
                         break;
+                    case SDL_SCANCODE_E:
+                        rotateRight = false;
+                        break;
+                    case SDL_SCANCODE_Q:
+                        rotateLeft = false;
+                        break;
                 }
             }
             else if(event.type == SDL_MOUSEBUTTONDOWN){
@@ -246,28 +277,23 @@ int main(int argv, char** args) {
                 {
                 case SDL_BUTTON_LEFT:
                     clique = true;
-                    printf("Halleluja\n");
+                    printf("-----MouseValues:\n");
                     printf("mousex: %f, mousey: %f\n", mouseVector.x, mouseVector.y);
                     printf("midPointX: %f, midPointY: %f\n", getMidPoint(pPlayer).x, getMidPoint(pPlayer).y);
-                    printf("DistansMouse: %f\n",  vectorLength(getMidPoint(pPlayer), mouseVector));
+                    printf("Distans_Mouse->PlayerMid: %f\n",  vectorLength(getMidPoint(pPlayer), mouseVector));
                     
                     break;
-                
-                default:
-                    break;
                 }
-
-
-
             }
             else if(event.type == SDL_MOUSEBUTTONUP){
                 switch (event.button.button)
                 {
                 case SDL_BUTTON_LEFT:
                     clique = false;
-                    break;
-                
-                default:
+                    if(rotation){
+                        rotation = false;
+                        applyVelocity = true;
+                    }
                     break;
                 }
             }
@@ -275,22 +301,64 @@ int main(int argv, char** args) {
 
         if(vectorLength(mouseVector, getMidPoint(pPlayer)) < 240.0f) {
             if(clique && touching(getHitbox(pMObject), mouseVector)) {
-                printf("TOUCHING!\n");
+                //printf("TOUCHING!\n");
+                rotation = true; //låsa movement!
+                applyVelocity = true;  
             }
+        }
+        if(rotation){
+            gravityModifier = 0.0f;
+
+            radius = vectorLength(getMidPoint(pPlayer), getMidPoint(pMObject));
+            alpha = vectorGetAngle(getMidPoint(pPlayer), getMidPoint(pMObject));
+
+            if(rotateRight && !rotateLeft) {
+                newAlpha = alpha - (((PI/180) * deltaTime) * ROTSPEED);
+
+
+                newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
+                newRotPos.y = (getMidPoint(pPlayer).y + (sinf(newAlpha) * radius));
+
+                vectorSub(&rotateVelocity, getMidPoint(pMObject), newRotPos);
+
+
+                setVelocityX(pMObject, rotateVelocity.x);
+                setVelocityY(pMObject, rotateVelocity.y);
+                
+                updatePosition(pMObject, 1.0f);
+            }
+            if(rotateLeft && !rotateRight) {
+                newAlpha = alpha + (((PI/180) * deltaTime) * ROTSPEED);
+
+                newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
+                newRotPos.y = (getMidPoint(pPlayer).y + (sinf(newAlpha) * radius));
+
+                vectorSub(&rotateVelocity, getMidPoint(pMObject), newRotPos);
+
+
+                setVelocityX(pMObject, rotateVelocity.x);
+                setVelocityY(pMObject, rotateVelocity.y);
+                
+                updatePosition(pMObject, 1.0f);
+            }
+
         }
 
 
 
 
+        if (up && godMode && !rotation) { currentDirection.y = -1.0f; }
+        if (down && godMode && !rotation) { currentDirection.y += 1.0f; }
+        if (left && !rotation) { currentDirection.x = -1.0f; }
+        if (right && !rotation) { currentDirection.x += 1.0f; }
+
+
+        
 
 
 
-        if (up && godMode) { currentDirection.y = -1.0f; }
-        if (down && godMode) { currentDirection.y += 1.0f; }
-        if (left) { currentDirection.x = -1.0f; }
-        if (right) { currentDirection.x += 1.0f; }
 
-        if (jump && gravityModifier == 0.0f) {
+        if (jump && gravityModifier == 0.0f && !rotation) {
             jumpTimer = 10;
             gravityModifier = 0.50f;
             setVelocityY(pPlayer, -JUMP_VELOCITY);
