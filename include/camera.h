@@ -69,6 +69,11 @@ Returns 'true' if it is inside the camera view, 'false' if it is outside the cam
 bool entityIsVisible(Camera const *pCamera, Entity const *pEntity);
 
 /*
+Returns the absolute position of the mouse cursor in the game world.
+*/
+Vec2 cameraGetMousePosition(Camera *pCamera);
+
+/*
 Returns the logical width of the given Camera.
 
 The logical dimensions are the width and height of the camera itself, not the actual resolution of the game.

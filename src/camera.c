@@ -18,6 +18,7 @@ struct camera {
     Entity *pTarget1;
     Entity *pTarget2;
     int cameraMode;
+    float currentZoom;
     int trackTimer;
 };
 
@@ -73,6 +74,7 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
 
     pCamera->logicalWidth = round(pCamera->display.width / zoomScale);
     pCamera->logicalHeight = round(pCamera->display.height / zoomScale);
+    pCamera->currentZoom = zoomScale;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
     return 0;
 }
@@ -169,6 +171,15 @@ bool entityIsVisible(Camera const *pCamera, Entity const *pEntity) {
     }
 
     return isVisible;
+}
+
+Vec2 cameraGetMousePosition(Camera *pCamera) {
+    Vec2 mousePosition = createVector(0.0f, 0.0f);
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    mousePosition.x = (float)x/pCamera->currentZoom - pCamera->logicalWidth*0.5f + pCamera->position.x;
+    mousePosition.y = (float)y/pCamera->currentZoom - pCamera->logicalHeight*0.5f + pCamera->position.y; 
+    return mousePosition;
 }
 
 int cameraGetWidth(Camera const *pCamera) {

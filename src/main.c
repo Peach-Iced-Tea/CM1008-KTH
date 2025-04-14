@@ -112,6 +112,7 @@ int main(int argv, char** args) {
     cameraSetTargets(pCamera, pPlayer, pReference);
 
     SDL_Event event;
+    Vec2 mousePosition;
 
     const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
     Uint32 lastTime = SDL_GetTicks();
@@ -132,6 +133,7 @@ int main(int argv, char** args) {
         lastTime = currentTime;
         accumulator += deltaTime;
 
+        mousePosition = cameraGetMousePosition(pCamera);
         currentDirection.x = 0.0f;
         currentDirection.y = 0.0f;
         while(SDL_PollEvent(&event)) {  // Turn this into a function, maybe add a struct containing a Vec2 and some other variables.
@@ -169,6 +171,7 @@ int main(int argv, char** args) {
                         break;
                     case SDL_SCANCODE_T:
                         printf("dT: %f\n", deltaTime);
+                        printf("MousePos: x=%f, y=%f\n", mousePosition.x, mousePosition.y);
                         printf("PlayerPos: x=%f, y=%f\n", getPosition(pPlayer).x, getPosition(pPlayer).y);
                         printf("PlatformPos: x=%f, y=%f\n", getPosition(platformArray.entities[0]).x, getPosition(platformArray.entities[0]).y);
                         printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(pPlayer)).x, getHitboxPosition(getHitbox(pPlayer)).y);
