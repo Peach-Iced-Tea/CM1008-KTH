@@ -106,7 +106,7 @@ int hitboxOrientation(Hitbox const *pObject, Hitbox const *pReference) {
     vectorAdd(&max2, pReference->position, pReference->halfSize);
     if (max1.y <= min2.y) { return OBJECT_IS_NORTH; }
     else if (min1.y >= max2.y) { return OBJECT_IS_SOUTH; }
-    else if (max1.x <= min2.x) { return OBJECT_IS_WEST;}
+    else if (max1.x <= min2.x) { return OBJECT_IS_WEST; }
     else { return OBJECT_IS_EAST; }
 }
 

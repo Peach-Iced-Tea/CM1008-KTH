@@ -1,15 +1,22 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <stdbool.h>
 
 #include "entity.h"
+#include "camera.h"
 
-// Keep GLOBAL_SCALER to a power of 2 (i.e. 1, 2, 4, 8...) for the most optimal scaling.
-#define GLOBAL_SCALER 2
+#define GLOBAL_SCALER 3.0f
 
 typedef struct renderWindow RenderWindow;
 
 RenderWindow *createRenderWindow(const char* pTitle, int w, int h);
+
+/*
+This function will set the game window of the given RenderWindow to fullscreen,
+unless it is already in fullscreen, then it will set it to Borderless instead.
+*/
+void toggleFullscreen(RenderWindow *pRenderWindow);
 
 /*
 Load a new SDL_Texture* using the pRenderer of the given RenderWindow.
@@ -28,12 +35,17 @@ void clearWindow(RenderWindow *pRenderWindow);
 /*
 Renders the given Entity on the screen if it is visible inside the camera dimensions.
 */
-void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity);
+void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity, Camera *pCamera);
 
 /*
 Display the current latest frame inside the buffer of the given RenderWindow.
 */
 void displayWindow(RenderWindow *pRenderWindow);
+
+/*
+Get the SDL_Renderer* from the given RenderWindow.
+*/
+SDL_Renderer *getRenderer(RenderWindow *pRenderWindow);
 
 /*
 Use this function to destroy the given RenderWindow pointer and free up memory.

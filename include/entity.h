@@ -16,7 +16,7 @@ Returns the SDL_Texture* of the given Entity.
 SDL_Texture *getTexture(Entity const *pEntity);
 
 /*
-Returns the SDL_Rect of the given Entity.
+Returns the SDL_FRect of the given Entity.
 */
 SDL_FRect getCurrentFrame(Entity const *pEntity);
 
