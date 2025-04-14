@@ -159,3 +159,25 @@ void destroyHitbox(Hitbox *pHitbox) {
 
     free(pHitbox);
 }
+
+
+//Fixa Får inte ligga här
+bool touching(Hitbox const *pHitbox, Vec2 const point) {
+    bool collisionDetected = true;
+    Vec2 min1;  
+    Vec2 max1;  
+    vectorSub(&min1, pHitbox->position, pHitbox->halfSize);
+    vectorAdd(&max1, pHitbox->position, pHitbox->halfSize);
+
+    if (max1.x < point.x || min1.x > point.x) {
+        collisionDetected = false;
+    }
+
+    if (collisionDetected) {
+        if (max1.y < point.y || min1.y > point.y) {
+            collisionDetected = false;
+        }
+    }
+
+    return collisionDetected;
+}

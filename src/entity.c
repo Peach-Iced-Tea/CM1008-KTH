@@ -108,6 +108,14 @@ Vec2 getAcceleration(Entity const *pEntity) {
     return pEntity->acceleration;
 }
 
+Vec2 getMidPoint(Entity const *pEntity) {
+    Vec2 midpoint;
+    midpoint.x = pEntity->currentFrame.x + pEntity->currentFrame.w * 0.5f;
+    midpoint.y = pEntity->currentFrame.y + pEntity->currentFrame.h * 0.5f;
+    return midpoint;
+}
+
+
 Hitbox *getHitbox(Entity const *pEntity) {
     return pEntity->pHitbox;
 }

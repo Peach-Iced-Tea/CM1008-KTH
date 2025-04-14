@@ -65,3 +65,11 @@ void destroyRenderWindow(RenderWindow *pRenderWindow) {
     SDL_DestroyWindow(pRenderWindow->pWindow);
     SDL_DestroyRenderer(pRenderWindow->pRenderer);
 }
+
+
+//Fixa får inte ligga här
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2) {
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 255, 255);
+    SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x *GLOBAL_SCALER, pos1.y * GLOBAL_SCALER, pos2.x * GLOBAL_SCALER, pos2.y * GLOBAL_SCALER);
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
+}

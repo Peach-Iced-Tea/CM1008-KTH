@@ -108,6 +108,20 @@ int main(int argv, char** args) {
 
     Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
 
+
+
+
+
+    Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, HITBOX_FULL_BLOCK);
+
+    int x, y;
+    Vec2 mouseVector = createVector(0.0f, 0.0f);
+    
+    bool clique = false;
+
+
+
+
     bool gameRunning = true;
 
     SDL_Event event;
@@ -129,6 +143,14 @@ int main(int argv, char** args) {
         deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
         lastTime = currentTime;
         accumulator += deltaTime;
+
+
+        SDL_GetMouseState(&x, &y);
+        mouseVector.x = (float)x/GLOBAL_SCALER;
+        mouseVector.y = (float)y/GLOBAL_SCALER;
+
+
+
 
         currentDirection.x = 0.0f;
         currentDirection.y = 0.0f;
@@ -189,6 +211,7 @@ int main(int argv, char** args) {
                     case SDL_SCANCODE_SPACE:
                         if (!godMode) { jump = true; }
                         break;
+                    
                 }
             }
             else if(event.type == SDL_KEYUP) {
@@ -218,7 +241,49 @@ int main(int argv, char** args) {
                         break;
                 }
             }
+            else if(event.type == SDL_MOUSEBUTTONDOWN){
+                switch (event.button.button)
+                {
+                case SDL_BUTTON_LEFT:
+                    clique = true;
+                    printf("Halleluja\n");
+                    printf("mousex: %f, mousey: %f\n", mouseVector.x, mouseVector.y);
+                    printf("midPointX: %f, midPointY: %f\n", getMidPoint(pPlayer).x, getMidPoint(pPlayer).y);
+                    printf("DistansMouse: %f\n",  vectorLength(getMidPoint(pPlayer), mouseVector));
+                    
+                    break;
+                
+                default:
+                    break;
+                }
+
+
+
+            }
+            else if(event.type == SDL_MOUSEBUTTONUP){
+                switch (event.button.button)
+                {
+                case SDL_BUTTON_LEFT:
+                    clique = false;
+                    break;
+                
+                default:
+                    break;
+                }
+            }
         }
+
+        if(vectorLength(mouseVector, getMidPoint(pPlayer)) < 240.0f) {
+            if(clique && touching(getHitbox(pMObject), mouseVector)) {
+                printf("TOUCHING!\n");
+            }
+        }
+
+
+
+
+
+
 
         if (up && godMode) { currentDirection.y = -1.0f; }
         if (down && godMode) { currentDirection.y += 1.0f; }
@@ -290,7 +355,11 @@ int main(int argv, char** args) {
         }
 
         clearWindow(pWindow);
+        if(clique == true) {
+            drawLine(pWindow, mouseVector, getMidPoint(pPlayer));
+        } 
         renderEntity(pWindow, pPlayer);
+        renderEntity(pWindow, pMObject);
         for(int i = 0; i < platformArray.size; i++) {
             renderEntity(pWindow, platformArray.entities[i]);
         }

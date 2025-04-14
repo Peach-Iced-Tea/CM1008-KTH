@@ -33,8 +33,8 @@ void vectorScale(Vec2 *vector, float scalar) {
 }
 
 float vectorLength(Vec2 const vector1, Vec2 const vector2) {
-    float x = pow(vector1.x+vector2.x, 2);
-    float y = pow(vector1.y+vector2.y, 2);
+    float x = powf(vector1.x-vector2.x, 2);
+    float y = powf(vector1.y-vector2.y, 2);
     return sqrtf(x+y);
 }
 

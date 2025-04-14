@@ -86,3 +86,7 @@ float rayVsRect(Hitbox const *pObject, Hitbox const *pReference);
 Use this function to destroy the given Hitbox pointer and free up memory.
 */
 void destroyHitbox(Hitbox *pHitbox);
+
+
+//Fixa får inte ligga här
+bool touching(Hitbox const *pHitbox, Vec2 const point);

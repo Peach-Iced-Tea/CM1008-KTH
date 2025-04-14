@@ -39,3 +39,7 @@ void displayWindow(RenderWindow *pRenderWindow);
 Use this function to destroy the given RenderWindow pointer and free up memory.
 */
 void destroyRenderWindow(RenderWindow *pRenderWindow);
+
+
+//Fixa får inte ligga här
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2);
