@@ -262,7 +262,7 @@ int main(int argv, char** args) {
 
             if(rotateRight && !rotateLeft) {
                 newAlpha = alpha + (((PI/180) * deltaTime) * ROTSPEED);
-                printf("newAlpa: %f\n", newAlpha);
+                //printf("newAlpa: %f\n", newAlpha);
 
 
                 newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
@@ -279,7 +279,7 @@ int main(int argv, char** args) {
             }
             if(rotateLeft && !rotateRight) {
                 newAlpha = alpha - (((PI/180) * deltaTime) * ROTSPEED);
-                printf("newAlpa: %f\n", newAlpha);
+                //printf("newAlpa: %f\n", newAlpha);
 
                 newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
                 newRotPos.y = (getMidPoint(pPlayer).y + (sinf(newAlpha) * radius));
