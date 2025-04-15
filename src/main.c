@@ -20,6 +20,8 @@ int main(int argv, char** args) {
     // laddar Entitys med pekare till texturer
     SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/player1.png");
 
+    Player *player = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
+
     // DynamicArray
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
     // Add blocks along the top of the screen.
@@ -51,10 +53,9 @@ int main(int argv, char** args) {
     addEntity(pPlatformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
     addEntity(pPlatformArray, width-32, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
-    Entity *pPlayer = createEntity(createVector(32.0f, 32.0f), pPlayerTexture, HITBOX_PLAYER);
     Entity *pReference = createEntity(createVector(128.0f, 32.0f), pPlayerTexture, HITBOX_NONE);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
-    cameraSetTargets(pCamera, pPlayer, pReference);
+    cameraSetTargets(pCamera, playerGetBody(player), pReference);
 
     SDL_Event event;
     Vec2 mousePosition;
@@ -64,13 +65,6 @@ int main(int argv, char** args) {
     float deltaTime = 0.0f;
     float accumulator = 0.0f;
 
-    int jumpTimer = 0;
-    bool up, down, left, right, jump;
-    up = down = left = right = jump = false;
-    bool godMode = false, applyVelocity = false;
-    float gravityModifier = 1.0f;   // Changes how much of GRAVITY_ACCELERATION that is applied to a player.
-    Vec2 currentDirection = createVector(0.0f, 0.0f);  // Contains the current direction the player should move.
-
     bool gameRunning = true;
     while(gameRunning) {
         Uint32 currentTime = SDL_GetTicks();
@@ -79,9 +73,7 @@ int main(int argv, char** args) {
         accumulator += deltaTime;
 
         mousePosition = cameraGetMousePosition(pCamera);
-        currentDirection.x = 0.0f;
-        currentDirection.y = 0.0f;
-        while(SDL_PollEvent(&event)) {  // Turn this into a function, maybe add a struct containing a Vec2 and some other variables.
+        /*while(SDL_PollEvent(&event)) {
             if(event.type == SDL_QUIT) {
                 gameRunning = false;
             }
@@ -90,79 +82,21 @@ int main(int argv, char** args) {
                     case SDL_SCANCODE_ESCAPE:
                         gameRunning = false;
                         break;
-                    case SDL_SCANCODE_W:
-                        if (godMode && !up) {
-                            up = true;
-                            applyVelocity = true;
-                        }
-                        break;
-                    case SDL_SCANCODE_S:
-                        if (godMode && !down) {
-                            down = true;
-                            applyVelocity = true;
-                        }
-                        break;
-                    case SDL_SCANCODE_A:
-                        if (!left) {
-                            left = true;
-                            applyVelocity = true;
-                        }
-                        break;
-                    case SDL_SCANCODE_D:
-                        if (!right) {
-                            right = true;
-                            applyVelocity = true;
-                        }
-                        break;
                     case SDL_SCANCODE_T:
                         printf("dT: %f\n", deltaTime);
                         printf("MousePos: x=%f, y=%f\n", mousePosition.x, mousePosition.y);
-                        printf("PlayerPos: x=%f, y=%f\n", getPosition(pPlayer).x, getPosition(pPlayer).y);
+                        //printf("PlayerPos: x=%f, y=%f\n", getPosition(pPlayer).x, getPosition(pPlayer).y);
                         //printf("PlatformPos: x=%f, y=%f\n", getPosition(platformArray.entities[0]).x, getPosition(platformArray.entities[0]).y);
-                        printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(pPlayer)).x, getHitboxPosition(getHitbox(pPlayer)).y);
+                        //printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(pPlayer)).x, getHitboxPosition(getHitbox(pPlayer)).y);
                         //printf("PlatformHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(platformArray.entities[0])).x, getHitboxPosition(getHitbox(platformArray.entities[0])).y);
                         printf("PlatformArray.size: %ld\n", arrayGetSize(pPlatformArray));
-                        printf("playerVelocity.x: %f\n", getVelocity(pPlayer).x);
-                        printf("playerVelocity.y: %f\n", getVelocity(pPlayer).y);
-                        break;
-                    case SDL_SCANCODE_G:
-                        if (!godMode) {
-                            applyVelocity = true;
-                            gravityModifier = 0.0f;
-                            godMode = true;
-                        }
-                        else {
-                            applyVelocity = true;
-                            godMode = false;
-                        }
-                        break;
-                    case SDL_SCANCODE_SPACE:
-                        if (!godMode) { jump = true; }
+                        //printf("playerVelocity.x: %f\n", getVelocity(pPlayer).x);
+                        //printf("playerVelocity.y: %f\n", getVelocity(pPlayer).y);
                         break;
                 }
             }
             else if(event.type == SDL_KEYUP) {
                 switch(event.key.keysym.scancode) {
-                    case SDL_SCANCODE_W:
-                        up = false;
-                        if (godMode) {
-                            applyVelocity = true;
-                        }
-                        break;
-                    case SDL_SCANCODE_S:
-                        down = false;
-                        if (godMode) {
-                            applyVelocity = true;
-                        }
-                        break;
-                    case SDL_SCANCODE_A:
-                        left = false;
-                        applyVelocity = true;
-                        break;
-                    case SDL_SCANCODE_D:
-                        right = false;
-                        applyVelocity = true;
-                        break;
                     case SDL_SCANCODE_RETURN:
                         toggleFullscreen(pWindow);
                         break;
@@ -181,85 +115,32 @@ int main(int argv, char** args) {
                     case SDL_SCANCODE_COMMA:
                         cameraSetZoom(pCamera, MAX_ZOOM_OUT);
                         break;
-                    case SDL_SCANCODE_SPACE:
-                        jump = false;
-                        break;
                 }
             }
-        }
+        }*/
 
-        if (up && godMode) { currentDirection.y = -1.0f; }
-        if (down && godMode) { currentDirection.y += 1.0f; }
-        if (left) { currentDirection.x = -1.0f; }
-        if (right) { currentDirection.x += 1.0f; }
-
-        if (jump && gravityModifier == 0.0f) {
-            jumpTimer = 10;
-            gravityModifier = 0.50f;
-            setVelocityY(pPlayer, -JUMP_VELOCITY);
-        }
-        else if (!jump && jumpTimer > 0) {
-            jumpTimer = 0;
-            gravityModifier = 1.0f;
-            if (getVelocity(pPlayer).y<=0.0f) { setVelocityY(pPlayer, 0.0f); }
-        }
-
-        if (applyVelocity) {
-            if (godMode) {
-                setVelocityY(pPlayer, currentDirection.y*MAX_PLAYER_VELOCITY*0.75f);
-            }
-
-            setVelocityX(pPlayer, currentDirection.x*(PLAYER_VELOCITY*!godMode + MAX_PLAYER_VELOCITY*0.75f*godMode));
-            setAccelerationX(pPlayer, currentDirection.x*PLAYER_ACCELERATION*!godMode);
-
-            applyVelocity = false;
-        }
+        gameRunning = playerHandleInput(player);
 
         if (accumulator >= timestep) {    
             // Add physics related calculations here...
-            if (jumpTimer > 0) {
-                jumpTimer--;
-                if (jumpTimer == 0) { gravityModifier = 1.0f; }
-            }
-
-            if (!godMode) {
-                if (gravityModifier == 0.0f) { setVelocityY(pPlayer, 0.0f); }
-                float gravity = GRAVITY_ACCELERATION*gravityModifier;
-                if (getAcceleration(pPlayer).y != gravity) {
-                    setAccelerationY(pPlayer, gravity);
-                }
-            }
-
-            updateVelocity(pPlayer, timestep);
+            playerUpdateState(player, timestep);
             accumulator -= timestep;
         }
 
-        updatePosition(pPlayer, deltaTime);
-        if (!godMode && jumpTimer == 0) { gravityModifier = 1.0f; }
+        playerUpdatePosition(player, deltaTime);
 
-        Hitbox *pPlayerHitbox = getHitbox(pPlayer);
+        bool collisionDetected = false;
         for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
-            Hitbox *pEntityHitbox = getHitbox(arrayGetObject(pPlatformArray, i));
-            if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
-                Vec2 correction = rectVsRect(pPlayerHitbox, pEntityHitbox);
-                collisionResponse(pPlayer, correction);
-                switch (hitboxOrientation(pPlayerHitbox, pEntityHitbox)) {
-                    case OBJECT_IS_NORTH:
-                        gravityModifier = 0.0f;
-                        break;
-                    case OBJECT_IS_SOUTH:
-                        break;
-                    case OBJECT_IS_WEST:
-                        break;
-                    case OBJECT_IS_EAST:
-                        break;
-                }
+            if (playerCheckCollision(player, arrayGetObject(pPlatformArray, i))) {
+                collisionDetected = true;
             }
         }
 
+        if (!collisionDetected) { playerSetFalling(player); }
+
         clearWindow(pWindow);
         cameraUpdate(pCamera);
-        renderEntity(pWindow, pPlayer, pCamera);
+        renderEntity(pWindow, playerGetBody(player), pCamera);
         renderEntity(pWindow, pReference, pCamera);
         for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             renderEntity(pWindow, arrayGetObject(pPlatformArray, i), pCamera);
@@ -268,7 +149,7 @@ int main(int argv, char** args) {
         displayWindow(pWindow);
     }
     
-    destroyEntity(pPlayer);
+    destroyPlayer(player);
     destroyEntity(pReference);
     destroyDynamicArray(pPlatformArray);
     SDL_DestroyTexture(pPlayerTexture);
