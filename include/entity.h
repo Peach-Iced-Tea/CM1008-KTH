@@ -52,6 +52,8 @@ Expects an acceleration for the y-axis.
 */
 bool setAccelerationY(Entity *pEntity, float a_y);
 
+void setPosition(Entity *pEntity, Vec2 const vector);
+
 /*
 Updates the current x and y coordinates of the given Entity.
 The values of velocity(x,y) gets added to the current position(x,y).

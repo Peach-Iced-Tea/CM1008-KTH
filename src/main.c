@@ -211,6 +211,7 @@ int main(int argv, char** args) {
                         printf("playerVelocity.y: %f\n", getVelocity(pPlayer).y);
                         printf("Distans_PlayerToObject: %f\n", vectorLength(getMidPoint(pPlayer), getMidPoint(pMObject)));
                         printf("Alpha: %f\n", alpha);
+                        printf("Cos(3PI/2): %f\nSin(3PI/2): %f\n", cosf(3*PI*0.5f), sinf(3*PI*0.5f));
                         break;
                     case SDL_SCANCODE_G:
                         if (!godMode) {
@@ -300,26 +301,28 @@ int main(int argv, char** args) {
         }
 
         if(vectorLength(mouseVector, getMidPoint(pPlayer)) < 240.0f) {
-            if(clique && touching(getHitbox(pMObject), mouseVector)) {
+            if(clique && touching(getHitbox(pMObject), mouseVector) && !rotation) {
                 //printf("TOUCHING!\n");
                 rotation = true; //låsa movement!
-                applyVelocity = true;  
+                applyVelocity = true;
             }
         }
         if(rotation){
             gravityModifier = 0.0f;
-
+            
             radius = vectorLength(getMidPoint(pPlayer), getMidPoint(pMObject));
             alpha = vectorGetAngle(getMidPoint(pPlayer), getMidPoint(pMObject));
 
             if(rotateRight && !rotateLeft) {
                 newAlpha = alpha - (((PI/180) * deltaTime) * ROTSPEED);
+                printf("newAlpa: %f\n", newAlpha);
 
 
                 newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
                 newRotPos.y = (getMidPoint(pPlayer).y + (sinf(newAlpha) * radius));
+                //setPosition(pMObject, newRotPos);
 
-                vectorSub(&rotateVelocity, getMidPoint(pMObject), newRotPos);
+                vectorSub(&rotateVelocity, newRotPos, getMidPoint(pMObject));
 
 
                 setVelocityX(pMObject, rotateVelocity.x);
@@ -329,11 +332,13 @@ int main(int argv, char** args) {
             }
             if(rotateLeft && !rotateRight) {
                 newAlpha = alpha + (((PI/180) * deltaTime) * ROTSPEED);
+                printf("newAlpa: %f\n", newAlpha);
 
                 newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
                 newRotPos.y = (getMidPoint(pPlayer).y + (sinf(newAlpha) * radius));
+                //setPosition(pMObject, newRotPos);
 
-                vectorSub(&rotateVelocity, getMidPoint(pMObject), newRotPos);
+                vectorSub(&rotateVelocity, newRotPos, getMidPoint(pMObject));
 
 
                 setVelocityX(pMObject, rotateVelocity.x);

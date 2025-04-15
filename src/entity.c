@@ -60,6 +60,13 @@ bool setAccelerationY(Entity *pEntity, float a_y) {
     return true;
 }
 
+void setPosition(Entity *pEntity, Vec2 const vector) {
+    pEntity->currentFrame.x = vector.x;
+    pEntity->currentFrame.y = vector.y;
+    hitboxPositionAdd(pEntity->pHitbox, vector);
+    return;
+}
+
 void updatePosition(Entity *pEntity, float const deltaTime) {
     Vec2 velocity = createVector(pEntity->velocity.x, pEntity->velocity.y);
     vectorScale(&velocity, deltaTime);
