@@ -11,15 +11,14 @@ else
 	DELCMD = rm
 endif
 
-HEADERFILES = $(INCDIR)/renderWindow.h $(INCDIR)/entity.h $(INCDIR)/vmath.h $(INCDIR)/physics.h $(INCDIR)/camera.h
 CFLAGS = -g $(INCLUDE) -c
 TARGET = ToTheTop.exe
 
 
-$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o
-	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o $(LDFLAGS)
+$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o
+	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o $(LDFLAGS)
 
-main.o: $(SRCDIR)/main.c $(HEADERFILES)
+main.o: $(SRCDIR)/main.c $(INCDIR)/main.h
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c
 
 renderWindow.o: $(SRCDIR)/renderWindow.c $(INCDIR)/renderWindow.h
@@ -36,6 +35,9 @@ physics.o: $(SRCDIR)/physics.c $(INCDIR)/physics.h
 
 camera.o: $(SRCDIR)/camera.c $(INCDIR)/camera.h
 	$(CC) $(CFLAGS) $(SRCDIR)/camera.c
+
+utils.o: $(SRCDIR)/utils.c $(INCDIR)/utils.h
+	$(CC) $(CFLAGS) $(SRCDIR)/utils.c
 
 
 clean:
