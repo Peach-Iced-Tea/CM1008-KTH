@@ -1,63 +1,10 @@
-#include <SDL2/SDL.h>
-#include <stdio.h>
-#include <stdbool.h>
-
-#include "renderWindow.h" 
-#include "entity.h"
-#include "vmath.h"
-#include "physics.h"
+#include "main.h"
 
 // Change GLOBAL_SCALER inside renderWindow.h to change the scaling of the window.
 #define WINDOW_W 1920
 #define WINDOW_H 1080
 
 #define ROTSPEED 100
-
-// DynamicArray     Turn these dynamicArray related functions into its own .c and .h files.
-struct entityArray {
-    Entity **entities;
-    size_t size;
-    size_t capacity;
-};typedef struct entityArray EntityArray;
-
-EntityArray initEntityArray() {
-    EntityArray array;
-
-    array.entities = malloc(4 * sizeof(Entity*));
-    if(!array.entities) {
-        printf("Error failed allocation of memory for array\n");
-        exit(1);
-    }
-    array.size = 0;
-    array.capacity = 4;
-    return array;
-}
-
-void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture, int hitboxType) {
-    if(array->size == array->capacity) {
-        array->capacity *=2;
-        array->entities = realloc(array->entities, array->capacity * sizeof(Entity*));
-        if(!array->entities) {
-            printf("Error failed to reallocate memory for array\n");
-            return;
-        }
-    }
-
-    array->entities[array->size] = createEntity(createVector(x, y), texture, hitboxType);
-    array->size++;
-}
-
-void destroyEntityArray(EntityArray *array) {
-    for (size_t i = 0; i < array->size; i++) {
-        destroyEntity(array->entities[i]);
-    }
-
-    free(array->entities);
-    array->entities = NULL;
-    array->size = 0;
-    array->capacity = 0;
-}
-// End of DynamicArray
 
 int main(int argv, char** args) {
     if(SDL_Init(SDL_INIT_VIDEO)!=0) {
@@ -78,7 +25,7 @@ int main(int argv, char** args) {
     SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/player1.png");
 
     // DynamicArray
-    EntityArray platformArray = initEntityArray();
+    DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
     // Add blocks along the top of the screen.
     //for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
     //    addEntity(&platformArray, i, 0.0f, grassTexture, HITBOX_FULL_BLOCK);
@@ -91,22 +38,22 @@ int main(int argv, char** args) {
 
     // Add blocks along the bottom of the screen.
     for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
-        addEntity(&platformArray, i, (WINDOW_H-32*GLOBAL_SCALER)/GLOBAL_SCALER, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(pPlatformArray, i, (WINDOW_H-32*GLOBAL_SCALER)/GLOBAL_SCALER, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
     for (int i = 0; i < 6*32; i+=32) {
-        addEntity(&platformArray, i, 96, pGrassTexture, HITBOX_FULL_BLOCK);
-        addEntity(&platformArray, i, 128, pGrassTexture, HITBOX_FULL_BLOCK);
-        addEntity(&platformArray, i, 160, pGrassTexture, HITBOX_FULL_BLOCK);
-        addEntity(&platformArray, i+6*32, 192, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(pPlatformArray, i, 96, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(pPlatformArray, i, 128, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(pPlatformArray, i, 160, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(pPlatformArray, i+6*32, 192, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
     for (int i = 0; i < 4*32; i+=32) {
-        addEntity(&platformArray, i+7*32, 96, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(pPlatformArray, i+7*32, 96, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
-    addEntity(&platformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
-    addEntity(&platformArray, (WINDOW_W-32*GLOBAL_SCALER)/GLOBAL_SCALER, 32, pGrassTexture, HITBOX_FULL_BLOCK);
+    addEntity(pPlatformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
+    addEntity(pPlatformArray, (WINDOW_W-32*GLOBAL_SCALER)/GLOBAL_SCALER, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
     Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
 
@@ -203,10 +150,10 @@ int main(int argv, char** args) {
                     case SDL_SCANCODE_T:
                         printf("dT: %f\n", deltaTime);
                         printf("PlayerPos: x=%f, y=%f\n", getPosition(pPlayer).x, getPosition(pPlayer).y);
-                        printf("PlatformPos: x=%f, y=%f\n", getPosition(platformArray.entities[0]).x, getPosition(platformArray.entities[0]).y);
+                        //printf("PlatformPos: x=%f, y=%f\n", getPosition(platformArray.entities[0]).x, getPosition(platformArray.entities[0]).y);
                         printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(pPlayer)).x , getHitboxPosition(getHitbox(pPlayer)).y);
-                        printf("PlatformHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(platformArray.entities[0])).x, getHitboxPosition(getHitbox(platformArray.entities[0])).y);
-                        printf("PlatformArray.size: %ld\n", platformArray.size);
+                        //printf("PlatformHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(platformArray.entities[0])).x, getHitboxPosition(getHitbox(platformArray.entities[0])).y);
+                        printf("PlatformArray.size: %ld\n", arrayGetSize(pPlatformArray));
                         printf("playerVelocity.x: %f\n", getVelocity(pPlayer).x);
                         printf("playerVelocity.y: %f\n", getVelocity(pPlayer).y);
                         printf("Distans_PlayerToObject: %f\n", vectorLength(getMidPoint(pPlayer), getMidPoint(pMObject)));
@@ -314,7 +261,7 @@ int main(int argv, char** args) {
             alpha = vectorGetAngle(getMidPoint(pPlayer), getMidPoint(pMObject));
 
             if(rotateRight && !rotateLeft) {
-                newAlpha = alpha - (((PI/180) * deltaTime) * ROTSPEED);
+                newAlpha = alpha + (((PI/180) * deltaTime) * ROTSPEED);
                 printf("newAlpa: %f\n", newAlpha);
 
 
@@ -331,7 +278,7 @@ int main(int argv, char** args) {
                 updatePosition(pMObject, 1.0f);
             }
             if(rotateLeft && !rotateRight) {
-                newAlpha = alpha + (((PI/180) * deltaTime) * ROTSPEED);
+                newAlpha = alpha - (((PI/180) * deltaTime) * ROTSPEED);
                 printf("newAlpa: %f\n", newAlpha);
 
                 newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
@@ -408,8 +355,8 @@ int main(int argv, char** args) {
         if (!godMode && jumpTimer == 0) { gravityModifier = 1.0f; }
 
         Hitbox *pPlayerHitbox = getHitbox(pPlayer);
-        for(int i = 0; i < platformArray.size; i++) {
-            Hitbox *pEntityHitbox = getHitbox(platformArray.entities[i]);
+        for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
+            Hitbox *pEntityHitbox = getHitbox(arrayGetObject(pPlatformArray, i));
             if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
                 Vec2 correction = rectVsRect(pPlayerHitbox, pEntityHitbox);
                 collisionResponse(pPlayer, correction);
@@ -433,15 +380,15 @@ int main(int argv, char** args) {
         } 
         renderEntity(pWindow, pPlayer);
         renderEntity(pWindow, pMObject);
-        for(int i = 0; i < platformArray.size; i++) {
-            renderEntity(pWindow, platformArray.entities[i]);
+        for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
+            renderEntity(pWindow, arrayGetObject(pPlatformArray, i));
         }
         
         displayWindow(pWindow);
     }
     
     destroyEntity(pPlayer);
-    destroyEntityArray(&platformArray);
+    destroyDynamicArray(pPlatformArray);
     SDL_DestroyTexture(pPlayerTexture);
     SDL_DestroyTexture(pGrassTexture);
     destroyRenderWindow(pWindow);
