@@ -6,10 +6,11 @@
 #include "entity.h"
 #include "vmath.h"
 #include "physics.h"
+#include "client.h"
 
 // Change GLOBAL_SCALER inside renderWindow.h to change the scaling of the window.
-#define WINDOW_W 1920
-#define WINDOW_H 1080
+#define WINDOW_W 1280
+#define WINDOW_H 720
 
 // DynamicArray     Turn these dynamicArray related functions into its own .c and .h files.
 struct entityArray {
@@ -130,27 +131,28 @@ int main(int argv, char** args) {
 
     while(gameRunning) {
         switch(gameState){
-            case 0:
+            case GAME_CONNECTING:
                 while(establishConnection){
                     switch(connectionState){
-                        case 0:
+                        case CONNECTION_SETUP:
+                            gameMenu(pWindow,&event,&gameState);
                             //host/join
-                            connectionState=1;
+                            connectionState=CONNECTION_SERVER;
                             break;
-                        case 1:
+                        case CONNECTION_SERVER:
                             //koppla upp
-                            connectionState=2;
+                            connectionState=CONNECTION_WAIT;
                             break;
-                        case 2:
+                        case CONNECTION_WAIT:
                             //vänta på andra spelare
                             establishConnection=false;
-                            connectionState=0;
+                            connectionState=CONNECTION_SETUP;
                             break;
                     }
                 }
-                gameState=1;
+                gameState=GAME_RUNNING;
                 break;
-            case 1: 
+            case GAME_RUNNING: 
 
 
                 Uint32 currentTime = SDL_GetTicks();
@@ -325,7 +327,7 @@ int main(int argv, char** args) {
                 
                 displayWindow(pWindow);
             break;
-        case 2:
+        case GAME_CLOSING:
             break;
         }
     }

@@ -6,6 +6,7 @@
 
 // Keep GLOBAL_SCALER to a power of 2 (i.e. 1, 2, 4, 8...) for the most optimal scaling.
 #define GLOBAL_SCALER 2
+#define MENU_SCALER 8
 
 typedef struct renderWindow RenderWindow;
 
@@ -29,6 +30,11 @@ void clearWindow(RenderWindow *pRenderWindow);
 Renders the given Entity on the screen if it is visible inside the camera dimensions.
 */
 void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity);
+
+/*
+Ugga viktors funktion
+*/
+void renderMenu(RenderWindow *pRenderWindow, Entity *pEntity);
 
 /*
 Display the current latest frame inside the buffer of the given RenderWindow.

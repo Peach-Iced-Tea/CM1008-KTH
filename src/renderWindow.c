@@ -37,6 +37,24 @@ void clearWindow(RenderWindow *pRenderWindow) {
     SDL_RenderClear(pRenderWindow->pRenderer);
 }
 
+void renderMenu(RenderWindow *pRenderWindow, Entity *pEntity) {
+    SDL_FRect entity = getCurrentFrame(pEntity);
+
+    SDL_FRect dst;
+    dst.w = entity.w * MENU_SCALER;
+    dst.h = entity.h * MENU_SCALER;
+    dst.x = entity.x * MENU_SCALER;
+    dst.y = entity.y * MENU_SCALER;
+
+    SDL_FRect src;
+    src.w = entity.w;
+    src.h = entity.h;
+    src.x = entity.x;
+    src.y = entity.y;
+    
+    SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), NULL, &dst);
+}
+
 void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity) {
     SDL_FRect entity = getCurrentFrame(pEntity);
 
