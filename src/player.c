@@ -3,10 +3,6 @@
 #define JUMP_TIMER 10
 
 typedef enum {
-    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING
-} PlayerState;
-
-typedef enum {
     NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED
 } Direction;
 
@@ -37,10 +33,10 @@ bool playerHandleInput(Player *pPlayer) {
     bool gameRunning = true;
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
-        if(event.type == SDL_QUIT) {
+        if (event.type == SDL_QUIT) {
             gameRunning = false;
         }
-        if(event.type == SDL_KEYDOWN) {
+        else if (event.type == SDL_KEYDOWN) {
             switch(event.key.keysym.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     gameRunning = false;
@@ -103,7 +99,7 @@ bool playerHandleInput(Player *pPlayer) {
                     break;
             }
         }
-        else if(event.type == SDL_KEYUP) {
+        else if (event.type == SDL_KEYUP) {
             switch(event.key.keysym.scancode) {
                 case SDL_SCANCODE_W:
                     switch (pPlayer->directionY) {
@@ -215,12 +211,12 @@ void standardCalculations(Player *pPlayer) {
 
 void flyingCalculations(Player *pPlayer) {
     switch (pPlayer->directionX) {
-        case UP:
+        case LEFT:
             if (getVelocity(pPlayer->pBody).x >= 0.0f) {
                 setVelocityX(pPlayer->pBody, -MAX_PLAYER_VELOCITY*0.75f);
             }
             break;
-        case DOWN:
+        case RIGHT:
             if (getVelocity(pPlayer->pBody).x <= 0.0f) {
                 setVelocityX(pPlayer->pBody, MAX_PLAYER_VELOCITY*0.75f);
             }
@@ -283,9 +279,9 @@ bool playerCheckCollision(Player *pPlayer, Entity *pEntity) {
         switch (hitboxOrientation(pPlayerHitbox, pEntityHitbox)) {
             case OBJECT_IS_NORTH:
                 switch (pPlayer->state) {
-                    case FLYING:
-                        break;
                     case JUMPING:
+                        break;
+                    case FLYING:
                         break;
                     default:
                         pPlayer->state = IDLE;
@@ -305,12 +301,26 @@ bool playerCheckCollision(Player *pPlayer, Entity *pEntity) {
     return collisionDetected;
 }
 
-void playerSetFalling(Player *pPlayer) {
-    if (pPlayer->state != JUMPING) {
-        pPlayer->state = FALLING;
+bool playerSetState(Player *pPlayer, int newState) {
+    bool stateWasChanged = false;
+    switch (newState) {
+        case FALLING:
+            switch (pPlayer->state) {
+                case JUMPING:
+                    break;
+                case FLYING:
+                    break;
+                default:
+                    pPlayer->state = FALLING;
+                    stateWasChanged = true;
+                    break;
+            }
+            break;
+        default:
+            break;
     }
 
-    return;
+    return stateWasChanged;
 }
 
 Entity *playerGetBody(Player const *pPlayer) {

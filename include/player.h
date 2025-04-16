@@ -5,6 +5,10 @@
 #include "entity.h"
 #include "vmath.h"
 
+typedef enum {
+    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING
+} PlayerState;
+
 typedef struct player Player;
 
 Player *createPlayer(Vec2 position, SDL_Texture *pTexture);
@@ -17,7 +21,7 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime);
 
 bool playerCheckCollision(Player *pPlayer, Entity *pEntity);
 
-void playerSetFalling(Player *pPlayer);
+bool playerSetState(Player *pPlayer, int newState);
 
 Entity *playerGetBody(Player const *pPlayer);
 

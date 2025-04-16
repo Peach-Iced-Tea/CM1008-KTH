@@ -20,19 +20,10 @@ int main(int argv, char** args) {
     // laddar Entitys med pekare till texturer
     SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/player1.png");
 
-    Player *player = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
+    Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
 
     // DynamicArray
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
-    // Add blocks along the top of the screen.
-    //for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
-    //    addEntity(&platformArray, i, 0.0f, grassTexture, HITBOX_FULL_BLOCK);
-    //}
-
-    // Add blocks along the middle of the y-axis.
-    /*for(int i = 0; i < (WINDOW_W/(32*GLOBAL_SCALER) * 32); i+=32) {
-        addEntity(&platformArray, i, (WINDOW_H*0.5f-32*GLOBAL_SCALER*0.5f)/GLOBAL_SCALER, grassTexture, HITBOX_FULL_BLOCK);
-    }*/
 
     // Add blocks along the bottom of the screen.
     for(int i = 0; i < width; i+=32) {
@@ -55,7 +46,7 @@ int main(int argv, char** args) {
 
     Entity *pReference = createEntity(createVector(128.0f, 32.0f), pPlayerTexture, HITBOX_NONE);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
-    cameraSetTargets(pCamera, playerGetBody(player), pReference);
+    cameraSetTargets(pCamera, playerGetBody(pPlayer), pReference);
 
     SDL_Event event;
     Vec2 mousePosition;
@@ -119,28 +110,28 @@ int main(int argv, char** args) {
             }
         }*/
 
-        gameRunning = playerHandleInput(player);
+        gameRunning = playerHandleInput(pPlayer);
 
         if (accumulator >= timestep) {    
             // Add physics related calculations here...
-            playerUpdateState(player, timestep);
+            playerUpdateState(pPlayer, timestep);
             accumulator -= timestep;
         }
 
-        playerUpdatePosition(player, deltaTime);
+        playerUpdatePosition(pPlayer, deltaTime);
 
         bool collisionDetected = false;
         for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
-            if (playerCheckCollision(player, arrayGetObject(pPlatformArray, i))) {
+            if (playerCheckCollision(pPlayer, arrayGetObject(pPlatformArray, i))) {
                 collisionDetected = true;
             }
         }
 
-        if (!collisionDetected) { playerSetFalling(player); }
+        if (!collisionDetected) { playerSetState(pPlayer, FALLING); }
 
         clearWindow(pWindow);
         cameraUpdate(pCamera);
-        renderEntity(pWindow, playerGetBody(player), pCamera);
+        renderEntity(pWindow, playerGetBody(pPlayer), pCamera);
         renderEntity(pWindow, pReference, pCamera);
         for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             renderEntity(pWindow, arrayGetObject(pPlatformArray, i), pCamera);
@@ -149,7 +140,7 @@ int main(int argv, char** args) {
         displayWindow(pWindow);
     }
     
-    destroyPlayer(player);
+    destroyPlayer(pPlayer);
     destroyEntity(pReference);
     destroyDynamicArray(pPlatformArray);
     SDL_DestroyTexture(pPlayerTexture);
