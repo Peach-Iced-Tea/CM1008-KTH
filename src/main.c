@@ -55,7 +55,10 @@ int main(int argv, char** args) {
     addEntity(pPlatformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
     addEntity(pPlatformArray, (WINDOW_W-32*GLOBAL_SCALER)/GLOBAL_SCALER, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
-    Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
+    //Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
+
+    Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
+
 
 
 //--------------------------------------------------------------------------------------------------------------------//
@@ -63,10 +66,13 @@ int main(int argv, char** args) {
     //RotateObject
     Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, HITBOX_FULL_BLOCK);
 
+
     int x, y;
     Vec2 mouseVector = createVector(0.0f, 0.0f);
-    
     bool clique = false;
+
+
+
     bool rotation = false;
     float radius = 0.0f;
 
@@ -109,9 +115,9 @@ int main(int argv, char** args) {
         mouseVector.x = (float)x/GLOBAL_SCALER;
         mouseVector.y = (float)y/GLOBAL_SCALER;
 
+        gameRunning = playerHandleInput(pPlayer);
 
-
-
+/*
         currentDirection.x = 0.0f;
         currentDirection.y = 0.0f;
         while(SDL_PollEvent(&event)) {  // Turn this into a function, maybe add a struct containing a Vec2* and some other variables.
@@ -246,14 +252,27 @@ int main(int argv, char** args) {
                 }
             }
         }
+*/
+       
 
-        if(vectorLength(mouseVector, getMidPoint(pPlayer)) < 240.0f) {
+    
+        if (playerGetMouseState(pPlayer)) {
+            if (vectorLength(mouseVector, getMidPoint(playerGetBody(pPlayer))) < 240.0f) {
+                if (touching(getHitbox(pMObject), mouseVector)) {
+                    playerSetState(pPlayer, ROTATING); //LOGIK I PLAYER.C 
+                }
+            }
+        }
+
+
+
+       /*  if(vectorLength(mouseVector, getMidPoint(pPlayer)) < 240.0f) {
             if(clique && touching(getHitbox(pMObject), mouseVector) && !rotation) {
                 //printf("TOUCHING!\n");
                 rotation = true; //låsa movement!
                 applyVelocity = true;
             }
-        }
+        } */
         if(rotation){
             gravityModifier = 0.0f;
             
@@ -265,7 +284,7 @@ int main(int argv, char** args) {
                 //printf("newAlpa: %f\n", newAlpha);
 
 
-                newRotPos.x = (getMidPoint(pPlayer).x + (cosf(newAlpha) * radius));
+                newRotPos.x = (getMidPoint(playerGetBody(pPlayer)).x + (cosf(newAlpha) * radius));
                 newRotPos.y = (getMidPoint(pPlayer).y + (sinf(newAlpha) * radius));
                 //setPosition(pMObject, newRotPos);
 
