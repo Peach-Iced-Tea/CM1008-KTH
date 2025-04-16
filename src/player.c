@@ -3,18 +3,19 @@
 #define JUMP_TIMER 10
 
 typedef enum {
-    IDLE, JUMPING, FALLING, ROTATING, FLYING
-} State;
+    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING
+} PlayerState;
 
 typedef enum {
-    LEFT, RIGHT, NEUTRAL, BLOCKED
+    NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED
 } Direction;
 
 struct player {
     Entity *pBody;
     Entity *pTongue;
-    State state;
-    Direction direction;
+    PlayerState state;
+    Direction directionX;
+    Direction directionY;
     float gravityModifier;
     int jumpTimer;
 };
@@ -24,7 +25,8 @@ Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
     pPlayer->pBody = createEntity(position, pTexture, HITBOX_PLAYER);
     pPlayer->pTongue = NULL;
     pPlayer->state = FALLING;
-    pPlayer->direction = NEUTRAL;
+    pPlayer->directionX = NEUTRAL;
+    pPlayer->directionY = NEUTRAL;
     pPlayer->gravityModifier = 0.0f;
     pPlayer->jumpTimer = 0;
 
@@ -44,27 +46,47 @@ bool playerHandleInput(Player *pPlayer) {
                     gameRunning = false;
                     break;
                 case SDL_SCANCODE_W:
-                    //pPlayer->velocity.y -= MAX_PLAYER_VELOCITY*0.75f;
+                    switch (pPlayer->directionY) {
+                        case NEUTRAL:
+                            pPlayer->directionY = UP;
+                            break;
+                        case DOWN:
+                            pPlayer->directionY = BLOCKED;
+                            break;
+                    }
                     break;
                 case SDL_SCANCODE_S:
-                    //pPlayer->velocity.y += MAX_PLAYER_VELOCITY*0.75f;
+                    switch (pPlayer->directionY) {
+                        case NEUTRAL:
+                            pPlayer->directionY = DOWN;
+                            break;
+                        case UP:
+                            pPlayer->directionY = BLOCKED;
+                            break;
+                    }
                     break;
                 case SDL_SCANCODE_A:
-                    switch (pPlayer->direction) {
+                    switch (pPlayer->directionX) {
                         case NEUTRAL:
-                            pPlayer->direction = LEFT;
+                            pPlayer->directionX = LEFT;
                             break;
                         case RIGHT:
-                            pPlayer->direction = BLOCKED;
+                            pPlayer->directionX = BLOCKED;
                             break;
                     }
                     break;
                 case SDL_SCANCODE_D:
-                    if (pPlayer->direction == NEUTRAL) { pPlayer->direction = RIGHT; }
-                    else if (pPlayer->direction == LEFT) { pPlayer->direction = BLOCKED; }
+                    switch (pPlayer->directionX) {
+                        case NEUTRAL:
+                            pPlayer->directionX = RIGHT;
+                            break;
+                        case LEFT:
+                            pPlayer->directionX = BLOCKED;
+                            break;
+                    }
                     break;
                 case SDL_SCANCODE_G:
-                    switch (pPlayer->direction) {
+                    switch (pPlayer->state) {
                         case FLYING:
                             pPlayer->state = FALLING;
                             break;
@@ -84,18 +106,44 @@ bool playerHandleInput(Player *pPlayer) {
         else if(event.type == SDL_KEYUP) {
             switch(event.key.keysym.scancode) {
                 case SDL_SCANCODE_W:
-                    
+                    switch (pPlayer->directionY) {
+                        case BLOCKED:
+                            pPlayer->directionY = DOWN;
+                            break;
+                        case UP:
+                            pPlayer->directionY = NEUTRAL;
+                            break;
+                    }
                     break;
                 case SDL_SCANCODE_S:
-                    
+                    switch (pPlayer->directionY) {
+                        case BLOCKED:
+                            pPlayer->directionY = UP;
+                            break;
+                        case DOWN:
+                            pPlayer->directionY = NEUTRAL;
+                            break;
+                    }
                     break;
                 case SDL_SCANCODE_A:
-                    if (pPlayer->direction == BLOCKED) { pPlayer->direction = RIGHT; }
-                    else if (pPlayer->direction == LEFT) { pPlayer->direction = NEUTRAL; }
+                    switch (pPlayer->directionX) {
+                        case BLOCKED:
+                            pPlayer->directionX = RIGHT;
+                            break;
+                        case LEFT:
+                            pPlayer->directionX = NEUTRAL;
+                            break;
+                    }
                     break;
                 case SDL_SCANCODE_D:
-                    if (pPlayer->direction == BLOCKED) { pPlayer->direction = LEFT; }
-                    else if (pPlayer->direction == RIGHT) { pPlayer->direction = NEUTRAL; }
+                    switch (pPlayer->directionX) {
+                        case BLOCKED:
+                            pPlayer->directionX = LEFT;
+                            break;
+                        case RIGHT:
+                            pPlayer->directionX = NEUTRAL;
+                            break;
+                    }
                     break;
                 case SDL_SCANCODE_SPACE:
                     pPlayer->state = FALLING;
@@ -110,6 +158,7 @@ bool playerHandleInput(Player *pPlayer) {
 void playerUpdateState(Player *pPlayer, float deltaTime) {
     switch (pPlayer->state) {
         case IDLE:
+        case RUNNING:
             pPlayer->gravityModifier = 0.0f;
             setVelocityY(pPlayer->pBody, 0.0f);
             break;
@@ -141,7 +190,7 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
 }
 
 void standardCalculations(Player *pPlayer) {
-    switch (pPlayer->direction) {
+    switch (pPlayer->directionX) {
         case LEFT:
             if (getVelocity(pPlayer->pBody).x >= 0.0f) {
                 setVelocityX(pPlayer->pBody, -PLAYER_VELOCITY);
@@ -164,15 +213,60 @@ void standardCalculations(Player *pPlayer) {
     return;
 }
 
+void flyingCalculations(Player *pPlayer) {
+    switch (pPlayer->directionX) {
+        case UP:
+            if (getVelocity(pPlayer->pBody).x >= 0.0f) {
+                setVelocityX(pPlayer->pBody, -MAX_PLAYER_VELOCITY*0.75f);
+            }
+            break;
+        case DOWN:
+            if (getVelocity(pPlayer->pBody).x <= 0.0f) {
+                setVelocityX(pPlayer->pBody, MAX_PLAYER_VELOCITY*0.75f);
+            }
+            break;
+        case NEUTRAL:
+        case BLOCKED:
+            setVelocityX(pPlayer->pBody, 0.0f);
+            setAccelerationX(pPlayer->pBody, 0.0f);
+            break;
+    }
+
+    switch (pPlayer->directionY) {
+        case UP:
+            if (getVelocity(pPlayer->pBody).y >= 0.0f) {
+                setVelocityY(pPlayer->pBody, -MAX_PLAYER_VELOCITY*0.75f);
+            }
+            break;
+        case DOWN:
+            if (getVelocity(pPlayer->pBody).y <= 0.0f) {
+                setVelocityY(pPlayer->pBody, MAX_PLAYER_VELOCITY*0.75f);
+            }
+            break;
+        case NEUTRAL:
+        case BLOCKED:
+            setVelocityY(pPlayer->pBody, 0.0f);
+            setAccelerationY(pPlayer->pBody, 0.0f);
+            break;
+    }
+
+    return;
+}
+
 void playerUpdatePosition(Player *pPlayer, float deltaTime) {
     switch (pPlayer->state) {
         case FALLING:
         case JUMPING:
         case IDLE:
+        case RUNNING:
             standardCalculations(pPlayer);
             updatePosition(pPlayer->pBody, deltaTime);
             break;
         case ROTATING:
+            break;
+        case FLYING:
+            flyingCalculations(pPlayer);
+            updatePosition(pPlayer->pBody, deltaTime);
             break;
     }
 
@@ -188,7 +282,15 @@ bool playerCheckCollision(Player *pPlayer, Entity *pEntity) {
         collisionResponse(pPlayer->pBody, correction);
         switch (hitboxOrientation(pPlayerHitbox, pEntityHitbox)) {
             case OBJECT_IS_NORTH:
-                if (pPlayer->state != JUMPING) { pPlayer->state = IDLE; }
+                switch (pPlayer->state) {
+                    case FLYING:
+                        break;
+                    case JUMPING:
+                        break;
+                    default:
+                        pPlayer->state = IDLE;
+                        break;
+                }
                 collisionDetected = true;
                 break;
             case OBJECT_IS_SOUTH:
