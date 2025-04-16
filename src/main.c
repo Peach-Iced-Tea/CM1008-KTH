@@ -9,25 +9,24 @@ int main(int argv, char** args) {
     // Get information about the main display, such as pixel width and pixel height.
     SDL_DisplayMode mainDisplay;
     SDL_GetDesktopDisplayMode(0, &mainDisplay);
-    int width = mainDisplay.w;
-    int height = mainDisplay.h;
 
-    Camera *pCamera = createCamera(width, height, mainDisplay.refresh_rate, CAMERA_SCALING);
     // rendera ett fönster
-    RenderWindow *pWindow = createRenderWindow("ToTheTop", width, height);
+    RenderWindow *pWindow = createRenderWindow("ToTheTop", mainDisplay.w, mainDisplay.h);
     // rendera in Texturer för sig
     SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
     // laddar Entitys med pekare till texturer
     SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/player1.png");
 
     Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
+    Player *pReference = createPlayer(createVector(128.0f, 32.0f), pPlayerTexture);
 
     // DynamicArray
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
 
     // Add blocks along the bottom of the screen.
-    for(int i = 0; i < width; i+=32) {
-        addEntity(pPlatformArray, i, height-32, pGrassTexture, HITBOX_FULL_BLOCK);
+    int windowHeight = (float)MAX_LOGICAL_WIDTH * mainDisplay.h/mainDisplay.w;
+    for(int i = 0; i < MAX_LOGICAL_WIDTH; i+=32) {
+        addEntity(pPlatformArray, i, windowHeight-32, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
     for (int i = 0; i < 6*32; i+=32) {
@@ -42,11 +41,11 @@ int main(int argv, char** args) {
     }
 
     addEntity(pPlatformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
-    addEntity(pPlatformArray, width-32, 32, pGrassTexture, HITBOX_FULL_BLOCK);
+    addEntity(pPlatformArray, MAX_LOGICAL_WIDTH-32, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
-    Entity *pReference = createEntity(createVector(128.0f, 32.0f), pPlayerTexture, HITBOX_NONE);
+    Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, CAMERA_SCALING);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
-    cameraSetTargets(pCamera, playerGetBody(pPlayer), pReference);
+    cameraSetTargets(pCamera, playerGetBody(pPlayer), playerGetBody(pReference));
 
     SDL_Event event;
     Vec2 mousePosition;
@@ -64,52 +63,6 @@ int main(int argv, char** args) {
         accumulator += deltaTime;
 
         mousePosition = cameraGetMousePosition(pCamera);
-        /*while(SDL_PollEvent(&event)) {
-            if(event.type == SDL_QUIT) {
-                gameRunning = false;
-            }
-            else if(event.type == SDL_KEYDOWN) {
-                switch(event.key.keysym.scancode) {
-                    case SDL_SCANCODE_ESCAPE:
-                        gameRunning = false;
-                        break;
-                    case SDL_SCANCODE_T:
-                        printf("dT: %f\n", deltaTime);
-                        printf("MousePos: x=%f, y=%f\n", mousePosition.x, mousePosition.y);
-                        //printf("PlayerPos: x=%f, y=%f\n", getPosition(pPlayer).x, getPosition(pPlayer).y);
-                        //printf("PlatformPos: x=%f, y=%f\n", getPosition(platformArray.entities[0]).x, getPosition(platformArray.entities[0]).y);
-                        //printf("playerHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(pPlayer)).x, getHitboxPosition(getHitbox(pPlayer)).y);
-                        //printf("PlatformHbox: x=%f, y=%f\n", getHitboxPosition(getHitbox(platformArray.entities[0])).x, getHitboxPosition(getHitbox(platformArray.entities[0])).y);
-                        printf("PlatformArray.size: %ld\n", arrayGetSize(pPlatformArray));
-                        //printf("playerVelocity.x: %f\n", getVelocity(pPlayer).x);
-                        //printf("playerVelocity.y: %f\n", getVelocity(pPlayer).y);
-                        break;
-                }
-            }
-            else if(event.type == SDL_KEYUP) {
-                switch(event.key.keysym.scancode) {
-                    case SDL_SCANCODE_RETURN:
-                        toggleFullscreen(pWindow);
-                        break;
-                    case SDL_SCANCODE_1:
-                        cameraSetMode(pCamera, CAMERA_SCALING);
-                        break;
-                    case SDL_SCANCODE_2:
-                        cameraSetMode(pCamera, CAMERA_TRACKING_T1);
-                        break;
-                    case SDL_SCANCODE_3:
-                        cameraSetMode(pCamera, CAMERA_TRACKING_T2);
-                        break;
-                    case SDL_SCANCODE_PERIOD:
-                        cameraSetZoom(pCamera, MAX_ZOOM_IN);
-                        break;
-                    case SDL_SCANCODE_COMMA:
-                        cameraSetZoom(pCamera, MAX_ZOOM_OUT);
-                        break;
-                }
-            }
-        }*/
-
         gameRunning = playerHandleInput(pPlayer);
 
         if (accumulator >= timestep) {    
@@ -120,19 +73,19 @@ int main(int argv, char** args) {
 
         playerUpdatePosition(pPlayer, deltaTime);
 
-        bool collisionDetected = false;
+        bool standingOnPlatform = false;
         for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
-            if (playerCheckCollision(pPlayer, arrayGetObject(pPlatformArray, i))) {
-                collisionDetected = true;
+            if (playerCheckCollision(pPlayer, arrayGetObject(pPlatformArray, i)) == OBJECT_IS_NORTH) {
+                standingOnPlatform = true;
             }
         }
 
-        if (!collisionDetected) { playerSetState(pPlayer, FALLING); }
+        if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 
         clearWindow(pWindow);
         cameraUpdate(pCamera);
         renderEntity(pWindow, playerGetBody(pPlayer), pCamera);
-        renderEntity(pWindow, pReference, pCamera);
+        renderEntity(pWindow, playerGetBody(pReference), pCamera);
         for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             renderEntity(pWindow, arrayGetObject(pPlatformArray, i), pCamera);
         }
@@ -141,7 +94,7 @@ int main(int argv, char** args) {
     }
     
     destroyPlayer(pPlayer);
-    destroyEntity(pReference);
+    destroyPlayer(pReference);
     destroyDynamicArray(pPlatformArray);
     SDL_DestroyTexture(pPlayerTexture);
     SDL_DestroyTexture(pGrassTexture);

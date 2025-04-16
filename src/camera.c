@@ -5,6 +5,7 @@
 typedef struct {
     int width;
     int height;
+    float maxZoomOut;
     int refreshRate;
 } Display;
 
@@ -27,8 +28,16 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
     pCamera->position = createVector(0.0f, 0.0f);
     pCamera->velocity = createVector(0.0f, 0.0f);
 
-    pCamera->display.width = width;
-    pCamera->display.height = height;
+    if (width > MAX_LOGICAL_WIDTH) {
+        pCamera->display.width = MAX_LOGICAL_WIDTH;
+        pCamera->display.height = MAX_LOGICAL_WIDTH * height/width;
+    }
+    else {
+        pCamera->display.width = width;
+        pCamera->display.height = height;
+    }
+
+    pCamera->display.maxZoomOut = (float)pCamera->display.width/MAX_LOGICAL_WIDTH;
     pCamera->display.refreshRate = refreshRate;
 
     pCamera->logicalWidth = 0;
@@ -70,7 +79,7 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
     if (pCamera == NULL) { return CAMERA_IS_NULL; }
 
     if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
-    else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
+    else if (zoomScale < pCamera->display.maxZoomOut) { zoomScale = pCamera->display.maxZoomOut; }
 
     pCamera->logicalWidth = round(pCamera->display.width / zoomScale);
     pCamera->logicalHeight = round(pCamera->display.height / zoomScale);
@@ -101,7 +110,7 @@ void cameraScaleToTargets(Camera *pCamera) {
     else { zoomToApply = zoomY; }
 
     if (zoomToApply > MAX_ZOOM_IN) { zoomToApply = MAX_ZOOM_IN; }
-    else if (zoomToApply < MAX_ZOOM_OUT) { zoomToApply = MAX_ZOOM_OUT; }
+    else if (zoomToApply < pCamera->display.maxZoomOut) { zoomToApply = pCamera->display.maxZoomOut; }
 
     cameraSetZoom(pCamera, zoomToApply);
 
@@ -152,6 +161,8 @@ int cameraUpdate(Camera *pCamera) {
             if (pCamera->pTarget2 == NULL) { return CAMERA_MISSING_TARGET2; }
             cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget2));
             break;
+        case CAMERA_FIXED:
+            break;
     }
     
     return 0;
@@ -178,7 +189,7 @@ Vec2 cameraGetMousePosition(Camera *pCamera) {
     int x, y;
     SDL_GetMouseState(&x, &y);
     mousePosition.x = (float)x/pCamera->currentZoom - pCamera->logicalWidth*0.5f + pCamera->position.x;
-    mousePosition.y = (float)y/pCamera->currentZoom - pCamera->logicalHeight*0.5f + pCamera->position.y; 
+    mousePosition.y = (float)y/pCamera->currentZoom - pCamera->logicalHeight*0.5f + pCamera->position.y;
     return mousePosition;
 }
 

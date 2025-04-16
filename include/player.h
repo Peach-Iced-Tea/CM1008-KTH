@@ -19,7 +19,7 @@ void playerUpdateState(Player *pPlayer, float deltaTime);
 
 void playerUpdatePosition(Player *pPlayer, float deltaTime);
 
-bool playerCheckCollision(Player *pPlayer, Entity *pEntity);
+int playerCheckCollision(Player *pPlayer, Entity *pEntity);
 
 bool playerSetState(Player *pPlayer, int newState);
 

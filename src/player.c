@@ -269,14 +269,15 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
     return;
 }
 
-bool playerCheckCollision(Player *pPlayer, Entity *pEntity) {
-    bool collisionDetected = false;
+int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
+    int collisionDetected = 0;
     Hitbox *pPlayerHitbox = getHitbox(pPlayer->pBody);
     Hitbox *pEntityHitbox = getHitbox(pEntity);
     if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
         Vec2 correction = rectVsRect(pPlayerHitbox, pEntityHitbox);
         collisionResponse(pPlayer->pBody, correction);
-        switch (hitboxOrientation(pPlayerHitbox, pEntityHitbox)) {
+        collisionDetected = hitboxOrientation(pPlayerHitbox, pEntityHitbox);
+        switch (collisionDetected) {
             case OBJECT_IS_NORTH:
                 switch (pPlayer->state) {
                     case JUMPING:
@@ -287,7 +288,6 @@ bool playerCheckCollision(Player *pPlayer, Entity *pEntity) {
                         pPlayer->state = IDLE;
                         break;
                 }
-                collisionDetected = true;
                 break;
             case OBJECT_IS_SOUTH:
                 break;
