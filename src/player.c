@@ -3,7 +3,7 @@
 #define JUMP_TIMER 10
 
 typedef enum {
-    NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED
+    NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED, ROT_RIGHT, ROT_LEFT
 } Direction;
 
 struct player {
@@ -12,6 +12,7 @@ struct player {
     State state;
     Direction directionX;
     Direction directionY;
+    Direction rotateDirection;
     bool mouseClicked;
     float gravityModifier;
     int jumpTimer;
@@ -98,6 +99,26 @@ bool playerHandleInput(Player *pPlayer) {
                         break;
                     }
                     break;
+                case SDL_SCANCODE_E:
+                    switch (pPlayer->rotateDirection) {
+                        case NEUTRAL:
+                            pPlayer->rotateDirection = ROT_RIGHT;
+                            break;
+                        case ROT_LEFT:
+                            pPlayer->rotateDirection = BLOCKED;
+                            break;
+                    }
+                    break;
+                case SDL_SCANCODE_Q:
+                    switch (pPlayer->rotateDirection) {
+                        case NEUTRAL:
+                            pPlayer->rotateDirection = ROT_LEFT;
+                            break;
+                        case ROT_RIGHT:
+                            pPlayer->rotateDirection = BLOCKED;
+                            break;
+                    }
+                    break;
             }
         }
         else if (event.type == SDL_KEYUP) {
@@ -144,6 +165,26 @@ bool playerHandleInput(Player *pPlayer) {
                     break;
                 case SDL_SCANCODE_SPACE:
                     pPlayer->state = FALLING;
+                    break;
+                case SDL_SCANCODE_E:
+                    switch (pPlayer->rotateDirection) {
+                        case BLOCKED:
+                            pPlayer->rotateDirection = ROT_LEFT;
+                            break;
+                        case ROT_RIGHT:
+                            pPlayer->rotateDirection = NEUTRAL;
+                            break;
+                    }
+                    break;
+                case SDL_SCANCODE_Q:
+                    switch (pPlayer->rotateDirection) {
+                        case BLOCKED:
+                            pPlayer->rotateDirection = ROT_RIGHT;
+                            break;
+                        case ROT_LEFT:
+                            pPlayer->rotateDirection = NEUTRAL;
+                            break;
+                    }
                     break;
             }
         }
