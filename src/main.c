@@ -89,7 +89,6 @@ int main(int argv, char** args) {
         if (playerGetMouseClick(pPlayer)) {
             if (vectorLength(mouseVector, getMidPoint(playerGetBody(pPlayer))) < 240.0f) {
                 if (touching(getHitbox(pMObject), mouseVector)) {
-                    printf("JAG AR SIGMA\n");
                     playerSetState(pPlayer, ROTATING); //LOGIK I PLAYER.C 
                     float radius = vectorLength(getMidPoint(playerGetBody(pPlayer)), getMidPoint(pMObject));
                     float alpha = vectorGetAngle(getMidPoint(playerGetBody(pPlayer)), getMidPoint(pMObject));
