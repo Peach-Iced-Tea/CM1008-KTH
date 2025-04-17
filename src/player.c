@@ -23,7 +23,7 @@ struct player {
 
 Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
     Player *pPlayer = malloc(sizeof(Player));
-    pPlayer->pBody = createEntity(position, pTexture, HITBOX_PLAYER);
+    pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
     pPlayer->pTounge = NULL;
     pPlayer->state = FALLING;
     pPlayer->directionX = NEUTRAL;

@@ -46,13 +46,13 @@ void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity) {
     dst.x = entity.x * GLOBAL_SCALER;
     dst.y = entity.y * GLOBAL_SCALER;
 
-    SDL_FRect src;
-    src.w = entity.w;
-    src.h = entity.h;
-    src.x = entity.x;
-    src.y = entity.y;
+    SDL_Rect src;
+    src.w = 32.0f;
+    src.h = 32.0f;
+    src.x = 0;
+    src.y = 0;
     
-    SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), NULL, &dst);
+    SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), &src, &dst);
 }
 
 void displayWindow(RenderWindow *pRenderWindow) {
@@ -72,4 +72,22 @@ void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2) {
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 255, 255);
     SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x *GLOBAL_SCALER, pos1.y * GLOBAL_SCALER, pos2.x * GLOBAL_SCALER, pos2.y * GLOBAL_SCALER);
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
+}
+
+void renderPlayer(RenderWindow *pRenderWindow, Entity *pEntity) {
+    SDL_FRect entity = getCurrentFrame(pEntity);
+
+    SDL_FRect dst;
+    dst.w = entity.w * GLOBAL_SCALER;
+    dst.h = entity.h * GLOBAL_SCALER;
+    dst.x = entity.x * GLOBAL_SCALER;
+    dst.y = entity.y * GLOBAL_SCALER;
+
+    SDL_Rect src;
+    src.w = 32.0f;
+    src.h = 32.0f;
+    src.x = 0;
+    src.y = 0;
+
+    SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), &src, &dst);
 }

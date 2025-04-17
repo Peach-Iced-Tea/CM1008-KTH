@@ -20,7 +20,7 @@ int main(int argv, char** args) {
     SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
     // laddar Entitys med pekare till texturer
     //Entity *platform0 = createEntiy(100, 50, grassTexture);
-    SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/player1.png");
+    SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/spriteSheetPlayer1.png");
 
     // DynamicArray
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
@@ -51,7 +51,7 @@ int main(int argv, char** args) {
 //--------------------------------------------------------------------------------------------------------------------//
 
     //RotateObject
-    Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, HITBOX_FULL_BLOCK);
+    Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, 0, HITBOX_FULL_BLOCK);
 
     int x, y;
     Vec2 mouseVector = createVector(0.0f, 0.0f);
