@@ -19,6 +19,7 @@ struct player {
     int jumpTimer;
     float radius;
     float referenceAngle;
+    SDL_Rect sheetPosition;
 };
 
 Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
@@ -30,6 +31,14 @@ Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
     pPlayer->directionY = NEUTRAL;
     pPlayer->gravityModifier = 0.0f;
     pPlayer->jumpTimer = 0;
+    pPlayer->mouseClicked = false;
+    pPlayer->rotateDirection = NEUTRAL;
+
+
+    pPlayer->sheetPosition.x = 0;
+    pPlayer->sheetPosition.y = 0;
+    pPlayer->sheetPosition.w = 32;
+    pPlayer->sheetPosition.h = 32; 
 
     return pPlayer;
 }
@@ -93,6 +102,11 @@ bool playerHandleInput(Player *pPlayer) {
                             break;
                         case FALLING:
                             pPlayer->state = FLYING;
+                            break;
+                        case IDLE:
+                            pPlayer->state = FLYING;
+                            break;
+
                     }
                     break;
                 case SDL_SCANCODE_SPACE:
@@ -215,11 +229,27 @@ bool playerHandleInput(Player *pPlayer) {
 }
 
 void playerUpdateState(Player *pPlayer, float deltaTime) {
+    int offset = 0;
+    switch (pPlayer->directionX) {
+        case LEFT:
+            offset = 32;
+            break;
+        case RIGHT:
+            offset = 0;
+            break;
+        case NEUTRAL:
+        case BLOCKED:
+            offset = pPlayer->sheetPosition.x;
+            break;
+    }
+    
     switch (pPlayer->state) {
         case IDLE:
         case RUNNING:
             pPlayer->gravityModifier = 0.0f;
             setVelocityY(pPlayer->pBody, 0.0f);
+
+            pPlayer->sheetPosition.y = 0;
             break;
         case FALLING:
             if (pPlayer->jumpTimer > 0) {
@@ -227,6 +257,8 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
                 pPlayer->jumpTimer = 0;
             }
             pPlayer->gravityModifier = 1.0f;
+
+            pPlayer->sheetPosition.y = 64;
             break;
         case JUMPING:
             if (pPlayer->jumpTimer == 0) {
@@ -238,14 +270,22 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
                 pPlayer->jumpTimer--;
                 if(pPlayer->jumpTimer == 0) {pPlayer->state = FALLING;}
             }
+
+            pPlayer->sheetPosition.y = 32;
             break;
         case FLYING:
             pPlayer->gravityModifier = 0.0f;
+
+            pPlayer->sheetPosition.y = 0;
             break;
         case ROTATING:
             pPlayer->gravityModifier = 0.0f;
+
+            offset = pPlayer->sheetPosition.x;
+            pPlayer->sheetPosition.y = 0;
             break;
     }
+    pPlayer->sheetPosition.x = offset;
 
     setAccelerationY(pPlayer->pBody, GRAVITY_ACCELERATION*pPlayer->gravityModifier);
     updateVelocity(pPlayer->pBody, deltaTime);
@@ -284,7 +324,7 @@ void flyingCalculations(Player *pPlayer) {
             break;
         case RIGHT:
             if (getVelocity(pPlayer->pBody).x <= 0.0f) {
-                setVelocityY(pPlayer->pBody, MAX_PLAYER_VELOCITY*0.75f);
+                setVelocityX(pPlayer->pBody, MAX_PLAYER_VELOCITY*0.75f);
             }
             break;
         case NEUTRAL:
@@ -325,8 +365,10 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
             pPlayer->referenceAngle += (PI/180) * deltaTime * ROTSPEED;
             break;
     }   
+
     newPosition.x =(getMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
     newPosition.y =(getMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
+    
     return newPosition;
 }
 
@@ -430,6 +472,10 @@ int playerGetState(Player *pPlayer) {
 
 Entity *playerGetBody(Player const *pPlayer) {
     return pPlayer->pBody;
+}
+
+SDL_Rect playerGetSheetPosition(Player *pPlayer) {
+    return pPlayer->sheetPosition;
 }
 
 bool playerGetMouseClick(Player const *pPlayer) {

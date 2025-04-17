@@ -131,7 +131,10 @@ int main(int argv, char** args) {
         if(playerGetMouseClick(pPlayer)) {
             drawLine(pWindow, mouseVector, getMidPoint(playerGetBody(pPlayer)));
         } 
-        renderEntity(pWindow, playerGetBody(pPlayer));
+
+        renderPlayer(pWindow, pPlayer);
+
+
         renderEntity(pWindow, pMObject);
         for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             renderEntity(pWindow, arrayGetObject(pPlatformArray, i));

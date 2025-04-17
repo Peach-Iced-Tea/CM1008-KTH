@@ -154,14 +154,6 @@ float rayVsRect(Hitbox const *pObject, Hitbox const *pReference) {
     // Add logic for collision prediction along an objects trajectory.
 }
 
-void destroyHitbox(Hitbox *pHitbox) {
-    if (pHitbox == NULL) { return; }
-
-    free(pHitbox);
-}
-
-
-//Fixa Får inte ligga här
 bool touching(Hitbox const *pHitbox, Vec2 const point) {
     bool collisionDetected = true;
     Vec2 min1;  
@@ -180,4 +172,10 @@ bool touching(Hitbox const *pHitbox, Vec2 const point) {
     }
 
     return collisionDetected;
+}
+
+void destroyHitbox(Hitbox *pHitbox) {
+    if (pHitbox == NULL) { return; }
+
+    free(pHitbox);
 }

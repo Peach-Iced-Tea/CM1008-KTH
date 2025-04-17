@@ -31,6 +31,8 @@ int playerGetState(Player *pPlayer);
 
 Entity *playerGetBody(Player const *pPlayer);
 
+SDL_Rect playerGetSheetPosition(Player *pPlayer);
+
 bool playerGetMouseClick(Player const *pPlayer);
 
 void destroyPlayer(Player *pPlayer);

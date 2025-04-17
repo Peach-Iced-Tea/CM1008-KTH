@@ -3,6 +3,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "entity.h"
+#include "player.h"
 
 // Keep GLOBAL_SCALER to a power of 2 (i.e. 1, 2, 4, 8...) for the most optimal scaling.
 #define GLOBAL_SCALER 2
@@ -31,15 +32,19 @@ Renders the given Entity on the screen if it is visible inside the camera dimens
 void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity);
 
 /*
+Renders the given Player on the screen if it is visible inside the camera dimensions.
+*/
+void renderPlayer(RenderWindow *pRenderWindow, Player *pPlayer);
+
+/*
 Display the current latest frame inside the buffer of the given RenderWindow.
 */
 void displayWindow(RenderWindow *pRenderWindow);
+
+
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2);
 
 /*
 Use this function to destroy the given RenderWindow pointer and free up memory.
 */
 void destroyRenderWindow(RenderWindow *pRenderWindow);
-
-
-//Fixa får inte ligga här
-void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2);
