@@ -3,7 +3,7 @@ INCDIR=./include
 CC=gcc
 ifeq ($(OS),Windows_NT)
 	INCLUDE = -IC:/msys64/mingw64/include/SDL2 -I$(INCDIR) 
-	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -mwindows -lm -mconsole
+	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole
 	DELCMD = del
 else
 	INCLUDE = -I$(INCDIR)

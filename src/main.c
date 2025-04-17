@@ -32,6 +32,13 @@ EntityArray initEntityArray() {
     return array;
 }
 
+typedef struct Client{
+    int ID;
+    UDPpacket *packet;
+    IPaddress serverAddress;
+    UDPsocket clientSocket;
+} client;
+
 void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture, int hitboxType) {
     if(array->size == array->capacity) {
         array->capacity *=2;
@@ -124,9 +131,13 @@ int main(int argv, char** args) {
     bool godMode = false, applyVelocity = false;
     float gravityModifier = 1.0f;   // Changes how much of GRAVITY_ACCELERATION that is applied to a player.
     Vec2 currentDirection = createVector(0.0f, 0.0f); // Contains the current direction the player should move.
-
+    
+    // Added in networking Branch
+    client playerCli;
     int gameState=0,connectionState=0;
     bool establishConnection=true;
+    char ipAddr[16];
+    int ms = 0;
 
 
     while(gameRunning) {
@@ -135,12 +146,14 @@ int main(int argv, char** args) {
                 while(establishConnection){
                     switch(connectionState){
                         case CONNECTION_SETUP:
-                            gameMenu(pWindow,&event,&gameState);
+                            gameMenu(pWindow,&event,&gameState, ipAddr);
                             //host/join
                             connectionState=CONNECTION_SERVER;
                             break;
                         case CONNECTION_SERVER:
+                            playerCli.ID = -1;
                             //koppla upp
+                            serverConnect(ipAddr, 50505, &playerCli);
                             connectionState=CONNECTION_WAIT;
                             break;
                         case CONNECTION_WAIT:
@@ -278,10 +291,16 @@ int main(int argv, char** args) {
                 }
 
                 if (accumulator >= timestep) {    
-                    // Add physics related calculations here...
+                    // Add physics related calculations here..
+                    ms++;
                     if (jumpTimer > 0) {
                         jumpTimer--;
                         if (jumpTimer == 0) { gravityModifier = 1.0f; }
+                    }
+
+                    if(ms >= 60){
+                        sendPacket(&playerCli);
+                        ms = 0;
                     }
 
                     if (!godMode) {

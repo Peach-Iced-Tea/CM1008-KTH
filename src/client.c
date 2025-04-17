@@ -1,6 +1,23 @@
 #include "client.h"
 
-void gameMenu(RenderWindow *pWindow, SDL_Event *pEvent, int *pGameState){
+typedef struct DataSection
+{
+    int ID;
+    float x;
+    float y;
+    float dx;
+    float dy;
+} dataSection;
+
+typedef struct Client{
+    int ID;
+    UDPpacket *packet;
+    IPaddress serverAddress;
+    UDPsocket clientSocket;
+    dataSection data;
+} client;
+
+void gameMenu(RenderWindow *pWindow, SDL_Event *pEvent, int *pGameState, char ipAddr[16]){
 
     Entity *pMenuButton;
     SDL_Texture *pMenu;
@@ -20,30 +37,53 @@ void gameMenu(RenderWindow *pWindow, SDL_Event *pEvent, int *pGameState){
             else if(pEvent->type == SDL_KEYDOWN) {
                 switch(pEvent->key.keysym.scancode) {
                     case SDL_SCANCODE_J:
+                        strcpy(ipAddr, "127.0.0.1");
                         menuRunning = false;
                         break;
                     case SDL_SCANCODE_H:
-                        
+                        strcpy(ipAddr, "127.0.0.1");
 
 
 
 
                         menuRunning = false;
                         break;
+                    }
                 }
             }
         }
     }
     
-    //If host -> start server
-#ifdef _WIN32
-    HANDLE thread = CreateThread(NULL, 0, server_WIN, NULL, 0, NULL); //Create a separate thread for server (only WIN systems)
-#else
-    pthread_t serverThread;
-    pthread_create(&serverThread, NULL, server_POSIX, NULL); //Starts process for POSIX systems
-#endif
-    //Start client (always)
+void serverConnect(char serverIP[16], int port, client *pPlayer){
+        
+    bool wait = true;
+    SDLNet_Init();
+    pPlayer->clientSocket = SDLNet_UDP_Open(0);
+    pPlayer->packet = SDLNet_AllocPacket(512);
 
+    SDLNet_ResolveHost(&pPlayer->serverAddress, "127.0.0.1", 50505);
+    pPlayer->packet->address = pPlayer->serverAddress;
+    memcpy(pPlayer->packet->data, &pPlayer->ID, sizeof(pPlayer->ID));
+	pPlayer->packet->len = sizeof(pPlayer->ID);
+    sendPacket(pPlayer);
+    while (wait){
+        if(SDLNet_UDP_Recv(pPlayer->clientSocket, pPlayer->packet)){
+            wait = false;
+            int recPacket;
+            memcpy(&recPacket, pPlayer->packet->data, pPlayer->packet->len);
+            pPlayer->ID = recPacket;
+            printf("Recieved Package.\n");
+        }
+    }
+    printf("Connection complete.");
+    
+}
 
+void sendPacket(client *pPlayer){
+    SDLNet_UDP_Send(pPlayer->clientSocket, -1, pPlayer->packet);
+    printf("Packet Sent\n");
+}
+
+void recPacket(){
 
 }

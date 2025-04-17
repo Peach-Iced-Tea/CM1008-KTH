@@ -1,6 +1,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_net.h>
 #include <stdbool.h>
+#include <string.h>
 #include <stdio.h>
 #include "renderWindow.h"
 #include "entity.h"
@@ -14,7 +16,9 @@
 #define CONNECTION_SERVER 1
 #define CONNECTION_WAIT 2
 
-DWORD WINAPI server_WIN(LPVOID lpParam);
-void* server_POSIX(void* arg);
-void gameMenu(RenderWindow *pWindow,SDL_Event *pEvent,int *pGameState);
+typedef struct Client client;
 
+void gameMenu(RenderWindow *pWindow,SDL_Event *pEvent,int *pGameState, char ipAddr[16]);
+void serverConnect(char serverIP[16], int port, client *pPlayer);
+void sendPacket(client *pPlayer);
+void recPacket();
