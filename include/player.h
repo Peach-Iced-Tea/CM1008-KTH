@@ -17,14 +17,20 @@ bool playerHandleInput(Player *pPlayer);
 
 void playerUpdateState(Player *pPlayer, float deltaTime);
 
-void playerUpdatePosition(Player *pPlayer, float deltaTime);
+Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime);
 
-bool playerCheckCollision(Player *pPlayer, Entity *pEntity);
+int playerCheckCollision(Player *pPlayer, Entity *pEntity);
 
-void playerSetState(Player *pPlayer, int newState);
+bool playerSetState(Player *pPlayer, int newState);
+
+void playerSetRadius(Player *pPlayer, float radius);
+
+void playerSetReferenceAngle(Player *pPlayer, float newAngle);
+
+int playerGetState(Player *pPlayer);
 
 Entity *playerGetBody(Player const *pPlayer);
 
-bool playerGetMouseState(Player const *pPlayer);
+bool playerGetMouseClick(Player const *pPlayer);
 
 void destroyPlayer(Player *pPlayer);

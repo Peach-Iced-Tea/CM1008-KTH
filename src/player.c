@@ -1,6 +1,7 @@
 #include "player.h"
 
 #define JUMP_TIMER 10
+#define ROTSPEED 100
 
 typedef enum {
     NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED, ROT_RIGHT, ROT_LEFT
@@ -16,6 +17,8 @@ struct player {
     bool mouseClicked;
     float gravityModifier;
     int jumpTimer;
+    float radius;
+    float referenceAngle;
 };
 
 Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
@@ -34,11 +37,11 @@ Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
 bool playerHandleInput(Player *pPlayer) {
     bool gameRunning = true;
     SDL_Event event;
-    while(SDL_PollEvent) {
-        if (event.type == SDL_Quit) {
+    while(SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) {
             gameRunning = false;
         }
-        if (event.type == SDL_KEYDOWN) {
+        else if (event.type == SDL_KEYDOWN) {
             switch (event.key.keysym.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     gameRunning = false;
@@ -211,8 +214,6 @@ bool playerHandleInput(Player *pPlayer) {
     return gameRunning;
 }
 
-
-
 void playerUpdateState(Player *pPlayer, float deltaTime) {
     switch (pPlayer->state) {
         case IDLE:
@@ -241,12 +242,14 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
         case FLYING:
             pPlayer->gravityModifier = 0.0f;
             break;
+        case ROTATING:
+            pPlayer->gravityModifier = 0.0f;
+            break;
     }
 
     setAccelerationY(pPlayer->pBody, GRAVITY_ACCELERATION*pPlayer->gravityModifier);
     updateVelocity(pPlayer->pBody, deltaTime);
 }
-
 
 void standardCalculations(Player *pPlayer) {
     switch (pPlayer->directionX) {
@@ -312,7 +315,23 @@ void flyingCalculations(Player *pPlayer) {
     return;
 }
 
-void playerUpdatePosition(Player *pPlayer, float deltaTime) {
+Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
+    Vec2 newPosition;
+    switch (pPlayer->rotateDirection) {
+        case ROT_LEFT:
+            pPlayer->referenceAngle -= (PI/180) * deltaTime * ROTSPEED;
+            break;
+        case ROT_RIGHT:
+            pPlayer->referenceAngle += (PI/180) * deltaTime * ROTSPEED;
+            break;
+    }   
+    newPosition.x =(getMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
+    newPosition.y =(getMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
+    return newPosition;
+}
+
+Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
+    Vec2 returnVector;
     switch(pPlayer->state) {
         case FALLING:
         case JUMPING:
@@ -322,6 +341,7 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             updatePosition(pPlayer->pBody, deltaTime);
             break;
         case ROTATING:
+            returnVector = rotationCalculations(pPlayer, deltaTime);
             break;
         case FLYING:
             flyingCalculations(pPlayer);
@@ -329,28 +349,30 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             break;
     }
 
-    return;
+    return returnVector;
 }
 
-bool playerCheckCollision(Player *pPlayer, Entity *pEntity) {
-    bool collisionDetected = false;    
+int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
+    int collisionDetected = 0;    
     Hitbox *pPlayerHitbox = getHitbox(pPlayer->pBody);
     Hitbox *pEntityHitbox = getHitbox(pEntity);
     if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
         Vec2 correction = rectVsRect(pPlayerHitbox, pEntityHitbox);
         collisionResponse(pPlayer->pBody, correction);
-        switch (hitboxOrientation(pPlayerHitbox, pEntityHitbox)) {
+        collisionDetected = hitboxOrientation(pPlayerHitbox, pEntityHitbox);
+        switch (collisionDetected) {
             case OBJECT_IS_NORTH:
                 switch (pPlayer->state) {
                     case JUMPING:
                         break;
                     case FLYING:
                         break;
+                    case ROTATING:
+                        break;
                     default:
                         pPlayer->state = IDLE;
                         break;
                 }
-                collisionDetected =true;
                 break;
             case OBJECT_IS_SOUTH:
                 break;
@@ -364,7 +386,7 @@ bool playerCheckCollision(Player *pPlayer, Entity *pEntity) {
     return collisionDetected;
 }
 
-void playerSetState(Player *pPlayer, int newState) {
+bool playerSetState(Player *pPlayer, int newState) {
     bool stateWasChanged = false;
     switch (newState) {
         case FALLING:
@@ -373,12 +395,17 @@ void playerSetState(Player *pPlayer, int newState) {
                     break;
                 case FLYING:
                     break;
+                case ROTATING:
+                    break;
                 default:
                     pPlayer->state = FALLING;
                     stateWasChanged = true;
                     break;
             }
             break;
+        case ROTATING:
+            pPlayer->state = newState;
+            stateWasChanged = true;
         default:
             break;   
     }
@@ -386,11 +413,26 @@ void playerSetState(Player *pPlayer, int newState) {
     return stateWasChanged;
 }
 
+void playerSetRadius(Player *pPlayer, float radius) {
+    if (radius <= 0.0f) {
+        return;
+    }
+    pPlayer->radius = radius;
+}
+
+void playerSetReferenceAngle(Player *pPlayer, float newAngle) {
+    pPlayer->referenceAngle = newAngle;
+}
+
+int playerGetState(Player *pPlayer) {
+    return pPlayer->state;
+}
+
 Entity *playerGetBody(Player const *pPlayer) {
     return pPlayer->pBody;
 }
 
-bool playerGetMouseState(Player const *pPlayer) {
+bool playerGetMouseClick(Player const *pPlayer) {
     return pPlayer->mouseClicked;
 }
 
