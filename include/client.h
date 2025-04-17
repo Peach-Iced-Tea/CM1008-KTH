@@ -17,8 +17,10 @@
 #define CONNECTION_WAIT 2
 
 typedef struct Client client;
+typedef struct ReturnData returnData;
+typedef struct DataSection dataSection;
 
 void gameMenu(RenderWindow *pWindow,SDL_Event *pEvent,int *pGameState, char ipAddr[16]);
 void serverConnect(char serverIP[16], int port, client *pPlayer);
 void sendPacket(client *pPlayer);
-void recPacket();
+void recPacket(client *pPlayer, returnData *playerData);

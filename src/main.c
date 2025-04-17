@@ -32,11 +32,22 @@ EntityArray initEntityArray() {
     return array;
 }
 
-typedef struct Client{
+typedef struct DataSection
+{
     int ID;
+    Vec2 pos;
+} dataSection;
+
+typedef struct ReturnData{
+    int playerNumber;
+    dataSection players[4];
+} returnData;
+
+typedef struct Client{
     UDPpacket *packet;
     IPaddress serverAddress;
     UDPsocket clientSocket;
+    dataSection data;
 } client;
 
 void addEntity(EntityArray *array, float x, float y, SDL_Texture *texture, int hitboxType) {
@@ -133,12 +144,13 @@ int main(int argv, char** args) {
     Vec2 currentDirection = createVector(0.0f, 0.0f); // Contains the current direction the player should move.
     
     // Added in networking Branch
+    returnData playerData;
     client playerCli;
     int gameState=0,connectionState=0;
     bool establishConnection=true;
     char ipAddr[16];
     int ms = 0;
-
+    playerData.playerNumber = 0;
 
     while(gameRunning) {
         switch(gameState){
@@ -151,7 +163,8 @@ int main(int argv, char** args) {
                             connectionState=CONNECTION_SERVER;
                             break;
                         case CONNECTION_SERVER:
-                            playerCli.ID = -1;
+                            playerCli.data.ID = -1;
+
                             //koppla upp
                             serverConnect(ipAddr, 50505, &playerCli);
                             connectionState=CONNECTION_WAIT;
@@ -297,8 +310,9 @@ int main(int argv, char** args) {
                         jumpTimer--;
                         if (jumpTimer == 0) { gravityModifier = 1.0f; }
                     }
-
+                    
                     if(ms >= 60){
+                        recPacket(&playerCli, &playerData);
                         sendPacket(&playerCli);
                         ms = 0;
                     }

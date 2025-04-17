@@ -118,3 +118,5 @@ void destroyEntity(Entity *pEntity) {
     destroyHitbox(pEntity->pHitbox);
     free(pEntity);
 }
+
+//Create setX and setY functions

@@ -1,16 +1,18 @@
 #include "client.h"
+#include "vmath.h"
 
 typedef struct DataSection
 {
     int ID;
-    float x;
-    float y;
-    float dx;
-    float dy;
+    Vec2 pos;
 } dataSection;
 
+typedef struct ReturnData{
+    int playerNumber;
+    dataSection players[4];
+} returnData;
+
 typedef struct Client{
-    int ID;
     UDPpacket *packet;
     IPaddress serverAddress;
     UDPsocket clientSocket;
@@ -63,15 +65,16 @@ void serverConnect(char serverIP[16], int port, client *pPlayer){
 
     SDLNet_ResolveHost(&pPlayer->serverAddress, "127.0.0.1", 50505);
     pPlayer->packet->address = pPlayer->serverAddress;
-    memcpy(pPlayer->packet->data, &pPlayer->ID, sizeof(pPlayer->ID));
-	pPlayer->packet->len = sizeof(pPlayer->ID);
+    memcpy(pPlayer->packet->data, &pPlayer->data, sizeof(pPlayer->data));
+	pPlayer->packet->len = sizeof(pPlayer->data);
     sendPacket(pPlayer);
+
     while (wait){
         if(SDLNet_UDP_Recv(pPlayer->clientSocket, pPlayer->packet)){
             wait = false;
-            int recPacket;
+            dataSection recPacket;
             memcpy(&recPacket, pPlayer->packet->data, pPlayer->packet->len);
-            pPlayer->ID = recPacket;
+            pPlayer->data.ID = recPacket.ID;
             printf("Recieved Package.\n");
         }
     }
@@ -84,6 +87,15 @@ void sendPacket(client *pPlayer){
     printf("Packet Sent\n");
 }
 
-void recPacket(){
-
+void recPacket(client *pPlayer, returnData *playerData){
+    UDPpacket *recPacket = SDLNet_AllocPacket(1024);
+    if(SDLNet_UDP_Recv(pPlayer->clientSocket, recPacket)){
+        // printf("Length %d", recPacket->len);
+        memcpy(playerData, recPacket->data, recPacket->len);
+        // printf("Players: %d\n", playerData->playerNumber);
+        for (int i = 0; i < playerData->playerNumber; i++){
+            printf("player %d exists at %f,%f", i, playerData->players[i].pos.x, playerData->players[i].pos.x);
+        }
+        // printf("Print5\n");
+    }
 }
