@@ -430,6 +430,7 @@ bool playerSetState(Player *pPlayer, int newState) {
             switch (pPlayer->state) {
                 case JUMPING:
                 case FLYING:
+                case ROTATING:
                     break;
                 default:
                     stateWasChanged = true;

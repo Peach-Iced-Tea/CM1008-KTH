@@ -50,20 +50,10 @@ int main(int argv, char** args) {
     cameraSetMode(pCamera, TRACKING_T1);
     cameraSetZoom(pCamera, MAX_ZOOM_IN);
 
-    //Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
-
+//--------------------------------------------------------------------------------------------------------------------//
 
 //--------------------------------------------------------------------------------------------------------------------//
 
-    //RotateObject
-    //Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, 0, HITBOX_FULL_BLOCK);
-
-    int x, y;
-    Vec2 mouseVector = createVector(0.0f, 0.0f);
-   
-//--------------------------------------------------------------------------------------------------------------------//
-
-    bool gameRunning = true;
 
     SDL_Event event;
  
@@ -80,7 +70,8 @@ int main(int argv, char** args) {
         lastTime = currentTime;
         accumulator += deltaTime;
 
-        mouseVector = cameraGetMousePosition(pCamera);
+        Vec2 mouseVector = cameraGetMousePosition(pCamera);
+
         gameRunning = playerHandleInput(pPlayer);
 
         if (playerGetMouseClick(pPlayer)) {
@@ -137,7 +128,7 @@ int main(int argv, char** args) {
 
         renderPlayer(pWindow, pPlayer, pCamera);
         //renderEntity(pWindow, playerGetBody(pReference), pCamera);
-
+        renderEntity(pWindow, pMObject, pCamera);
 
         for (int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             Entity *pEntity = arrayGetObject(pPlatformArray, i);
@@ -147,7 +138,8 @@ int main(int argv, char** args) {
         }
 
         if(playerGetMouseClick(pPlayer)) {
-            drawLine(pWindow, mouseVector, getMidPoint(playerGetBody(pPlayer)));
+            printf("mouseVector, X: %f, Y: %f\n", mouseVector.x, mouseVector.y);
+            drawLine(pWindow, mouseVector, getMidPoint(playerGetBody(pPlayer)), pCamera);
         } 
 
         //renderEntity(pWindow, pMObject);

@@ -106,9 +106,14 @@ void displayWindow(RenderWindow *pRenderWindow) {
     SDL_RenderPresent(pRenderWindow->pRenderer);
 }
 
-void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2) {
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera *pCamera) {
+    float offsetWidth = cameraGetWidth(pCamera)*0.5f;
+    float offsetHeight = cameraGetHeight(pCamera)*0.5f;
+    Vec2 cameraPosition = cameraGetPosition(pCamera);
+
+
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 255, 255);
-    SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x *GLOBAL_SCALER, pos1.y * GLOBAL_SCALER, pos2.x * GLOBAL_SCALER, pos2.y * GLOBAL_SCALER);
+    SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x + offsetWidth - cameraPosition.x, pos1.y + offsetHeight - cameraPosition.y, pos2.x + offsetWidth - cameraPosition.x, pos2.y + offsetHeight - cameraPosition.y);
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
 }
 

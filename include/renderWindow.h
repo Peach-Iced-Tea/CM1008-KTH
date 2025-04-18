@@ -7,8 +7,6 @@
 #include "camera.h"
 #include "player.h"
 
-#define GLOBAL_SCALER 3.0f
-
 typedef struct renderWindow RenderWindow;
 
 RenderWindow *createRenderWindow(const char* pTitle, int w, int h);
@@ -49,7 +47,7 @@ Display the current latest frame inside the buffer of the given RenderWindow.
 void displayWindow(RenderWindow *pRenderWindow);
 
 
-void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2);
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera *pCamera);
 
 /*
 Get the SDL_Renderer* from the given RenderWindow.
