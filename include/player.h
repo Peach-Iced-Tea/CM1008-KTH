@@ -25,4 +25,6 @@ bool playerSetState(Player *pPlayer, int newState);
 
 Entity *playerGetBody(Player const *pPlayer);
 
+int playerGetState(Player const *pPlayer);
+
 void destroyPlayer(Player *pPlayer);

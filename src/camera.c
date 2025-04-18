@@ -18,7 +18,7 @@ struct camera {
     SDL_Renderer *pRenderer;
     Entity *pTarget1;
     Entity *pTarget2;
-    int cameraMode;
+    CameraMode mode;
     float currentZoom;
     int trackTimer;
 };
@@ -47,7 +47,7 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
     pCamera->pTarget1 = NULL;
     pCamera->pTarget2 = NULL;
 
-    pCamera->cameraMode = cameraMode;
+    pCamera->mode = cameraMode;
     pCamera->trackTimer = TRACKING_TIMER;
 
     return pCamera;
@@ -68,10 +68,19 @@ int cameraSetTargets(Camera *pCamera, Entity *pTarget1, Entity *pTarget2) {
     return 0;
 }
 
-int cameraSetMode(Camera *pCamera, int cameraMode) {
+int cameraSetMode(Camera *pCamera, int newMode) {
     if (pCamera == NULL) { return CAMERA_IS_NULL; }
 
-    pCamera->cameraMode = cameraMode;
+    switch (newMode) {
+        case SCALING:
+        case TRACKING_T1:
+        case TRACKING_T2:
+        case FIXED:
+            break;
+    }
+
+    pCamera->mode = newMode;
+    
     return 0;
 }
 
@@ -148,36 +157,35 @@ int cameraUpdate(Camera *pCamera) {
         return CAMERA_MISSING_RENDERER;
     }
 
-    switch (pCamera->cameraMode) {
-        case CAMERA_SCALING:
+    switch (pCamera->mode) {
+        case SCALING:
             if (pCamera->pTarget1 == NULL && pCamera->pTarget2 == NULL) { return CAMERA_MISSING_TARGETS; }
             cameraScaleToTargets(pCamera);
             break;
-        case CAMERA_TRACKING_T1:
+        case TRACKING_T1:
             if (pCamera->pTarget1 == NULL) { return CAMERA_MISSING_TARGET1; }
             cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget1));
             break;
-        case CAMERA_TRACKING_T2:
+        case TRACKING_T2:
             if (pCamera->pTarget2 == NULL) { return CAMERA_MISSING_TARGET2; }
             cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget2));
             break;
-        case CAMERA_FIXED:
+        case FIXED:
             break;
     }
     
     return 0;
 }
 
-bool entityIsVisible(Camera const *pCamera, Entity const *pEntity) {
+bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity) {
     bool isVisible = true;
-    SDL_FRect entityFRect = getCurrentFrame(pEntity);
-    float deltaDistanceX = fabsf(pCamera->position.x-entityFRect.x);
-    float deltaDistanceY = fabsf(pCamera->position.y-entityFRect.y);
+    float deltaDistanceX = fabsf(pCamera->position.x-entity.x);
+    float deltaDistanceY = fabsf(pCamera->position.y-entity.y);
 
-    if (deltaDistanceX > pCamera->logicalWidth*0.5f+entityFRect.w) {
+    if (deltaDistanceX > pCamera->logicalWidth*0.5f+entity.w) {
         isVisible = false;
     }
-    if (deltaDistanceY > pCamera->logicalHeight*0.5f+entityFRect.h) {
+    if (deltaDistanceY > pCamera->logicalHeight*0.5f+entity.h) {
         isVisible = false;
     }
 
@@ -214,7 +222,7 @@ Vec2 cameraGetPosition(Camera const *pCamera) {
 int cameraGetMode(Camera const *pCamera) {
     if (pCamera == NULL) { return CAMERA_IS_NULL; }
 
-    return pCamera->cameraMode;
+    return pCamera->mode;
 }
 
 void destroyCamera(Camera *pCamera) {

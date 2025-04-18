@@ -54,24 +54,19 @@ void clearWindow(RenderWindow *pRenderWindow) {
 }
 
 void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity, Camera *pCamera) {
-    if (!entityIsVisible(pCamera, pEntity)) { return; }
-
-    SDL_FRect entity = getCurrentFrame(pEntity);
     float offsetWidth = cameraGetWidth(pCamera)*0.5f;
     float offsetHeight = cameraGetHeight(pCamera)*0.5f;
     Vec2 cameraPosition = cameraGetPosition(pCamera);
 
-    SDL_FRect dst;
-    dst.w = entity.w;
-    dst.h = entity.h;
-    dst.x = entity.x + offsetWidth - cameraPosition.x;
-    dst.y = entity.y + offsetHeight - cameraPosition.y;
+    SDL_FRect dst = getCurrentFrame(pEntity);
+    dst.x += offsetWidth - cameraPosition.x;
+    dst.y += offsetHeight - cameraPosition.y;
 
-    SDL_FRect src;
-    src.w = dst.w;
-    src.h = dst.h;
-    src.x = entity.x;
-    src.y = entity.y;
+    SDL_Rect src;
+    src.w = 32;
+    src.h = 32;
+    src.x = 0;
+    src.y = 0;
 
     SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), NULL, &dst);
     pRenderWindow->nrOfRenderedEntites++;

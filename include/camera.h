@@ -5,16 +5,21 @@
 #include "entity.h"
 #include "vmath.h"
 
+/*
+SCALING: The camera will use two Entities as reference points and stay in the middle of them while scaling the zoom level automatically.
+TRACKING_T1: The camera will track the first Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
+TRACKING_T2: The camera will track the second Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
+FIXED: The camera is set to a specific position and will not move unless manually done.
+*/
+typedef enum {
+    SCALING, TRACKING_T1, TRACKING_T2, FIXED
+} CameraMode;
+
 typedef struct camera Camera;
 
-#define MAX_ZOOM_IN 3.0f
+#define MAX_ZOOM_IN 2.5f
 #define MAX_ZOOM_OUT 1.0f
 #define MAX_LOGICAL_WIDTH 1920
-
-#define CAMERA_SCALING 0        // The camera will use two Entities as reference points and stay in the middle of them while scaling the zoom level automatically.
-#define CAMERA_TRACKING_T1 1    // The camera will track the first Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
-#define CAMERA_TRACKING_T2 2    // The camera will track the second Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
-#define CAMERA_FIXED 3
 
 // Error codes are defined below here.
 
@@ -46,7 +51,7 @@ int cameraSetTargets(Camera *pCamera, Entity *pTarget1, Entity *pTarget2);
 /*
 Set what mode the given Camera should be set to.
 */
-int cameraSetMode(Camera *pCamera, int cameraMode);
+int cameraSetMode(Camera *pCamera, int newMode);
 
 /*
 Set the camera to a specific zoom level.
@@ -68,7 +73,7 @@ Check if the given Entity is visible inside the dimensions of the given Camera.
 
 Returns 'true' if it is inside the camera view, 'false' if it is outside the camera view.
 */
-bool entityIsVisible(Camera const *pCamera, Entity const *pEntity);
+bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity);
 
 /*
 Returns the absolute position of the mouse cursor in the game world.

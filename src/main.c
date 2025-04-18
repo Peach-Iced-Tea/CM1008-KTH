@@ -43,9 +43,11 @@ int main(int argv, char** args) {
     addEntity(pPlatformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
     addEntity(pPlatformArray, MAX_LOGICAL_WIDTH-32, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
-    Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, CAMERA_SCALING);
+    Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
     cameraSetTargets(pCamera, playerGetBody(pPlayer), playerGetBody(pReference));
+    cameraSetMode(pCamera, TRACKING_T1);
+    cameraSetZoom(pCamera, MAX_ZOOM_IN);
 
     SDL_Event event;
     Vec2 mousePosition;
@@ -65,16 +67,21 @@ int main(int argv, char** args) {
         mousePosition = cameraGetMousePosition(pCamera);
         gameRunning = playerHandleInput(pPlayer);
 
-        if (accumulator >= timestep) {    
+        if (accumulator >= timestep) {
             // Add physics related calculations here...
             playerUpdateState(pPlayer, timestep);
             accumulator -= timestep;
         }
 
         playerUpdatePosition(pPlayer, deltaTime);
+        cameraUpdate(pCamera);
 
         bool standingOnPlatform = false;
-        for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
+        if (playerCheckCollision(pPlayer, playerGetBody(pReference)) == OBJECT_IS_NORTH) {
+            standingOnPlatform = true;
+        }
+
+        for (int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             if (playerCheckCollision(pPlayer, arrayGetObject(pPlatformArray, i)) == OBJECT_IS_NORTH) {
                 standingOnPlatform = true;
             }
@@ -83,11 +90,13 @@ int main(int argv, char** args) {
         if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 
         clearWindow(pWindow);
-        cameraUpdate(pCamera);
         renderEntity(pWindow, playerGetBody(pPlayer), pCamera);
         renderEntity(pWindow, playerGetBody(pReference), pCamera);
-        for(int i = 0; i < arrayGetSize(pPlatformArray); i++) {
-            renderEntity(pWindow, arrayGetObject(pPlatformArray, i), pCamera);
+        for (int i = 0; i < arrayGetSize(pPlatformArray); i++) {
+            Entity *pEntity = arrayGetObject(pPlatformArray, i);
+            if (entityIsVisible(pCamera, getCurrentFrame(pEntity))) {
+                renderEntity(pWindow, pEntity, pCamera);
+            }
         }
         
         displayWindow(pWindow);

@@ -279,17 +279,14 @@ int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
         collisionDetected = hitboxOrientation(pPlayerHitbox, pEntityHitbox);
         switch (collisionDetected) {
             case OBJECT_IS_NORTH:
-                switch (pPlayer->state) {
-                    case JUMPING:
-                        break;
-                    case FLYING:
-                        break;
-                    default:
-                        pPlayer->state = IDLE;
-                        break;
-                }
+                playerSetState(pPlayer, IDLE);
                 break;
             case OBJECT_IS_SOUTH:
+                switch (pPlayer->state) {
+                    case JUMPING:
+                        pPlayer->state = FALLING;
+                        break;
+                }
                 break;
             case OBJECT_IS_WEST:
                 break;
@@ -304,14 +301,22 @@ int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
 bool playerSetState(Player *pPlayer, int newState) {
     bool stateWasChanged = false;
     switch (newState) {
-        case FALLING:
+        case IDLE:
             switch (pPlayer->state) {
                 case JUMPING:
-                    break;
                 case FLYING:
                     break;
                 default:
-                    pPlayer->state = FALLING;
+                    stateWasChanged = true;
+                    break;
+            }
+            break;
+        case FALLING:
+            switch (pPlayer->state) {
+                case JUMPING:
+                case FLYING:
+                    break;
+                default:
                     stateWasChanged = true;
                     break;
             }
@@ -320,11 +325,17 @@ bool playerSetState(Player *pPlayer, int newState) {
             break;
     }
 
+    if (stateWasChanged) { pPlayer->state = newState; }
+
     return stateWasChanged;
 }
 
 Entity *playerGetBody(Player const *pPlayer) {
     return pPlayer->pBody;
+}
+
+int playerGetState(Player const *pPlayer) {
+    return pPlayer->state;
 }
 
 void destroyPlayer(Player *pPlayer) {
