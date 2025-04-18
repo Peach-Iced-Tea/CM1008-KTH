@@ -141,9 +141,9 @@ bool checkKeyCombo(Input const *pInputs, int key1, int key2) {
     if (key1 < 0 || key1 >= MAX_KEY_INPUTS) { return false; }
     if (key2 < 0 || key2 >= MAX_KEY_INPUTS) { return false; }
 
-    if (pInputs->keys[key1] == KEY_STATE_DOWN && (pInputs->keys[key2] >= KEY_STATE_DOWN && pInputs->keys[key2] < KEY_STATE_HOLD)) { return true; }
+    if (pInputs->keys[key1] == KEY_STATE_DOWN && (pInputs->keys[key2] >= KEY_STATE_DOWN && pInputs->keys[key2] <= KEY_STATE_HOLD)) { return true; }
 
-    if (pInputs->keys[key2] == KEY_STATE_DOWN && (pInputs->keys[key1] >= KEY_STATE_DOWN && pInputs->keys[key1] < KEY_STATE_HOLD)) { return true; }
+    if (pInputs->keys[key2] == KEY_STATE_DOWN && (pInputs->keys[key1] >= KEY_STATE_DOWN && pInputs->keys[key1] <= KEY_STATE_HOLD)) { return true; }
 
     return false;
 }

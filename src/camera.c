@@ -55,24 +55,27 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
 }
 
 void cameraHandleInput(Camera *pCamera, Input const *pInputs) {
+    const int *keys = getKeyInputs(pInputs);
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_1)) { cameraSetMode(pCamera, SCALING); }
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_2)) { cameraSetMode(pCamera, TRACKING_T1); }
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_3)) { cameraSetMode(pCamera, TRACKING_T2); }
-    if (checkKeyCombo(pInputs, KEY_ALT, KEY_COMMA)) { cameraSetZoom(pCamera, MAX_ZOOM_OUT); }
-    if (checkKeyCombo(pInputs, KEY_ALT, KEY_PERIOD)) { cameraSetZoom(pCamera, MAX_ZOOM_IN); }
+    if (keys[KEY_ALT] && pCamera->mode != SCALING) {
+        if (keys[KEY_COMMA]) { cameraSetZoom(pCamera, pCamera->currentZoom-0.1f); }
+        if (keys[KEY_PERIOD]) { cameraSetZoom(pCamera, pCamera->currentZoom+0.1f); }
+    }
 
     return;
 }
 
 int cameraSetRenderer(Camera *pCamera, SDL_Renderer *pRenderer) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     pCamera->pRenderer = pRenderer;
     return 0;
 }
 
 int cameraSetTargets(Camera *pCamera, Entity *pTarget1, Entity *pTarget2) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     pCamera->pTarget1 = pTarget1;
     pCamera->pTarget2 = pTarget2;
@@ -80,7 +83,7 @@ int cameraSetTargets(Camera *pCamera, Entity *pTarget1, Entity *pTarget2) {
 }
 
 int cameraSetMode(Camera *pCamera, int newMode) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     switch (newMode) {
         case SCALING:
@@ -96,7 +99,7 @@ int cameraSetMode(Camera *pCamera, int newMode) {
 }
 
 int cameraSetZoom(Camera *pCamera, float zoomScale) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
     else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
@@ -161,24 +164,24 @@ void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
 }
 
 int cameraUpdate(Camera *pCamera) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     if (pCamera->pRenderer == NULL) {
         printf("Error: Camera does not have a SDL_Renderer*\n");
-        return CAMERA_MISSING_RENDERER;
+        return MISSING_RENDERER;
     }
 
     switch (pCamera->mode) {
         case SCALING:
-            if (pCamera->pTarget1 == NULL && pCamera->pTarget2 == NULL) { return CAMERA_MISSING_TARGETS; }
+            if (pCamera->pTarget1 == NULL && pCamera->pTarget2 == NULL) { return MISSING_TARGETS; }
             cameraScaleToTargets(pCamera);
             break;
         case TRACKING_T1:
-            if (pCamera->pTarget1 == NULL) { return CAMERA_MISSING_TARGET1; }
+            if (pCamera->pTarget1 == NULL) { return MISSING_TARGET1; }
             cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget1));
             break;
         case TRACKING_T2:
-            if (pCamera->pTarget2 == NULL) { return CAMERA_MISSING_TARGET2; }
+            if (pCamera->pTarget2 == NULL) { return MISSING_TARGET2; }
             cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget2));
             break;
         case FIXED:
@@ -214,13 +217,13 @@ Vec2 cameraGetMousePosition(Camera *pCamera) {
 }
 
 int cameraGetWidth(Camera const *pCamera) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     return pCamera->logicalWidth;
 }
 
 int cameraGetHeight(Camera const *pCamera) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     return pCamera->logicalHeight;
 }
@@ -232,7 +235,7 @@ Vec2 cameraGetPosition(Camera const *pCamera) {
 }
 
 int cameraGetMode(Camera const *pCamera) {
-    if (pCamera == NULL) { return CAMERA_IS_NULL; }
+    if (pCamera == NULL) { return IS_NULL; }
 
     return pCamera->mode;
 }

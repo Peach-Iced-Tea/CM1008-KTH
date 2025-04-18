@@ -9,7 +9,7 @@
 
 typedef struct renderWindow RenderWindow;
 
-RenderWindow *createRenderWindow(const char* pTitle, int w, int h);
+RenderWindow *createRenderWindow(char const *pTitle, int w, int h);
 
 /*
 Handles key inputs related to the functions of the RenderWindow data type.
@@ -23,7 +23,7 @@ Load a new SDL_Texture* using the pRenderer of the given RenderWindow.
 
 Accepts a relative file path or an absolute file path.
 */
-SDL_Texture *loadTexture(RenderWindow *pRenderWindow, const char* pFilePath);
+SDL_Texture *loadTexture(RenderWindow *pRenderWindow, char const *pFilePath);
 
 /*
 Clear the previous frame off of the given RenderWindow.

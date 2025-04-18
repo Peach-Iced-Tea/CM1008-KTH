@@ -18,17 +18,14 @@ typedef enum {
 
 typedef struct camera Camera;
 
-#define MAX_ZOOM_IN 2.5f
-#define MAX_ZOOM_OUT 1.5f
+#define MAX_ZOOM_IN 2.8f
+#define MAX_ZOOM_OUT 1.2f
 #define MAX_LOGICAL_WIDTH 1920
 
 // Error codes are defined below here.
-
-#define CAMERA_IS_NULL -1
-#define CAMERA_MISSING_RENDERER -2
-#define CAMERA_MISSING_TARGETS -3
-#define CAMERA_MISSING_TARGET1 -4
-#define CAMERA_MISSING_TARGET2 -5
+typedef enum {
+    IS_NULL = -5, MISSING_RENDERER, MISSING_TARGETS, MISSING_TARGET1, MISSING_TARGET2
+} CameraError;
 
 /*
 Create a Camera with the current resolution of the game window.

@@ -8,22 +8,22 @@ struct renderWindow {
 };
 
 RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
-    RenderWindow *rw = malloc(sizeof(RenderWindow));
-    rw->pWindow = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    if(!rw->pWindow) {
+    RenderWindow *pRenderWindow = malloc(sizeof(RenderWindow));
+    pRenderWindow->pWindow = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    if (!pRenderWindow->pWindow) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
     }
 
-    rw->pRenderer = SDL_CreateRenderer(rw->pWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
-    if(!rw->pRenderer) {
+    pRenderWindow->pRenderer = SDL_CreateRenderer(pRenderWindow->pWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+    if (!pRenderWindow->pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
     }
 
-    rw->fullscreen = false;
+    pRenderWindow->fullscreen = false;
 
-    return rw;
+    return pRenderWindow;
 }
 
 void toggleFullscreen(RenderWindow *pRenderWindow) {
@@ -44,10 +44,10 @@ void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
     return;
 }
 
-SDL_Texture *loadTexture(RenderWindow *pRenderWindow, const char* pFilePath) {
+SDL_Texture *loadTexture(RenderWindow *pRenderWindow, char const *pFilePath) {
     SDL_Texture* texture = NULL;
     texture = IMG_LoadTexture(pRenderWindow->pRenderer, pFilePath);
-    if(texture == NULL) {
+    if (texture == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
     }
