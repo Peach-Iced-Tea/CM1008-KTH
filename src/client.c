@@ -65,8 +65,8 @@ void serverConnect(char serverIP[16], int port, client *pPlayer){
 
     SDLNet_ResolveHost(&pPlayer->serverAddress, "127.0.0.1", 50505);
     pPlayer->packet->address = pPlayer->serverAddress;
-    memcpy(pPlayer->packet->data, &pPlayer->data, sizeof(pPlayer->data));
-	pPlayer->packet->len = sizeof(pPlayer->data);
+    memcpy(pPlayer->packet->data, &pPlayer->data, sizeof(dataSection));
+	pPlayer->packet->len = sizeof(dataSection);
     sendPacket(pPlayer);
 
     while (wait){
@@ -75,27 +75,24 @@ void serverConnect(char serverIP[16], int port, client *pPlayer){
             dataSection recPacket;
             memcpy(&recPacket, pPlayer->packet->data, pPlayer->packet->len);
             pPlayer->data.ID = recPacket.ID;
-            printf("Recieved Package.\n");
         }
     }
-    printf("Connection complete.");
+    // printf("Connection complete.");
     
 }
 
 void sendPacket(client *pPlayer){
     SDLNet_UDP_Send(pPlayer->clientSocket, -1, pPlayer->packet);
-    printf("Packet Sent\n");
+    // printf("Packet Sent\n");
 }
 
 void recPacket(client *pPlayer, returnData *playerData){
     UDPpacket *recPacket = SDLNet_AllocPacket(1024);
     if(SDLNet_UDP_Recv(pPlayer->clientSocket, recPacket)){
-        // printf("Length %d", recPacket->len);
         memcpy(playerData, recPacket->data, recPacket->len);
-        // printf("Players: %d\n", playerData->playerNumber);
-        for (int i = 0; i < playerData->playerNumber; i++){
-            printf("player %d exists at %f,%f", i, playerData->players[i].pos.x, playerData->players[i].pos.x);
-        }
-        // printf("Print5\n");
+        // for (int i = 0; i < playerData->playerNumber; i++){
+        //     printf("player %d exists at %f,%f\n", i, playerData->players[i].pos.x, playerData->players[i].pos.x);
+        // }
     }
+    SDLNet_FreePacket(recPacket);
 }

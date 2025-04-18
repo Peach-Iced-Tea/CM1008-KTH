@@ -119,4 +119,7 @@ void destroyEntity(Entity *pEntity) {
     free(pEntity);
 }
 
-//Create setX and setY functions
+void setPosition(Entity *pEntity, Vec2 pos){
+    pEntity->currentFrame.x = pos.x;
+    pEntity->currentFrame.y = pos.y;
+}

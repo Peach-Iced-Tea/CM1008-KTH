@@ -126,7 +126,7 @@ int main(int argv, char** args) {
     addEntity(&platformArray, (WINDOW_W-32*GLOBAL_SCALER)/GLOBAL_SCALER, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
     Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
-
+    Entity *pPlayer2 = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
     bool gameRunning = true;
 
     SDL_Event event;
@@ -310,11 +310,19 @@ int main(int argv, char** args) {
                         jumpTimer--;
                         if (jumpTimer == 0) { gravityModifier = 1.0f; }
                     }
+
+                    recPacket(&playerCli, &playerData);
                     
-                    if(ms >= 60){
-                        recPacket(&playerCli, &playerData);
-                        sendPacket(&playerCli);
-                        ms = 0;
+                    playerCli.data.pos = getPosition(pPlayer);
+                    memcpy(playerCli.packet->data, &playerCli.data, sizeof(dataSection));
+                    playerCli.packet->len = sizeof(dataSection);
+                    sendPacket(&playerCli);
+
+                    if (playerData.playerNumber > 1 && playerCli.data.ID == 0){
+                        setPosition(pPlayer2, playerData.players[1].pos);
+                    }
+                    if (playerData.playerNumber > 1 && playerCli.data.ID == 1){
+                        setPosition(pPlayer2, playerData.players[0].pos);
                     }
 
                     if (!godMode) {
@@ -354,6 +362,7 @@ int main(int argv, char** args) {
 
                 clearWindow(pWindow);
                 renderEntity(pWindow, pPlayer);
+                renderEntity(pWindow, pPlayer2);
                 for(int i = 0; i < platformArray.size; i++) {
                     renderEntity(pWindow, platformArray.entities[i]);
                 }

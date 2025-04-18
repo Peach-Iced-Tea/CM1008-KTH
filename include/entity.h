@@ -90,3 +90,5 @@ Hitbox *getHitbox(Entity const *pEntity);
 Use this function to destroy the given Entity pointer and free up memory.
 */
 void destroyEntity(Entity *pEntity);
+
+void setPosition(Entity *pEntity, Vec2 pos);
