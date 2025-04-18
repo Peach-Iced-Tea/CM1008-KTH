@@ -34,12 +34,12 @@ void clearWindow(RenderWindow *pRenderWindow);
 /*
 Renders the given Entity on the screen if it is visible inside the camera dimensions.
 */
-void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity, Camera *pCamera);
+void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera);
 
 /*
 Renders the given Player on the screen if it is visible inside the camera dimensions.
 */
-void renderPlayer(RenderWindow *pRenderWindow, Player *pPlayer, Camera *pCamera);
+void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera);
 
 /*
 Display the current latest frame inside the buffer of the given RenderWindow.
@@ -47,12 +47,12 @@ Display the current latest frame inside the buffer of the given RenderWindow.
 void displayWindow(RenderWindow *pRenderWindow);
 
 
-void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera *pCamera);
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera);
 
 /*
 Get the SDL_Renderer* from the given RenderWindow.
 */
-SDL_Renderer *getRenderer(RenderWindow *pRenderWindow);
+SDL_Renderer *getRenderer(RenderWindow const *pRenderWindow);
 
 /*
 Use this function to destroy the given RenderWindow pointer and free up memory.

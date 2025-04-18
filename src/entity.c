@@ -140,4 +140,5 @@ void destroyEntity(Entity *pEntity) {
 
     destroyHitbox(pEntity->pHitbox);
     free(pEntity);
+    return;
 }

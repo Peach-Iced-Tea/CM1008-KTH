@@ -234,4 +234,5 @@ void destroyCamera(Camera *pCamera) {
     if (pCamera == NULL) { return; }
 
     free(pCamera);
+    return;
 }

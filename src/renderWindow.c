@@ -53,50 +53,42 @@ void clearWindow(RenderWindow *pRenderWindow) {
     pRenderWindow->nrOfRenderedEntites = 0;
 }
 
-void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity, Camera *pCamera) {
+void adjustToCamera(Camera const *pCamera, SDL_FRect *dst, Vec2 *vector) {
     float offsetWidth = cameraGetWidth(pCamera)*0.5f;
     float offsetHeight = cameraGetHeight(pCamera)*0.5f;
     Vec2 cameraPosition = cameraGetPosition(pCamera);
 
+    if (dst != NULL) {
+        dst->x += offsetWidth - cameraPosition.x;
+        dst->y += offsetHeight - cameraPosition.y;
+    }
+
+    if (vector != NULL) {
+        vector->x += offsetWidth - cameraPosition.x;
+        vector->y += offsetHeight - cameraPosition.y;
+    }
+
+    return;
+}
+
+void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera) {
     SDL_FRect dst = getCurrentFrame(pEntity);
-    dst.x += offsetWidth - cameraPosition.x;
-    dst.y += offsetHeight - cameraPosition.y;
+    adjustToCamera(pCamera, &dst, NULL);
 
     SDL_Rect src;
     src.w = 32;
     src.h = 32;
     src.x = 0;
     src.y = 0;
-/* 
-    SDL_Rect src;
-    src.w = 32.0f;
-    src.h = 32.0f;
-    src.x = 0;
-    src.y = 0;
-  */   
+
     SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), &src, &dst);
     pRenderWindow->nrOfRenderedEntites++;
 }
 
-void renderPlayer(RenderWindow *pRenderWindow, Player *pPlayer, Camera *pCamera) {
-    float offsetWidth = cameraGetWidth(pCamera)*0.5f;
-    float offsetHeight = cameraGetHeight(pCamera)*0.5f;
-    Vec2 cameraPosition = cameraGetPosition(pCamera);
-
-
-    //SDL_FRect entity = getCurrentFrame(playerGetBody(pPlayer));
-
+void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera) {
     SDL_FRect dst = getCurrentFrame(playerGetBody(pPlayer));
-    dst.x += offsetWidth - cameraPosition.x;
-    dst.y += offsetHeight - cameraPosition.y;
+    adjustToCamera(pCamera, &dst, NULL);
 
-/* 
-    SDL_FRect dst;
-    dst.w = entity.w * GLOBAL_SCALER;
-    dst.h = entity.h * GLOBAL_SCALER;
-    dst.x = entity.x * GLOBAL_SCALER;
-    dst.y = entity.y * GLOBAL_SCALER;
- */
     SDL_Rect src = playerGetSheetPosition(pPlayer);
 
     SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(playerGetBody(pPlayer)), &src, &dst);
@@ -106,18 +98,16 @@ void displayWindow(RenderWindow *pRenderWindow) {
     SDL_RenderPresent(pRenderWindow->pRenderer);
 }
 
-void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera *pCamera) {
-    float offsetWidth = cameraGetWidth(pCamera)*0.5f;
-    float offsetHeight = cameraGetHeight(pCamera)*0.5f;
-    Vec2 cameraPosition = cameraGetPosition(pCamera);
-
-
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera) {
+    adjustToCamera(pCamera, NULL, &pos1);
+    adjustToCamera(pCamera, NULL, &pos2);
+    
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 255, 255);
-    SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x + offsetWidth - cameraPosition.x, pos1.y + offsetHeight - cameraPosition.y, pos2.x + offsetWidth - cameraPosition.x, pos2.y + offsetHeight - cameraPosition.y);
+    SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x, pos1.y, pos2.x, pos2.y);
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
 }
 
-SDL_Renderer *getRenderer(RenderWindow *pRenderWindow) {
+SDL_Renderer *getRenderer(RenderWindow const *pRenderWindow) {
     return pRenderWindow->pRenderer;
 }
 
@@ -126,4 +116,5 @@ void destroyRenderWindow(RenderWindow *pRenderWindow) {
     
     SDL_DestroyWindow(pRenderWindow->pWindow);
     SDL_DestroyRenderer(pRenderWindow->pRenderer);
+    return;
 }

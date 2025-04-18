@@ -5,6 +5,11 @@ struct hitbox {
     Vec2 halfSize;
 };
 
+typedef struct {
+    Vec2 min;
+    Vec2 max;
+} MinMax;
+
 Hitbox *createPlayerHitbox(Vec2 const position, float w, float h) {
     Hitbox *pHitbox = malloc(sizeof(Hitbox));
     w *= 0.25f;
@@ -61,32 +66,24 @@ void hitboxPositionSub(Hitbox *pHitbox, Vec2 const vector) {
     return;
 }
 
-Vec2 getHitboxPosition(Hitbox const *pHitbox) {
-    return pHitbox->position;
-}
-
-Vec2 getHitboxHalfSize(Hitbox const *pHitbox) {
-    return pHitbox->halfSize;
+void getMinMax(MinMax *box, Vec2 const position, Vec2 const offset) {
+    vectorSub(&box->min, position, offset);
+    vectorAdd(&box->max, position, offset);
+    return;
 }
 
 bool checkCollision(Hitbox const *pObject1, Hitbox const *pObject2) {
     bool collisionDetected = true;
-    Vec2 min1;  // Used to get the top and left edges of the hitbox of pObject.
-    Vec2 max1;  // Used to get the bottom and right edges of the hitbox of pObject.
-    vectorSub(&min1, pObject1->position, pObject1->halfSize);
-    vectorAdd(&max1, pObject1->position, pObject1->halfSize);
+    MinMax box1, box2;
+    getMinMax(&box1, pObject1->position, pObject1->halfSize);
+    getMinMax(&box2, pObject2->position, pObject2->halfSize);
 
-    Vec2 min2;  // Used to get the top and left edges of the hitbox of pReference.
-    Vec2 max2;  // Used to get the bottom and right edges of the hitbox of pReference.
-    vectorSub(&min2, pObject2->position, pObject2->halfSize);
-    vectorAdd(&max2, pObject2->position, pObject2->halfSize);
-
-    if (max1.x < min2.x || min1.x > max2.x) {
+    if (box1.max.x < box2.min.x || box1.min.x > box2.max.x) {
         collisionDetected = false;
     }
 
     if (collisionDetected) {
-        if (max1.y < min2.y || min1.y > max2.y) {
+        if (box1.max.y < box2.min.y || box1.min.y > box2.max.y) {
             collisionDetected = false;
         }
     }
@@ -95,18 +92,13 @@ bool checkCollision(Hitbox const *pObject1, Hitbox const *pObject2) {
 }
 
 int hitboxOrientation(Hitbox const *pObject, Hitbox const *pReference) {
-    Vec2 min1;  // Used to get the top and left edges of the hitbox of pObject.
-    Vec2 max1;  // Used to get the bottom and right edges of the hitbox of pObject.
-    vectorSub(&min1, pObject->position, pObject->halfSize);
-    vectorAdd(&max1, pObject->position, pObject->halfSize);
+    MinMax box1, box2;
+    getMinMax(&box1, pObject->position, pObject->halfSize);
+    getMinMax(&box2, pReference->position, pReference->halfSize);
 
-    Vec2 min2;  // Used to get the top and left edges of the hitbox of pReference.
-    Vec2 max2;  // Used to get the bottom and right edges of the hitbox of pReference.
-    vectorSub(&min2, pReference->position, pReference->halfSize);
-    vectorAdd(&max2, pReference->position, pReference->halfSize);
-    if (max1.y <= min2.y) { return OBJECT_IS_NORTH; }
-    else if (min1.y >= max2.y) { return OBJECT_IS_SOUTH; }
-    else if (max1.x <= min2.x) { return OBJECT_IS_WEST; }
+    if (box1.max.y <= box2.min.y) { return OBJECT_IS_NORTH; }
+    else if (box1.min.y >= box2.max.y) { return OBJECT_IS_SOUTH; }
+    else if (box1.max.x <= box2.min.x) { return OBJECT_IS_WEST; }
     else { return OBJECT_IS_EAST; }
 }
 
@@ -116,31 +108,25 @@ Vec2 rectVsRect(Hitbox const *pObject, Hitbox const *pReference) {
     float x_diff = pObject->position.x-pReference->position.x;
     float y_diff = pObject->position.y-pReference->position.y;
 
-    Vec2 min1;  // Used to get the top and left edges of the hitbox of pObject.
-    Vec2 max1;  // Used to get the bottom and right edges of the hitbox of pObject.
-    vectorSub(&min1, pObject->position, pObject->halfSize);
-    vectorAdd(&max1, pObject->position, pObject->halfSize);
-
-    Vec2 min2;  // Used to get the top and left edges of the hitbox of pReference.
-    Vec2 max2;  // Used to get the bottom and right edges of the hitbox of pReference.
-    vectorSub(&min2, pReference->position, pReference->halfSize);
-    vectorAdd(&max2, pReference->position, pReference->halfSize);
+    MinMax box1, box2;
+    getMinMax(&box1, pObject->position, pObject->halfSize);
+    getMinMax(&box2, pReference->position, pReference->halfSize);
 
     Vec2 correction;
     if (abs(x_diff*scaler1*scaler2) > abs(y_diff)) {
         if (x_diff > 0.0f) {
-            correction = createVector(max2.x-min1.x, 0.0f);
+            correction = createVector(box2.max.x-box1.min.x, 0.0f);
         }
         else {
-            correction = createVector(min2.x-max1.x, 0.0f);
+            correction = createVector(box2.min.x-box1.max.x, 0.0f);
         }
     }
     else if (abs(x_diff*scaler1*scaler2) < abs(y_diff)) {
         if (y_diff > 0.0f) {
-            correction = createVector(0.0f, max2.y-min1.y);
+            correction = createVector(0.0f, box2.max.y-box1.min.y);
         }
         else {
-            correction = createVector(0.0f, min2.y-max1.y);
+            correction = createVector(0.0f, box2.min.y-box1.max.y);
         }
     }
     else {
@@ -154,19 +140,17 @@ float rayVsRect(Hitbox const *pObject, Hitbox const *pReference) {
     // Add logic for collision prediction along an objects trajectory.
 }
 
-bool touching(Hitbox const *pHitbox, Vec2 const point) {
+bool pointVsRect(Hitbox const *pHitbox, Vec2 const point) {
     bool collisionDetected = true;
-    Vec2 min1;  
-    Vec2 max1;  
-    vectorSub(&min1, pHitbox->position, pHitbox->halfSize);
-    vectorAdd(&max1, pHitbox->position, pHitbox->halfSize);
+    MinMax box;
+    getMinMax(&box, pHitbox->position, pHitbox->halfSize);
 
-    if (max1.x < point.x || min1.x > point.x) {
+    if (box.max.x < point.x || box.min.x > point.x) {
         collisionDetected = false;
     }
 
     if (collisionDetected) {
-        if (max1.y < point.y || min1.y > point.y) {
+        if (box.max.y < point.y || box.min.y > point.y) {
             collisionDetected = false;
         }
     }
@@ -174,8 +158,17 @@ bool touching(Hitbox const *pHitbox, Vec2 const point) {
     return collisionDetected;
 }
 
+Vec2 getHitboxPosition(Hitbox const *pHitbox) {
+    return pHitbox->position;
+}
+
+Vec2 getHitboxHalfSize(Hitbox const *pHitbox) {
+    return pHitbox->halfSize;
+}
+
 void destroyHitbox(Hitbox *pHitbox) {
     if (pHitbox == NULL) { return; }
 
     free(pHitbox);
+    return;
 }

@@ -69,4 +69,5 @@ void destroyDynamicArray(DynamicArray *pArray) {
 
     free(pArray->objects);
     free(pArray);
+    return;
 }

@@ -1,7 +1,10 @@
 #include "player.h"
 
-#define JUMP_TIMER 10
-#define ROTSPEED 100
+#define JUMP_TIMER 20
+#define PLAYER_VELOCITY 60.0f   // Initial velocity to be applied on a player upon moving.
+#define PLAYER_ACCELERATION 580.0f  // A constant for the acceleration of a player, this value gets modified by deltaTime before updating velocity.
+#define JUMP_VELOCITY 550.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
+#define ROTATION_SPEED 100
 
 typedef enum {
     NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED, ROT_RIGHT, ROT_LEFT
@@ -26,14 +29,17 @@ Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
     Player *pPlayer = malloc(sizeof(Player));
     pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
     pPlayer->pTongue = NULL;
+
     pPlayer->state = FALLING;
     pPlayer->directionX = NEUTRAL;
     pPlayer->directionY = NEUTRAL;
-    pPlayer->gravityModifier = 0.0f;
-    pPlayer->jumpTimer = 0;
-    pPlayer->mouseClicked = false;
     pPlayer->rotateDirection = NEUTRAL;
 
+    pPlayer->mouseClicked = false;
+    pPlayer->gravityModifier = 0.0f;
+    pPlayer->jumpTimer = 0;
+    pPlayer->radius = 0.0f;
+    pPlayer->referenceAngle = 0.0f;
 
     pPlayer->sheetPosition.x = 0;
     pPlayer->sheetPosition.y = 0;
@@ -285,8 +291,8 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
             pPlayer->sheetPosition.y = 0;
             break;
     }
-    pPlayer->sheetPosition.x = offset;
 
+    pPlayer->sheetPosition.x = offset;
     setAccelerationY(pPlayer->pBody, GRAVITY_ACCELERATION*pPlayer->gravityModifier);
     updateVelocity(pPlayer->pBody, deltaTime);
 }
@@ -359,10 +365,10 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
     Vec2 newPosition;
     switch (pPlayer->rotateDirection) {
         case ROT_LEFT:
-            pPlayer->referenceAngle -= (PI/180) * deltaTime * ROTSPEED;
+            pPlayer->referenceAngle -= (M_PI/180) * deltaTime * ROTATION_SPEED;
             break;
         case ROT_RIGHT:
-            pPlayer->referenceAngle += (PI/180) * deltaTime * ROTSPEED;
+            pPlayer->referenceAngle += (M_PI/180) * deltaTime * ROTATION_SPEED;
             break;
     }   
 
@@ -459,15 +465,18 @@ bool playerSetState(Player *pPlayer, int newState) {
     return stateWasChanged;
 }
 
-void playerSetRadius(Player *pPlayer, float radius) {
+bool playerSetRadius(Player *pPlayer, float radius) {
     if (radius <= 0.0f) {
-        return;
+        return false;
     }
+
     pPlayer->radius = radius;
+    return true;
 }
 
 void playerSetReferenceAngle(Player *pPlayer, float newAngle) {
     pPlayer->referenceAngle = newAngle;
+    return;
 }
 
 int playerGetState(Player *pPlayer) {
@@ -478,7 +487,7 @@ Entity *playerGetBody(Player const *pPlayer) {
     return pPlayer->pBody;
 }
 
-SDL_Rect playerGetSheetPosition(Player *pPlayer) {
+SDL_Rect playerGetSheetPosition(Player const *pPlayer) {
     return pPlayer->sheetPosition;
 }
 

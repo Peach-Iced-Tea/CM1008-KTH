@@ -17,9 +17,6 @@
 #define MAX_PLAYER_VELOCITY 380.0f  // The absolute max value of the velocity a player can reach.
 #define MAX_GRAVITY_VELOCITY 660.0f // The absolute max value that the velocity of gravity can reach.
 
-#define PLAYER_VELOCITY 60.0f   // Initial velocity to be applied on a player upon moving.
-#define PLAYER_ACCELERATION 580.0f  // A constant for the acceleration of a player, this value gets modified by deltaTime before updating velocity.
-#define JUMP_VELOCITY 550.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
 #define GRAVITY_ACCELERATION 1960.0f    // The simulation of gravity uses this constant.
 
 typedef struct hitbox Hitbox;
@@ -42,24 +39,9 @@ Subtracts the given vector from the current positional values of x and y.
 void hitboxPositionSub(Hitbox *pHitbox, Vec2 const vector);
 
 /*
-Get the position of the given Hitbox.
-
-Returns a Vec2 containing the x and y coordinates.
-*/
-Vec2 getHitboxPosition(Hitbox const *pHitbox);
-
-/*
-Get the halfSize of the given Hitbox.
-
-Returns a Vec2 containing the width (.x) and height (.y).
-*/
-Vec2 getHitboxHalfSize(Hitbox const *pHitbox);
-
-/*
 Check if there is any collision between two hitboxes.
 
-Returns 'true' if collision has been detected.
-Returns 'false' if no collision has been detected.
+Returns 'true' if collision has been detected, otherwise returns 'false'.
 */
 bool checkCollision(Hitbox const *pObject1, Hitbox const *pObject2);
 
@@ -82,8 +64,26 @@ Returns a float containing the amount of "time" until collision.
 */
 float rayVsRect(Hitbox const *pObject, Hitbox const *pReference);
 
+/*
+Check if a point in space (x,y) is inside the given Hitbox.
 
-bool touching(Hitbox const *pHitbox, Vec2 const point);
+Returns 'true' if the point is inside the given Hitbox, otherwise returns 'false'.
+*/
+bool pointVsRect(Hitbox const *pHitbox, Vec2 const point);
+
+/*
+Get the position of the given Hitbox.
+
+Returns a Vec2 containing the x and y coordinates.
+*/
+Vec2 getHitboxPosition(Hitbox const *pHitbox);
+
+/*
+Get the halfSize of the given Hitbox.
+
+Returns a Vec2 containing the width (.x) and height (.y).
+*/
+Vec2 getHitboxHalfSize(Hitbox const *pHitbox);
 
 /*
 Use this function to destroy the given Hitbox pointer and free up memory.

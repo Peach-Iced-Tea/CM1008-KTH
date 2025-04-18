@@ -10,20 +10,14 @@ int main(int argv, char** args) {
     SDL_DisplayMode mainDisplay;
     SDL_GetDesktopDisplayMode(0, &mainDisplay);
 
-    // rendera ett fönster
     RenderWindow *pWindow = createRenderWindow("ToTheTop", mainDisplay.w, mainDisplay.h);
-    // rendera in Texturer för sig
     SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
-    // laddar Entitys med pekare till texturer
     SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/spriteSheetPlayer1.png");
 
     Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
-    //Player *pReference = createPlayer(createVector(128.0f, 32.0f), pPlayerTexture);
-    Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, 0, HITBOX_FULL_BLOCK);
+    Player *pReference = createPlayer(createVector(256.0f, 256.0f), pPlayerTexture);
 
-    // DynamicArray
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
-
     // Add blocks along the bottom of the screen.
     int windowHeight = (float)MAX_LOGICAL_WIDTH * mainDisplay.h/mainDisplay.w;
     for(int i = 0; i < MAX_LOGICAL_WIDTH; i+=32) {
@@ -47,12 +41,10 @@ int main(int argv, char** args) {
 //--------------------------------------------------------------------------------------------------------------------//
     Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
-    cameraSetTargets(pCamera, playerGetBody(pPlayer), pMObject);
+    cameraSetTargets(pCamera, playerGetBody(pPlayer), playerGetBody(pReference));
     cameraSetMode(pCamera, TRACKING_T1);
     cameraSetZoom(pCamera, MAX_ZOOM_IN);
 //--------------------------------------------------------------------------------------------------------------------//
-
-    SDL_Event event;
  
     const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
     Uint32 lastTime = SDL_GetTicks();
@@ -66,16 +58,18 @@ int main(int argv, char** args) {
         lastTime = currentTime;
         accumulator += deltaTime;
 
-        Vec2 mouseVector = cameraGetMousePosition(pCamera);
+        Vec2 mousePosition = cameraGetMousePosition(pCamera);
 
         gameRunning = playerHandleInput(pPlayer);
 
         if (playerGetMouseClick(pPlayer)) {
-            if (vectorLength(mouseVector, getMidPoint(playerGetBody(pPlayer))) < 240.0f) {
-                if (touching(getHitbox(pMObject), mouseVector)) {
-                    playerSetState(pPlayer, ROTATING); //LOGIK I PLAYER.C 
-                    float radius = vectorLength(getMidPoint(playerGetBody(pPlayer)), getMidPoint(pMObject));
-                    float alpha = vectorGetAngle(getMidPoint(playerGetBody(pPlayer)), getMidPoint(pMObject));
+            Entity *pBodyP1 = playerGetBody(pPlayer);
+            if (vectorLength(mousePosition, getMidPoint(pBodyP1)) < 240.0f) {
+                Entity *pBodyP2 = playerGetBody(pReference);
+                if (pointVsRect(getHitbox(pBodyP2), mousePosition)) {
+                    playerSetState(pPlayer, ROTATING);
+                    float radius = vectorLength(getMidPoint(pBodyP1), getMidPoint(pBodyP2));
+                    float alpha = vectorGetAngle(getMidPoint(pBodyP1), getMidPoint(pBodyP2));
                     playerSetRadius(pPlayer, radius);
                     playerSetReferenceAngle(pPlayer, alpha);
                 }
@@ -90,12 +84,13 @@ int main(int argv, char** args) {
 
         switch (playerGetState(pPlayer)) {
             case ROTATING:
+                Entity *pBodyP2 = playerGetBody(pReference);
                 Vec2 rotateVelocity;
                 Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
-                vectorSub(&rotateVelocity, newRotPos, getMidPoint(pMObject));
-                setVelocityX(pMObject, rotateVelocity.x);
-                setVelocityY(pMObject, rotateVelocity.y);
-                updatePosition(pMObject, 1.0f);
+                vectorSub(&rotateVelocity, newRotPos, getMidPoint(pBodyP2));
+                setVelocityX(pBodyP2, rotateVelocity.x);
+                setVelocityY(pBodyP2, rotateVelocity.y);
+                updatePosition(pBodyP2, 1.0f);
                 break;
             default:
                 playerUpdatePosition(pPlayer, deltaTime);
@@ -111,20 +106,16 @@ int main(int argv, char** args) {
             }
         }
 
-/*         if (playerCheckCollision(pPlayer, playerGetBody(pReference)) == OBJECT_IS_NORTH) {
+        if (playerCheckCollision(pPlayer, playerGetBody(pReference)) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
-        } */
-
+        }
 
         if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 
         clearWindow(pWindow);
 
-
         renderPlayer(pWindow, pPlayer, pCamera);
-        //renderEntity(pWindow, playerGetBody(pReference), pCamera);
-        renderEntity(pWindow, pMObject, pCamera);
-
+        renderPlayer(pWindow, pReference, pCamera);
         for (int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             Entity *pEntity = arrayGetObject(pPlatformArray, i);
             if (entityIsVisible(pCamera, getCurrentFrame(pEntity))) {
@@ -132,14 +123,14 @@ int main(int argv, char** args) {
             }
         }
 
-        if(playerGetMouseClick(pPlayer)) {
-            drawLine(pWindow, mouseVector, getMidPoint(playerGetBody(pPlayer)), pCamera);
+        if (playerGetMouseClick(pPlayer)) {
+            drawLine(pWindow, mousePosition, getMidPoint(playerGetBody(pPlayer)), pCamera);
         } 
         displayWindow(pWindow);
     }
     
     destroyPlayer(pPlayer);
-    //destroyPlayer(pReference);
+    destroyPlayer(pReference);
     destroyDynamicArray(pPlatformArray);
     SDL_DestroyTexture(pPlayerTexture);
     SDL_DestroyTexture(pGrassTexture);
