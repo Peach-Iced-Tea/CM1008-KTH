@@ -44,20 +44,16 @@ int main(int argv, char** args) {
     addEntity(pPlatformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
     addEntity(pPlatformArray, MAX_LOGICAL_WIDTH-32, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
+//--------------------------------------------------------------------------------------------------------------------//
     Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
     cameraSetTargets(pCamera, playerGetBody(pPlayer), pMObject);
     cameraSetMode(pCamera, TRACKING_T1);
     cameraSetZoom(pCamera, MAX_ZOOM_IN);
-
 //--------------------------------------------------------------------------------------------------------------------//
-
-//--------------------------------------------------------------------------------------------------------------------//
-
 
     SDL_Event event;
  
-
     const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
     Uint32 lastTime = SDL_GetTicks();
     float deltaTime = 0.0f;
@@ -92,7 +88,6 @@ int main(int argv, char** args) {
             accumulator -= timestep;
         }
 
-        
         switch (playerGetState(pPlayer)) {
             case ROTATING:
                 Vec2 rotateVelocity;
@@ -138,12 +133,8 @@ int main(int argv, char** args) {
         }
 
         if(playerGetMouseClick(pPlayer)) {
-            printf("mouseVector, X: %f, Y: %f\n", mouseVector.x, mouseVector.y);
             drawLine(pWindow, mouseVector, getMidPoint(playerGetBody(pPlayer)), pCamera);
         } 
-
-        //renderEntity(pWindow, pMObject);
-
         displayWindow(pWindow);
     }
     
