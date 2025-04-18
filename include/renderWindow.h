@@ -5,6 +5,7 @@
 
 #include "entity.h"
 #include "camera.h"
+#include "player.h"
 
 #define GLOBAL_SCALER 3.0f
 
@@ -38,9 +39,17 @@ Renders the given Entity on the screen if it is visible inside the camera dimens
 void renderEntity(RenderWindow *pRenderWindow, Entity *pEntity, Camera *pCamera);
 
 /*
+Renders the given Player on the screen if it is visible inside the camera dimensions.
+*/
+void renderPlayer(RenderWindow *pRenderWindow, Player *pPlayer, Camera *pCamera);
+
+/*
 Display the current latest frame inside the buffer of the given RenderWindow.
 */
 void displayWindow(RenderWindow *pRenderWindow);
+
+
+void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2);
 
 /*
 Get the SDL_Renderer* from the given RenderWindow.

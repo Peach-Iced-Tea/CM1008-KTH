@@ -8,13 +8,22 @@ struct entity {
     SDL_Texture *pTexture;
 };
 
-Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int hitboxType) {
+Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int entityType, int hitboxType) {
     Entity *pEntity = malloc(sizeof(Entity));
 
     pEntity->currentFrame.x = position.x;
     pEntity->currentFrame.y = position.y;
-    pEntity->currentFrame.w = 32.0f;
-    pEntity->currentFrame.h = 32.0f;
+
+    switch (entityType) {
+        case ENTITY_PLAYER:
+            pEntity->currentFrame.w = 48.0f;
+            pEntity->currentFrame.h = 48.0f;
+            break;
+        default:
+            pEntity->currentFrame.w = 32.0f;
+            pEntity->currentFrame.h = 32.0f;
+            break;
+    }
 
     pEntity->velocity = createVector(0.0f, 0.0f);
     pEntity->acceleration = createVector(0.0f, 0.0f);
@@ -58,6 +67,13 @@ bool setAccelerationX(Entity *pEntity, float a_x) {
 bool setAccelerationY(Entity *pEntity, float a_y) {
     pEntity->acceleration.y = a_y;
     return true;
+}
+
+void setPosition(Entity *pEntity, Vec2 const vector) {
+    pEntity->currentFrame.x = vector.x;
+    pEntity->currentFrame.y = vector.y;
+    hitboxPositionAdd(pEntity->pHitbox, vector);
+    return;
 }
 
 void updatePosition(Entity *pEntity, float const deltaTime) {

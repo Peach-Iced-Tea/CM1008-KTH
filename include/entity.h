@@ -6,9 +6,11 @@
 #include "vmath.h"
 #include "physics.h"
 
+#define ENTITY_PLAYER 1
+
 typedef struct entity Entity;
 
-Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int hitboxType);
+Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int entityType, int hitboxType);
 
 /*
 Returns the SDL_Texture* of the given Entity.
@@ -51,6 +53,8 @@ This value does not change after it is set.
 Expects an acceleration for the y-axis.
 */
 bool setAccelerationY(Entity *pEntity, float a_y);
+
+void setPosition(Entity *pEntity, Vec2 const vector);
 
 /*
 Updates the current x and y coordinates of the given Entity.

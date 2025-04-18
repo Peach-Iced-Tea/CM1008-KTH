@@ -1,9 +1,10 @@
 #include "player.h"
 
 #define JUMP_TIMER 10
+#define ROTSPEED 100
 
 typedef enum {
-    NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED
+    NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED, ROT_RIGHT, ROT_LEFT
 } Direction;
 
 struct player {
@@ -12,19 +13,32 @@ struct player {
     PlayerState state;
     Direction directionX;
     Direction directionY;
+    Direction rotateDirection;
+    bool mouseClicked;
     float gravityModifier;
     int jumpTimer;
+    float radius;
+    float referenceAngle;
+    SDL_Rect sheetPosition;
 };
 
 Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
     Player *pPlayer = malloc(sizeof(Player));
-    pPlayer->pBody = createEntity(position, pTexture, HITBOX_PLAYER);
+    pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
     pPlayer->pTongue = NULL;
     pPlayer->state = FALLING;
     pPlayer->directionX = NEUTRAL;
     pPlayer->directionY = NEUTRAL;
     pPlayer->gravityModifier = 0.0f;
     pPlayer->jumpTimer = 0;
+    pPlayer->mouseClicked = false;
+    pPlayer->rotateDirection = NEUTRAL;
+
+
+    pPlayer->sheetPosition.x = 0;
+    pPlayer->sheetPosition.y = 0;
+    pPlayer->sheetPosition.w = 32;
+    pPlayer->sheetPosition.h = 32; 
 
     return pPlayer;
 }
@@ -37,7 +51,7 @@ bool playerHandleInput(Player *pPlayer) {
             gameRunning = false;
         }
         else if (event.type == SDL_KEYDOWN) {
-            switch(event.key.keysym.scancode) {
+            switch (event.key.keysym.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     gameRunning = false;
                     break;
@@ -86,21 +100,46 @@ bool playerHandleInput(Player *pPlayer) {
                         case FLYING:
                             pPlayer->state = FALLING;
                             break;
-                        default:
+                        case FALLING:
                             pPlayer->state = FLYING;
+                            break;
+                        case IDLE:
+                            pPlayer->state = FLYING;
+                            break;
+
                     }
                     break;
                 case SDL_SCANCODE_SPACE:
                     switch (pPlayer->state) {
                         case IDLE:
                             pPlayer->state = JUMPING;
+                        break;
+                    }
+                    break;
+                case SDL_SCANCODE_E:
+                    switch (pPlayer->rotateDirection) {
+                        case NEUTRAL:
+                            pPlayer->rotateDirection = ROT_RIGHT;
+                            break;
+                        case ROT_LEFT:
+                            pPlayer->rotateDirection = BLOCKED;
+                            break;
+                    }
+                    break;
+                case SDL_SCANCODE_Q:
+                    switch (pPlayer->rotateDirection) {
+                        case NEUTRAL:
+                            pPlayer->rotateDirection = ROT_LEFT;
+                            break;
+                        case ROT_RIGHT:
+                            pPlayer->rotateDirection = BLOCKED;
                             break;
                     }
                     break;
             }
         }
         else if (event.type == SDL_KEYUP) {
-            switch(event.key.keysym.scancode) {
+            switch (event.key.keysym.scancode) {
                 case SDL_SCANCODE_W:
                     switch (pPlayer->directionY) {
                         case BLOCKED:
@@ -144,6 +183,44 @@ bool playerHandleInput(Player *pPlayer) {
                 case SDL_SCANCODE_SPACE:
                     pPlayer->state = FALLING;
                     break;
+                case SDL_SCANCODE_E:
+                    switch (pPlayer->rotateDirection) {
+                        case BLOCKED:
+                            pPlayer->rotateDirection = ROT_LEFT;
+                            break;
+                        case ROT_RIGHT:
+                            pPlayer->rotateDirection = NEUTRAL;
+                            break;
+                    }
+                    break;
+                case SDL_SCANCODE_Q:
+                    switch (pPlayer->rotateDirection) {
+                        case BLOCKED:
+                            pPlayer->rotateDirection = ROT_RIGHT;
+                            break;
+                        case ROT_LEFT:
+                            pPlayer->rotateDirection = NEUTRAL;
+                            break;
+                    }
+                    break;
+            }
+        }
+        else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            switch (event.button.button) {
+                case SDL_BUTTON_LEFT:
+                    pPlayer->mouseClicked = true;
+                    break;
+            }
+        }
+        else if (event.type == SDL_MOUSEBUTTONUP) {
+            switch (event.button.button) {
+                case SDL_BUTTON_LEFT:
+                    pPlayer->mouseClicked = false;
+                    switch (pPlayer->state) {
+                        case ROTATING:
+                            pPlayer->state = FALLING;
+                            break;
+                    }
             }
         }
     }
@@ -152,11 +229,27 @@ bool playerHandleInput(Player *pPlayer) {
 }
 
 void playerUpdateState(Player *pPlayer, float deltaTime) {
+    int offset = 0;
+    switch (pPlayer->directionX) {
+        case LEFT:
+            offset = 32;
+            break;
+        case RIGHT:
+            offset = 0;
+            break;
+        case NEUTRAL:
+        case BLOCKED:
+            offset = pPlayer->sheetPosition.x;
+            break;
+    }
+    
     switch (pPlayer->state) {
         case IDLE:
         case RUNNING:
             pPlayer->gravityModifier = 0.0f;
             setVelocityY(pPlayer->pBody, 0.0f);
+
+            pPlayer->sheetPosition.y = 0;
             break;
         case FALLING:
             if (pPlayer->jumpTimer > 0) {
@@ -164,22 +257,35 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
                 pPlayer->jumpTimer = 0;
             }
             pPlayer->gravityModifier = 1.0f;
+
+            pPlayer->sheetPosition.y = 64;
             break;
         case JUMPING:
-            if (pPlayer->jumpTimer == 0) { 
+            if (pPlayer->jumpTimer == 0) {
                 pPlayer->jumpTimer = JUMP_TIMER;
                 pPlayer->gravityModifier = 0.5f;
                 setVelocityY(pPlayer->pBody, -JUMP_VELOCITY);
             }
             else if (pPlayer->jumpTimer > 0) {
                 pPlayer->jumpTimer--;
-                if (pPlayer->jumpTimer == 0) { pPlayer->state = FALLING; }
+                if(pPlayer->jumpTimer == 0) {pPlayer->state = FALLING;}
             }
+
+            pPlayer->sheetPosition.y = 32;
             break;
         case FLYING:
             pPlayer->gravityModifier = 0.0f;
+
+            pPlayer->sheetPosition.y = 0;
+            break;
+        case ROTATING:
+            pPlayer->gravityModifier = 0.0f;
+
+            offset = pPlayer->sheetPosition.x;
+            pPlayer->sheetPosition.y = 0;
             break;
     }
+    pPlayer->sheetPosition.x = offset;
 
     setAccelerationY(pPlayer->pBody, GRAVITY_ACCELERATION*pPlayer->gravityModifier);
     updateVelocity(pPlayer->pBody, deltaTime);
@@ -203,7 +309,7 @@ void standardCalculations(Player *pPlayer) {
         case BLOCKED:
             setVelocityX(pPlayer->pBody, 0.0f);
             setAccelerationX(pPlayer->pBody, 0.0f);
-            break;
+            break;    
     }
 
     return;
@@ -249,8 +355,26 @@ void flyingCalculations(Player *pPlayer) {
     return;
 }
 
-void playerUpdatePosition(Player *pPlayer, float deltaTime) {
-    switch (pPlayer->state) {
+Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
+    Vec2 newPosition;
+    switch (pPlayer->rotateDirection) {
+        case ROT_LEFT:
+            pPlayer->referenceAngle -= (PI/180) * deltaTime * ROTSPEED;
+            break;
+        case ROT_RIGHT:
+            pPlayer->referenceAngle += (PI/180) * deltaTime * ROTSPEED;
+            break;
+    }   
+
+    newPosition.x =(getMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
+    newPosition.y =(getMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
+    
+    return newPosition;
+}
+
+Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
+    Vec2 returnVector;
+    switch(pPlayer->state) {
         case FALLING:
         case JUMPING:
         case IDLE:
@@ -259,6 +383,7 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             updatePosition(pPlayer->pBody, deltaTime);
             break;
         case ROTATING:
+            returnVector = rotationCalculations(pPlayer, deltaTime);
             break;
         case FLYING:
             flyingCalculations(pPlayer);
@@ -266,11 +391,11 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             break;
     }
 
-    return;
+    return returnVector;
 }
 
 int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
-    int collisionDetected = 0;
+    int collisionDetected = 0;    
     Hitbox *pPlayerHitbox = getHitbox(pPlayer->pBody);
     Hitbox *pEntityHitbox = getHitbox(pEntity);
     if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
@@ -315,14 +440,17 @@ bool playerSetState(Player *pPlayer, int newState) {
             switch (pPlayer->state) {
                 case JUMPING:
                 case FLYING:
+                case ROTATING:
                     break;
                 default:
                     stateWasChanged = true;
                     break;
             }
             break;
+        case ROTATING:
+            stateWasChanged = true;
         default:
-            break;
+            break;   
     }
 
     if (stateWasChanged) { pPlayer->state = newState; }
@@ -330,12 +458,31 @@ bool playerSetState(Player *pPlayer, int newState) {
     return stateWasChanged;
 }
 
+void playerSetRadius(Player *pPlayer, float radius) {
+    if (radius <= 0.0f) {
+        return;
+    }
+    pPlayer->radius = radius;
+}
+
+void playerSetReferenceAngle(Player *pPlayer, float newAngle) {
+    pPlayer->referenceAngle = newAngle;
+}
+
+int playerGetState(Player *pPlayer) {
+    return pPlayer->state;
+}
+
 Entity *playerGetBody(Player const *pPlayer) {
     return pPlayer->pBody;
 }
 
-int playerGetState(Player const *pPlayer) {
-    return pPlayer->state;
+SDL_Rect playerGetSheetPosition(Player *pPlayer) {
+    return pPlayer->sheetPosition;
+}
+
+bool playerGetMouseClick(Player const *pPlayer) {
+    return pPlayer->mouseClicked;
 }
 
 void destroyPlayer(Player *pPlayer) {

@@ -2,6 +2,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+#define PI 3.14159265359
+
 /*
 2-dimensional vector, containing two float values.
 */
@@ -29,3 +31,10 @@ float vectorLength(Vec2 const vector1, Vec2 const vector2);
 
 // Get the point(x,y) that is in the middle between the two given vectors.
 void vectorMidPoint(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2);
+
+// Get the angle between two vector positions.
+float vectorGetAngle(Vec2 const vector1, Vec2 const vector2);
+
+
+
+

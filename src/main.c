@@ -15,10 +15,11 @@ int main(int argv, char** args) {
     // rendera in Texturer för sig
     SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
     // laddar Entitys med pekare till texturer
-    SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/player1.png");
+    SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/spriteSheetPlayer1.png");
 
     Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
-    Player *pReference = createPlayer(createVector(128.0f, 32.0f), pPlayerTexture);
+    //Player *pReference = createPlayer(createVector(128.0f, 32.0f), pPlayerTexture);
+    Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, 0, HITBOX_FULL_BLOCK);
 
     // DynamicArray
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
@@ -45,12 +46,27 @@ int main(int argv, char** args) {
 
     Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
-    cameraSetTargets(pCamera, playerGetBody(pPlayer), playerGetBody(pReference));
+    cameraSetTargets(pCamera, playerGetBody(pPlayer), pMObject);
     cameraSetMode(pCamera, TRACKING_T1);
     cameraSetZoom(pCamera, MAX_ZOOM_IN);
 
+    //Entity *pPlayer = createEntity(createVector(32, 32), pPlayerTexture, HITBOX_PLAYER);
+
+
+//--------------------------------------------------------------------------------------------------------------------//
+
+    //RotateObject
+    //Entity *pMObject = createEntity(createVector(256, 256), pPlayerTexture, 0, HITBOX_FULL_BLOCK);
+
+    int x, y;
+    Vec2 mouseVector = createVector(0.0f, 0.0f);
+   
+//--------------------------------------------------------------------------------------------------------------------//
+
+    bool gameRunning = true;
+
     SDL_Event event;
-    Vec2 mousePosition;
+ 
 
     const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
     Uint32 lastTime = SDL_GetTicks();
@@ -64,46 +80,83 @@ int main(int argv, char** args) {
         lastTime = currentTime;
         accumulator += deltaTime;
 
-        mousePosition = cameraGetMousePosition(pCamera);
+        mouseVector = cameraGetMousePosition(pCamera);
         gameRunning = playerHandleInput(pPlayer);
 
-        if (accumulator >= timestep) {
+        if (playerGetMouseClick(pPlayer)) {
+            if (vectorLength(mouseVector, getMidPoint(playerGetBody(pPlayer))) < 240.0f) {
+                if (touching(getHitbox(pMObject), mouseVector)) {
+                    playerSetState(pPlayer, ROTATING); //LOGIK I PLAYER.C 
+                    float radius = vectorLength(getMidPoint(playerGetBody(pPlayer)), getMidPoint(pMObject));
+                    float alpha = vectorGetAngle(getMidPoint(playerGetBody(pPlayer)), getMidPoint(pMObject));
+                    playerSetRadius(pPlayer, radius);
+                    playerSetReferenceAngle(pPlayer, alpha);
+                }
+            }
+        }
+
+        if (accumulator >= timestep) {    
             // Add physics related calculations here...
             playerUpdateState(pPlayer, timestep);
             accumulator -= timestep;
         }
 
-        playerUpdatePosition(pPlayer, deltaTime);
+        
+        switch (playerGetState(pPlayer)) {
+            case ROTATING:
+                Vec2 rotateVelocity;
+                Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
+                vectorSub(&rotateVelocity, newRotPos, getMidPoint(pMObject));
+                setVelocityX(pMObject, rotateVelocity.x);
+                setVelocityY(pMObject, rotateVelocity.y);
+                updatePosition(pMObject, 1.0f);
+                break;
+            default:
+                playerUpdatePosition(pPlayer, deltaTime);
+                break;
+        }
+            
         cameraUpdate(pCamera);
 
         bool standingOnPlatform = false;
-        if (playerCheckCollision(pPlayer, playerGetBody(pReference)) == OBJECT_IS_NORTH) {
-            standingOnPlatform = true;
-        }
-
         for (int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             if (playerCheckCollision(pPlayer, arrayGetObject(pPlatformArray, i)) == OBJECT_IS_NORTH) {
                 standingOnPlatform = true;
             }
         }
 
+/*         if (playerCheckCollision(pPlayer, playerGetBody(pReference)) == OBJECT_IS_NORTH) {
+            standingOnPlatform = true;
+        } */
+
+
         if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 
         clearWindow(pWindow);
-        renderEntity(pWindow, playerGetBody(pPlayer), pCamera);
-        renderEntity(pWindow, playerGetBody(pReference), pCamera);
+
+
+        renderPlayer(pWindow, pPlayer, pCamera);
+        //renderEntity(pWindow, playerGetBody(pReference), pCamera);
+
+
         for (int i = 0; i < arrayGetSize(pPlatformArray); i++) {
             Entity *pEntity = arrayGetObject(pPlatformArray, i);
             if (entityIsVisible(pCamera, getCurrentFrame(pEntity))) {
                 renderEntity(pWindow, pEntity, pCamera);
             }
         }
-        
+
+        if(playerGetMouseClick(pPlayer)) {
+            drawLine(pWindow, mouseVector, getMidPoint(playerGetBody(pPlayer)));
+        } 
+
+        //renderEntity(pWindow, pMObject);
+
         displayWindow(pWindow);
     }
     
     destroyPlayer(pPlayer);
-    destroyPlayer(pReference);
+    //destroyPlayer(pReference);
     destroyDynamicArray(pPlatformArray);
     SDL_DestroyTexture(pPlayerTexture);
     SDL_DestroyTexture(pGrassTexture);
