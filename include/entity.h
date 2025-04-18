@@ -16,7 +16,7 @@ Returns the SDL_Texture* of the given Entity.
 SDL_Texture *getTexture(Entity const *pEntity);
 
 /*
-Returns the SDL_Rect of the given Entity.
+Returns the SDL_FRect of the given Entity.
 */
 SDL_FRect getCurrentFrame(Entity const *pEntity);
 
@@ -80,6 +80,11 @@ Vec2 getVelocity(Entity const *pEntity);
 Get the current acceleration on both the x-axis and y-axis for the given Entity.
 */
 Vec2 getAcceleration(Entity const *pEntity);
+
+/* 
+Get the current midpoint of the entity struct (midpoint of the sprite).
+*/
+Vec2 getMidPoint(Entity const *pEntity);
 
 /*
 Returns the Hitbox of the given Entity.
