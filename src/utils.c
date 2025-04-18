@@ -43,6 +43,7 @@ int addEntity(DynamicArray *pArray, float x, float y, SDL_Texture *pTexture, int
     }
 
     pArray->objects[pArray->size++] = createEntity(createVector(x, y), pTexture, 0, hitboxType);
+    return 0;
 }
 
 void *arrayGetObject(DynamicArray *pArray, int index) {

@@ -22,6 +22,7 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
     }
 
     pRenderWindow->fullscreen = false;
+    SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("resources/windowIcon.png"));
 
     return pRenderWindow;
 }
@@ -35,6 +36,8 @@ void toggleFullscreen(RenderWindow *pRenderWindow) {
         SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN);
         pRenderWindow->fullscreen = true;
     }
+    
+    return;
 }
 
 void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
@@ -45,19 +48,20 @@ void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
 }
 
 SDL_Texture *loadTexture(RenderWindow *pRenderWindow, char const *pFilePath) {
-    SDL_Texture* texture = NULL;
-    texture = IMG_LoadTexture(pRenderWindow->pRenderer, pFilePath);
-    if (texture == NULL) {
+    SDL_Texture *pTexture = NULL;
+    pTexture = IMG_LoadTexture(pRenderWindow->pRenderer, pFilePath);
+    if (pTexture == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
     }
     
-    return texture;
+    return pTexture;
 }
 
 void clearWindow(RenderWindow *pRenderWindow) {
     SDL_RenderClear(pRenderWindow->pRenderer);
     pRenderWindow->nrOfRenderedEntites = 0;
+    return;
 }
 
 void adjustToCamera(Camera const *pCamera, SDL_FRect *dst, Vec2 *vector) {
@@ -90,6 +94,7 @@ void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera con
 
     SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), &src, &dst);
     pRenderWindow->nrOfRenderedEntites++;
+    return;
 }
 
 void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera) {
@@ -99,10 +104,12 @@ void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera con
     SDL_Rect src = playerGetSheetPosition(pPlayer);
 
     SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(playerGetBody(pPlayer)), &src, &dst);
+    return;
 } 
 
 void displayWindow(RenderWindow *pRenderWindow) {
     SDL_RenderPresent(pRenderWindow->pRenderer);
+    return;
 }
 
 void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera) {
@@ -112,6 +119,7 @@ void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *p
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 255, 255);
     SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x, pos1.y, pos2.x, pos2.y);
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
+    return;
 }
 
 SDL_Renderer *getRenderer(RenderWindow const *pRenderWindow) {

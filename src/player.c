@@ -34,8 +34,25 @@ struct player {
     SDL_Rect sheetPosition;
 };
 
-Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
+Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
+    if (id < 0 || id > 1) { return NULL; }
+
     Player *pPlayer = malloc(sizeof(Player));
+    SDL_Texture *pTexture;
+    switch (id) {
+        case PLAYER_1:
+            pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
+            break;
+        case PLAYER_2:
+            pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
+            break;
+    }
+
+    if (pTexture == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return NULL;
+    }
+
     pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
     pPlayer->pTongue = NULL;
 
@@ -287,6 +304,7 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
     pPlayer->sheetPosition.x = offset;
     setAccelerationY(pPlayer->pBody, GRAVITY_ACCELERATION*pPlayer->gravityModifier);
     updateVelocity(pPlayer->pBody, deltaTime);
+    return;
 }
 
 void standardCalculations(Player *pPlayer) {
@@ -492,6 +510,8 @@ void destroyPlayer(Player *pPlayer) {
 
     destroyEntity(pPlayer->pBody);
     destroyEntity(pPlayer->pTongue);
+    SDL_DestroyTexture(getTexture(pPlayer->pBody));
+    //SDL_DestroyTexture(getTexture(pPlayer->pTongue));
     free(pPlayer);
     return;
 }

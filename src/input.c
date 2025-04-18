@@ -44,6 +44,15 @@ bool checkUserInput(Input *pInputs) {
                 case SDL_SCANCODE_D:
                     pressedKey = KEY_D;
                     break;
+                case SDL_SCANCODE_R:
+                    pressedKey = KEY_R;
+                    break;
+                case SDL_SCANCODE_T:
+                    pressedKey = KEY_T;
+                    break;
+                case SDL_SCANCODE_F:
+                    pressedKey = KEY_F;
+                    break;
                 case SDL_SCANCODE_G:
                     pressedKey = KEY_G;
                     break;
@@ -53,6 +62,9 @@ bool checkUserInput(Input *pInputs) {
                 case SDL_SCANCODE_E:
                     pressedKey = KEY_E;
                     break;
+                case SDL_SCANCODE_0:
+                    pressedKey = KEY_0;
+                    break;
                 case SDL_SCANCODE_1:
                     pressedKey = KEY_1;
                     break;
@@ -61,6 +73,24 @@ bool checkUserInput(Input *pInputs) {
                     break;
                 case SDL_SCANCODE_3:
                     pressedKey = KEY_3;
+                    break;
+                case SDL_SCANCODE_4:
+                    pressedKey = KEY_4;
+                    break;
+                case SDL_SCANCODE_5:
+                    pressedKey = KEY_5;
+                    break;
+                case SDL_SCANCODE_6:
+                    pressedKey = KEY_6;
+                    break;
+                case SDL_SCANCODE_7:
+                    pressedKey = KEY_7;
+                    break;
+                case SDL_SCANCODE_8:
+                    pressedKey = KEY_8;
+                    break;
+                case SDL_SCANCODE_9:
+                    pressedKey = KEY_9;
                     break;
                 case SDL_SCANCODE_SPACE:
                     pressedKey = KEY_SPACE;

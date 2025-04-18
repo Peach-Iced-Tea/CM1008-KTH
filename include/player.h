@@ -6,6 +6,9 @@
 #include "vmath.h"
 #include "input.h"
 
+#define PLAYER_1 0
+#define PLAYER_2 1
+
 typedef enum {
     IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING
 } PlayerState;
@@ -15,7 +18,7 @@ typedef struct player Player;
 /*
 Create a player with a given SDL_Texture* and positional values for where it should be in the world.
 */
-Player *createPlayer(Vec2 position, SDL_Texture *pTexture);
+Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id);
 
 /*
 Handles key inputs related to the handling of the Player data type.

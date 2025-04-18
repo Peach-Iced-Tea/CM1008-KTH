@@ -1,7 +1,18 @@
 #include "main.h"
 
+void cleanUp(RenderWindow *pRW, SDL_Texture *pT, Player *pP1, Player *pP2, DynamicArray *pDA, Camera *pC, Input *pI) {
+    destroyInputTracker(pI);
+    destroyPlayer(pP1);
+    destroyPlayer(pP2);
+    destroyDynamicArray(pDA);
+    SDL_DestroyTexture(pT);
+    destroyCamera(pC);
+    destroyRenderWindow(pRW);
+    return;
+}
+
 int main(int argv, char** args) {
-    if(SDL_Init(SDL_INIT_VIDEO)!=0) {
+    if (SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
         return 1;
     }
@@ -11,13 +22,19 @@ int main(int argv, char** args) {
     SDL_GetDesktopDisplayMode(0, &mainDisplay);
 
     RenderWindow *pWindow = createRenderWindow("ToTheTop", mainDisplay.w, mainDisplay.h);
-    SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
-    SDL_Texture *pPlayerTexture = loadTexture(pWindow, "resources/spriteSheetPlayer1.png");
+    if (pWindow == NULL) { SDL_Quit(); return 1; }
 
-    Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), pPlayerTexture);
-    Player *pReference = createPlayer(createVector(256.0f, 256.0f), pPlayerTexture);
+    SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
+    if (pGrassTexture == NULL) { cleanUp(pWindow, NULL, NULL, NULL, NULL, NULL, NULL); SDL_Quit(); return 1; }
+
+    Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), getRenderer(pWindow), PLAYER_1);
+    if (pPlayer == NULL) { cleanUp(pWindow, pGrassTexture, NULL, NULL, NULL, NULL, NULL); SDL_Quit(); return 1; }
+
+    Player *pReference = createPlayer(createVector(256.0f, 256.0f), getRenderer(pWindow), PLAYER_2);
+    if (pReference == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, NULL, NULL, NULL, NULL); SDL_Quit(); return 1; }
 
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
+    if (pPlatformArray == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, NULL, NULL, NULL); SDL_Quit(); return 1; }
     // Add blocks along the bottom of the screen.
     int windowHeight = (float)MAX_LOGICAL_WIDTH * mainDisplay.h/mainDisplay.w;
     for(int i = 0; i < MAX_LOGICAL_WIDTH; i+=32) {
@@ -40,10 +57,13 @@ int main(int argv, char** args) {
 
 //--------------------------------------------------------------------------------------------------------------------//
     Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
+    if (pCamera == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, NULL, NULL); SDL_Quit(); return 1; }
+
     cameraSetRenderer(pCamera, getRenderer(pWindow));
     cameraSetTargets(pCamera, playerGetBody(pPlayer), playerGetBody(pReference));
 
     Input *pInputs = createInputTracker();
+    if (pInputs == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, pCamera, NULL); SDL_Quit(); return 1; }
 //--------------------------------------------------------------------------------------------------------------------//
  
     const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
@@ -129,17 +149,12 @@ int main(int argv, char** args) {
 
         if (playerGetMouseClick(pPlayer)) {
             drawLine(pWindow, mousePosition, getMidPoint(playerGetBody(pPlayer)), pCamera);
-        } 
+        }
+        
         displayWindow(pWindow);
     }
-    
-    destroyPlayer(pPlayer);
-    destroyPlayer(pReference);
-    destroyDynamicArray(pPlatformArray);
-    SDL_DestroyTexture(pPlayerTexture);
-    SDL_DestroyTexture(pGrassTexture);
-    destroyCamera(pCamera);
-    destroyRenderWindow(pWindow);
+
+    cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, pCamera, pInputs);
     SDL_Quit();
 
     return 0;
