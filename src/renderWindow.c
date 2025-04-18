@@ -37,6 +37,13 @@ void toggleFullscreen(RenderWindow *pRenderWindow) {
     }
 }
 
+void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_RETURN)) { toggleFullscreen(pRenderWindow); }
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_TAB) && pRenderWindow->fullscreen) { toggleFullscreen(pRenderWindow); }
+
+    return;
+}
+
 SDL_Texture *loadTexture(RenderWindow *pRenderWindow, const char* pFilePath) {
     SDL_Texture* texture = NULL;
     texture = IMG_LoadTexture(pRenderWindow->pRenderer, pFilePath);

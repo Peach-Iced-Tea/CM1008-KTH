@@ -12,10 +12,11 @@ typedef struct renderWindow RenderWindow;
 RenderWindow *createRenderWindow(const char* pTitle, int w, int h);
 
 /*
-This function will set the game window of the given RenderWindow to fullscreen,
-unless it is already in fullscreen, then it will set it to Borderless instead.
+Handles key inputs related to the functions of the RenderWindow data type.
+
+Such as toggling fullscreen on and off.
 */
-void toggleFullscreen(RenderWindow *pRenderWindow);
+void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs);
 
 /*
 Load a new SDL_Texture* using the pRenderer of the given RenderWindow.

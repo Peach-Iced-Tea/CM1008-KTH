@@ -4,6 +4,7 @@
 
 #include "entity.h"
 #include "vmath.h"
+#include "input.h"
 
 /*
 SCALING: The camera will use two Entities as reference points and stay in the middle of them while scaling the zoom level automatically.
@@ -18,7 +19,7 @@ typedef enum {
 typedef struct camera Camera;
 
 #define MAX_ZOOM_IN 2.5f
-#define MAX_ZOOM_OUT 1.0f
+#define MAX_ZOOM_OUT 1.5f
 #define MAX_LOGICAL_WIDTH 1920
 
 // Error codes are defined below here.
@@ -35,6 +36,13 @@ Create a Camera with the current resolution of the game window.
 The camera needs access to a SDL_renderer*, set one with cameraSetRenderer().
 */
 Camera *createCamera(int width, int height, int refreshRate, int cameraMode);
+
+/*
+Handles key inputs related to the functions of the Camera data type.
+
+Such as setting what mode the given Camera should be set to.
+*/
+void cameraHandleInput(Camera *pCamera, Input const *pInputs);
 
 /*
 Set the SDL_Renderer* that the given Camera should use when scaling.

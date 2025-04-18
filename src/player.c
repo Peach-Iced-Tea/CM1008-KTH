@@ -6,6 +6,15 @@
 #define JUMP_VELOCITY 550.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
 #define ROTATION_SPEED 100
 
+#define MOVE_UP_INPUT KEY_W
+#define MOVE_DOWN_INPUT KEY_S
+#define MOVE_LEFT_INPUT KEY_A
+#define MOVE_RIGHT_INPUT KEY_D
+#define JUMP_INPUT KEY_SPACE
+#define ROTATE_LEFT_INPUT KEY_Q
+#define ROTATE_RIGHT_INPUT KEY_E
+#define TOGGLE_GODMODE_INPUT KEY_G
+
 typedef enum {
     NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED, ROT_RIGHT, ROT_LEFT
 } Direction;
@@ -49,189 +58,172 @@ Player *createPlayer(Vec2 position, SDL_Texture *pTexture) {
     return pPlayer;
 }
 
-bool playerHandleInput(Player *pPlayer) {
-    bool gameRunning = true;
-    SDL_Event event;
-    while(SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            gameRunning = false;
-        }
-        else if (event.type == SDL_KEYDOWN) {
-            switch (event.key.keysym.scancode) {
-                case SDL_SCANCODE_ESCAPE:
-                    gameRunning = false;
-                    break;
-                case SDL_SCANCODE_W:
-                    switch (pPlayer->directionY) {
-                        case NEUTRAL:
-                            pPlayer->directionY = UP;
-                            break;
-                        case DOWN:
-                            pPlayer->directionY = BLOCKED;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_S:
-                    switch (pPlayer->directionY) {
-                        case NEUTRAL:
-                            pPlayer->directionY = DOWN;
-                            break;
-                        case UP:
-                            pPlayer->directionY = BLOCKED;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_A:
-                    switch (pPlayer->directionX) {
-                        case NEUTRAL:
-                            pPlayer->directionX = LEFT;
-                            break;
-                        case RIGHT:
-                            pPlayer->directionX = BLOCKED;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_D:
-                    switch (pPlayer->directionX) {
-                        case NEUTRAL:
-                            pPlayer->directionX = RIGHT;
-                            break;
-                        case LEFT:
-                            pPlayer->directionX = BLOCKED;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_G:
-                    switch (pPlayer->state) {
-                        case FLYING:
-                            pPlayer->state = FALLING;
-                            break;
-                        case FALLING:
-                            pPlayer->state = FLYING;
-                            break;
-                        case IDLE:
-                            pPlayer->state = FLYING;
-                            break;
+void playerHandleInput(Player *pPlayer, Input const *pInputs) {
+    const int *keys = getKeyInputs(pInputs);
+    const int *mouse = getMouseInputs(pInputs);
 
-                    }
-                    break;
-                case SDL_SCANCODE_SPACE:
-                    switch (pPlayer->state) {
-                        case IDLE:
-                            pPlayer->state = JUMPING;
-                        break;
-                    }
-                    break;
-                case SDL_SCANCODE_E:
-                    switch (pPlayer->rotateDirection) {
-                        case NEUTRAL:
-                            pPlayer->rotateDirection = ROT_RIGHT;
-                            break;
-                        case ROT_LEFT:
-                            pPlayer->rotateDirection = BLOCKED;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_Q:
-                    switch (pPlayer->rotateDirection) {
-                        case NEUTRAL:
-                            pPlayer->rotateDirection = ROT_LEFT;
-                            break;
-                        case ROT_RIGHT:
-                            pPlayer->rotateDirection = BLOCKED;
-                            break;
-                    }
-                    break;
-            }
+    if (keys[MOVE_UP_INPUT]) {
+        switch (pPlayer->directionY) {
+            case NEUTRAL:
+                pPlayer->directionY = UP;
+                break;
+            case DOWN:
+                pPlayer->directionY = BLOCKED;
+                break;
         }
-        else if (event.type == SDL_KEYUP) {
-            switch (event.key.keysym.scancode) {
-                case SDL_SCANCODE_W:
-                    switch (pPlayer->directionY) {
-                        case BLOCKED:
-                            pPlayer->directionY = DOWN;
-                            break;
-                        case UP:
-                            pPlayer->directionY = NEUTRAL;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_S:
-                    switch (pPlayer->directionY) {
-                        case BLOCKED:
-                            pPlayer->directionY = UP;
-                            break;
-                        case DOWN:
-                            pPlayer->directionY = NEUTRAL;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_A:
-                    switch (pPlayer->directionX) {
-                        case BLOCKED:
-                            pPlayer->directionX = RIGHT;
-                            break;
-                        case LEFT:
-                            pPlayer->directionX = NEUTRAL;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_D:
-                    switch (pPlayer->directionX) {
-                        case BLOCKED:
-                            pPlayer->directionX = LEFT;
-                            break;
-                        case RIGHT:
-                            pPlayer->directionX = NEUTRAL;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_SPACE:
-                    pPlayer->state = FALLING;
-                    break;
-                case SDL_SCANCODE_E:
-                    switch (pPlayer->rotateDirection) {
-                        case BLOCKED:
-                            pPlayer->rotateDirection = ROT_LEFT;
-                            break;
-                        case ROT_RIGHT:
-                            pPlayer->rotateDirection = NEUTRAL;
-                            break;
-                    }
-                    break;
-                case SDL_SCANCODE_Q:
-                    switch (pPlayer->rotateDirection) {
-                        case BLOCKED:
-                            pPlayer->rotateDirection = ROT_RIGHT;
-                            break;
-                        case ROT_LEFT:
-                            pPlayer->rotateDirection = NEUTRAL;
-                            break;
-                    }
-                    break;
-            }
-        }
-        else if (event.type == SDL_MOUSEBUTTONDOWN) {
-            switch (event.button.button) {
-                case SDL_BUTTON_LEFT:
-                    pPlayer->mouseClicked = true;
-                    break;
-            }
-        }
-        else if (event.type == SDL_MOUSEBUTTONUP) {
-            switch (event.button.button) {
-                case SDL_BUTTON_LEFT:
-                    pPlayer->mouseClicked = false;
-                    switch (pPlayer->state) {
-                        case ROTATING:
-                            pPlayer->state = FALLING;
-                            break;
-                    }
-            }
+    }
+    else {
+        switch (pPlayer->directionY) {
+            case BLOCKED:
+                pPlayer->directionY = DOWN;
+                break;
+            case UP:
+                pPlayer->directionY = NEUTRAL;
+                break;
         }
     }
 
-    return gameRunning;
+    if (keys[MOVE_DOWN_INPUT]) {
+        switch (pPlayer->directionY) {
+            case NEUTRAL:
+                pPlayer->directionY = DOWN;
+                break;
+            case UP:
+                pPlayer->directionY = BLOCKED;
+                break;
+        }
+    }
+    else {
+        switch (pPlayer->directionY) {
+            case BLOCKED:
+                pPlayer->directionY = UP;
+                break;
+            case DOWN:
+                pPlayer->directionY = NEUTRAL;
+                break;
+        }
+    }
+
+    if (keys[MOVE_LEFT_INPUT]) {
+        switch (pPlayer->directionX) {
+            case NEUTRAL:
+                pPlayer->directionX = LEFT;
+                break;
+            case RIGHT:
+                pPlayer->directionX = BLOCKED;
+                break;
+        }
+    }
+    else {
+        switch (pPlayer->directionX) {
+            case BLOCKED:
+                pPlayer->directionX = RIGHT;
+                break;
+            case LEFT:
+                pPlayer->directionX = NEUTRAL;
+                break;
+        }
+    }
+
+    if (keys[MOVE_RIGHT_INPUT]) {
+        switch (pPlayer->directionX) {
+            case NEUTRAL:
+                pPlayer->directionX = RIGHT;
+                break;
+            case LEFT:
+                pPlayer->directionX = BLOCKED;
+                break;
+        }
+    }
+    else {
+        switch (pPlayer->directionX) {
+            case BLOCKED:
+                pPlayer->directionX = LEFT;
+                break;
+            case RIGHT:
+                pPlayer->directionX = NEUTRAL;
+                break;
+        }
+    }
+
+    if (keys[TOGGLE_GODMODE_INPUT] == KEY_STATE_DOWN) {
+        switch (pPlayer->state) {
+            case FLYING:
+                pPlayer->state = FALLING;
+                break;
+            default:
+                pPlayer->state = FLYING;
+        }
+    }
+
+    if (keys[ROTATE_LEFT_INPUT]) {
+        switch (pPlayer->rotateDirection) {
+            case NEUTRAL:
+                pPlayer->rotateDirection = ROT_LEFT;
+                break;
+            case ROT_RIGHT:
+                pPlayer->rotateDirection = BLOCKED;
+                break;
+        }
+    }
+    else {
+        switch (pPlayer->rotateDirection) {
+            case BLOCKED:
+                pPlayer->rotateDirection = ROT_RIGHT;
+                break;
+            case ROT_LEFT:
+                pPlayer->rotateDirection = NEUTRAL;
+                break;
+        }
+    }
+
+    if (keys[ROTATE_RIGHT_INPUT]) {
+        switch (pPlayer->rotateDirection) {
+            case NEUTRAL:
+                pPlayer->rotateDirection = ROT_RIGHT;
+                break;
+            case ROT_LEFT:
+                pPlayer->rotateDirection = BLOCKED;
+                break;
+        }
+    }
+    else {
+        switch (pPlayer->rotateDirection) {
+            case BLOCKED:
+                pPlayer->rotateDirection = ROT_LEFT;
+                break;
+            case ROT_RIGHT:
+                pPlayer->rotateDirection = NEUTRAL;
+                break;
+        }
+    }
+
+    if (keys[JUMP_INPUT]) {
+        switch (pPlayer->state) {
+            case IDLE:
+            case RUNNING:
+                pPlayer->state = JUMPING;
+            break;
+        }
+    }
+    else {
+        switch (pPlayer->state) {
+            case JUMPING:
+                pPlayer->state = FALLING;
+                break;
+        }
+    }
+
+    pPlayer->mouseClicked = mouse[MOUSE_LEFT];
+    if (!pPlayer->mouseClicked) {
+        switch (pPlayer->state) {
+            case ROTATING:
+                pPlayer->state = FALLING;
+                break;
+        }
+    }
+
+    return;
 }
 
 void playerUpdateState(Player *pPlayer, float deltaTime) {

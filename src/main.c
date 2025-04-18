@@ -42,8 +42,8 @@ int main(int argv, char** args) {
     Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
     cameraSetRenderer(pCamera, getRenderer(pWindow));
     cameraSetTargets(pCamera, playerGetBody(pPlayer), playerGetBody(pReference));
-    cameraSetMode(pCamera, TRACKING_T1);
-    cameraSetZoom(pCamera, MAX_ZOOM_IN);
+
+    Input *pInputs = createInputTracker();
 //--------------------------------------------------------------------------------------------------------------------//
  
     const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
@@ -52,7 +52,7 @@ int main(int argv, char** args) {
     float accumulator = 0.0f;
 
     bool gameRunning = true;
-    while(gameRunning) {
+    while (gameRunning) {
         Uint32 currentTime = SDL_GetTicks();
         deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
         lastTime = currentTime;
@@ -60,7 +60,10 @@ int main(int argv, char** args) {
 
         Vec2 mousePosition = cameraGetMousePosition(pCamera);
 
-        gameRunning = playerHandleInput(pPlayer);
+        gameRunning = checkUserInput(pInputs);
+        playerHandleInput(pPlayer, pInputs);
+        cameraHandleInput(pCamera, pInputs);
+        windowHandleInput(pWindow, pInputs);
 
         if (playerGetMouseClick(pPlayer)) {
             Entity *pBodyP1 = playerGetBody(pPlayer);
@@ -78,6 +81,7 @@ int main(int argv, char** args) {
 
         if (accumulator >= timestep) {    
             // Add physics related calculations here...
+            inputHoldTimer(pInputs);
             playerUpdateState(pPlayer, timestep);
             accumulator -= timestep;
         }

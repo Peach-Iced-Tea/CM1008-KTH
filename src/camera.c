@@ -7,7 +7,6 @@ typedef struct {
     int trueHeight;
     int adjustedWidth;
     int adjustedHeight;
-    float maxZoomOut;
     int refreshRate;
 } Display;
 
@@ -32,6 +31,7 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
 
     pCamera->display.trueWidth = width;
     pCamera->display.trueHeight = height;
+    pCamera->display.refreshRate = refreshRate;
     if (width > MAX_LOGICAL_WIDTH) {
         pCamera->display.adjustedWidth = MAX_LOGICAL_WIDTH;
         pCamera->display.adjustedHeight = MAX_LOGICAL_WIDTH * height/width;
@@ -40,9 +40,6 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
         pCamera->display.adjustedWidth = width;
         pCamera->display.adjustedHeight = height;
     }
-
-    pCamera->display.maxZoomOut = (float)width/MAX_LOGICAL_WIDTH;
-    pCamera->display.refreshRate = refreshRate;
 
     pCamera->logicalWidth = 0;
     pCamera->logicalHeight = 0;
@@ -55,6 +52,16 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
     pCamera->trackTimer = TRACKING_TIMER;
 
     return pCamera;
+}
+
+void cameraHandleInput(Camera *pCamera, Input const *pInputs) {
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_1)) { cameraSetMode(pCamera, SCALING); }
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_2)) { cameraSetMode(pCamera, TRACKING_T1); }
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_3)) { cameraSetMode(pCamera, TRACKING_T2); }
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_COMMA)) { cameraSetZoom(pCamera, MAX_ZOOM_OUT); }
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_PERIOD)) { cameraSetZoom(pCamera, MAX_ZOOM_IN); }
+
+    return;
 }
 
 int cameraSetRenderer(Camera *pCamera, SDL_Renderer *pRenderer) {
@@ -92,7 +99,7 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
     if (pCamera == NULL) { return CAMERA_IS_NULL; }
 
     if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
-    else if (zoomScale < pCamera->display.maxZoomOut) { zoomScale = pCamera->display.maxZoomOut; }
+    else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
 
     pCamera->logicalWidth = round(pCamera->display.adjustedWidth / zoomScale);
     pCamera->logicalHeight = round(pCamera->display.adjustedHeight / zoomScale);
@@ -123,7 +130,7 @@ void cameraScaleToTargets(Camera *pCamera) {
     else { zoomToApply = zoomY; }
 
     if (zoomToApply > MAX_ZOOM_IN) { zoomToApply = MAX_ZOOM_IN; }
-    else if (zoomToApply < pCamera->display.maxZoomOut) { zoomToApply = pCamera->display.maxZoomOut; }
+    else if (zoomToApply < MAX_ZOOM_OUT) { zoomToApply = MAX_ZOOM_OUT; }
 
     cameraSetZoom(pCamera, zoomToApply);
 

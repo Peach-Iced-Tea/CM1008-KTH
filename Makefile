@@ -15,8 +15,8 @@ CFLAGS = -g $(INCLUDE) -c
 TARGET = ToTheTop.exe
 
 
-$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o
-	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o $(LDFLAGS)
+$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o
+	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o $(LDFLAGS)
 
 main.o: $(SRCDIR)/main.c $(INCDIR)/main.h
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c
@@ -41,6 +41,9 @@ utils.o: $(SRCDIR)/utils.c $(INCDIR)/utils.h
 
 player.o: $(SRCDIR)/player.c $(INCDIR)/player.h
 	$(CC) $(CFLAGS) $(SRCDIR)/player.c
+
+input.o: $(SRCDIR)/input.c $(INCDIR)/input.h
+	$(CC) $(CFLAGS) $(SRCDIR)/input.c
 
 
 clean:

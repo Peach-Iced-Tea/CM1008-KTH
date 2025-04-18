@@ -4,6 +4,7 @@
 
 #include "entity.h"
 #include "vmath.h"
+#include "input.h"
 
 typedef enum {
     IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING
@@ -17,9 +18,11 @@ Create a player with a given SDL_Texture* and positional values for where it sho
 Player *createPlayer(Vec2 position, SDL_Texture *pTexture);
 
 /*
-This function will handle keyboard/mouse inputs related to the player, such as movement or mouse clicks.
+Handles key inputs related to the handling of the Player data type.
+
+Such as moving the given Player left and right, as well as jumping.
 */
-bool playerHandleInput(Player *pPlayer);
+void playerHandleInput(Player *pPlayer, Input const *pInputs);
 
 /*
 Update the given Player based on what PlayerState it is in currently.
