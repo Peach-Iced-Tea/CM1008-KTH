@@ -55,13 +55,12 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
 }
 
 void cameraHandleInput(Camera *pCamera, Input const *pInputs) {
-    const int *keys = getKeyInputs(pInputs);
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_1)) { cameraSetMode(pCamera, SCALING); }
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_2)) { cameraSetMode(pCamera, TRACKING_T1); }
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_3)) { cameraSetMode(pCamera, TRACKING_T2); }
-    if (keys[KEY_ALT] && pCamera->mode != SCALING) {
-        if (keys[KEY_COMMA]) { cameraSetZoom(pCamera, pCamera->currentZoom-0.02f); }
-        if (keys[KEY_PERIOD]) { cameraSetZoom(pCamera, pCamera->currentZoom+0.02f); }
+    if (getKeyState(pInputs, KEY_ALT) && pCamera->mode != SCALING) {
+        if (getKeyState(pInputs, KEY_COMMA)) { cameraSetZoom(pCamera, pCamera->currentZoom-0.02f); }
+        if (getKeyState(pInputs, KEY_PERIOD)) { cameraSetZoom(pCamera, pCamera->currentZoom+0.02f); }
     }
 
     return;

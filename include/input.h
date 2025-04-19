@@ -23,14 +23,34 @@ typedef struct input Input;
 
 Input *createInputTracker();
 
+/*
+Use this function to check which user input events that SDL_PollEvent has found.
+*/
 bool checkUserInput(Input *pInputs);
 
+/*
+This function counts how many cycles the key/mouse button has been held down.
+
+If it equals KEY_STATE_HOLD then the button is considered to be held down.
+*/
 void inputHoldTimer(Input *pInputs);
 
+/*
+Check the state of a specific button tied to the keyboard input list.
+*/
+int getKeyState(Input const *pInputs, int keyboardButton);
+
+/*
+Check the state of a specific button tied to the mouse input list.
+*/
+int getMouseState(Input const *pInputs, int mouseButton);
+
+/*
+Check a combination of two keys related to the keyboard input list to see if the have both been pressed down.
+*/
 bool checkKeyCombo(Input const *pInputs, int key1, int key2);
 
-const int *getKeyInputs(Input const *pInputs);
-
-const int *getMouseInputs(Input const *pInputs);
-
+/*
+Use this function to destroy the given Input pointer and free up memory.
+*/
 void destroyInputTracker(Input *pInputs);

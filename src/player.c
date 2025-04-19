@@ -76,10 +76,7 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
 }
 
 void playerHandleInput(Player *pPlayer, Input const *pInputs) {
-    const int *keys = getKeyInputs(pInputs);
-    const int *mouse = getMouseInputs(pInputs);
-
-    if (keys[MOVE_UP_INPUT]) {
+    if (getKeyState(pInputs, MOVE_UP_INPUT)) {
         switch (pPlayer->directionY) {
             case NEUTRAL:
                 pPlayer->directionY = UP;
@@ -100,7 +97,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (keys[MOVE_DOWN_INPUT]) {
+    if (getKeyState(pInputs, MOVE_DOWN_INPUT)) {
         switch (pPlayer->directionY) {
             case NEUTRAL:
                 pPlayer->directionY = DOWN;
@@ -121,7 +118,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (keys[MOVE_LEFT_INPUT]) {
+    if (getKeyState(pInputs, MOVE_LEFT_INPUT)) {
         switch (pPlayer->directionX) {
             case NEUTRAL:
                 pPlayer->directionX = LEFT;
@@ -142,7 +139,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (keys[MOVE_RIGHT_INPUT]) {
+    if (getKeyState(pInputs, MOVE_RIGHT_INPUT)) {
         switch (pPlayer->directionX) {
             case NEUTRAL:
                 pPlayer->directionX = RIGHT;
@@ -163,7 +160,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (keys[TOGGLE_GODMODE_INPUT] == KEY_STATE_DOWN) {
+    if (getKeyState(pInputs, TOGGLE_GODMODE_INPUT) == KEY_STATE_DOWN) {
         switch (pPlayer->state) {
             case FLYING:
                 pPlayer->state = FALLING;
@@ -173,7 +170,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (keys[ROTATE_LEFT_INPUT]) {
+    if (getKeyState(pInputs, ROTATE_LEFT_INPUT)) {
         switch (pPlayer->rotateDirection) {
             case NEUTRAL:
                 pPlayer->rotateDirection = ROT_LEFT;
@@ -194,7 +191,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (keys[ROTATE_RIGHT_INPUT]) {
+    if (getKeyState(pInputs, ROTATE_RIGHT_INPUT)) {
         switch (pPlayer->rotateDirection) {
             case NEUTRAL:
                 pPlayer->rotateDirection = ROT_RIGHT;
@@ -215,7 +212,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (keys[JUMP_INPUT]) {
+    if (getKeyState(pInputs, JUMP_INPUT)) {
         switch (pPlayer->state) {
             case IDLE:
             case RUNNING:
@@ -231,7 +228,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    pPlayer->mouseClicked = mouse[MOUSE_LEFT];
+    pPlayer->mouseClicked = getMouseState(pInputs, MOUSE_LEFT);
     if (!pPlayer->mouseClicked) {
         switch (pPlayer->state) {
             case ROTATING:
