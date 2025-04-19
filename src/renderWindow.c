@@ -4,6 +4,7 @@ struct renderWindow {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     bool fullscreen;
+    bool renderHitboxes;
     int nrOfRenderedEntites;    // Used for debugging purposes.
 };
 
@@ -22,6 +23,7 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
     }
 
     pRenderWindow->fullscreen = false;
+    pRenderWindow->renderHitboxes = false;
     SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("resources/gameIcon.png"));
 
     return pRenderWindow;
@@ -50,6 +52,7 @@ void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
     }
 
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_RETURN)) { toggleFullscreen(pRenderWindow); }
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_T)) { pRenderWindow->renderHitboxes = !pRenderWindow->renderHitboxes; }
 
     return;
 }
@@ -72,20 +75,40 @@ void clearWindow(RenderWindow *pRenderWindow) {
 }
 
 void adjustToCamera(Camera const *pCamera, SDL_FRect *dst, Vec2 *vector) {
+    float globalScale = cameraGetGlobalScale(pCamera);
     float offsetWidth = cameraGetWidth(pCamera)*0.5f;
     float offsetHeight = cameraGetHeight(pCamera)*0.5f;
     Vec2 cameraPosition = cameraGetPosition(pCamera);
 
     if (dst != NULL) {
-        dst->x += offsetWidth - cameraPosition.x;
-        dst->y += offsetHeight - cameraPosition.y;
+        dst->x = dst->x*globalScale + offsetWidth - cameraPosition.x*globalScale;
+        dst->y = dst->y*globalScale + offsetHeight - cameraPosition.y*globalScale;
+        dst->w *= globalScale;
+        dst->h *= globalScale;
     }
 
     if (vector != NULL) {
-        vector->x += offsetWidth - cameraPosition.x;
-        vector->y += offsetHeight - cameraPosition.y;
+        vector->x = vector->x*globalScale + offsetWidth - cameraPosition.x*globalScale;
+        vector->y = vector->y*globalScale + offsetHeight - cameraPosition.y*globalScale;
     }
 
+    return;
+}
+
+void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
+    Vec2 halfSize = getHitboxHalfSize(pHitbox);
+    Vec2 topLeftCorner;
+    vectorSub(&topLeftCorner, getHitboxPosition(pHitbox), halfSize);
+    SDL_FRect dst;
+    dst.x = topLeftCorner.x;
+    dst.y = topLeftCorner.y;
+    dst.w = halfSize.x*2.0f;
+    dst.h = halfSize.y*2.0f;
+    adjustToCamera(pCamera, &dst, NULL);
+
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
+    SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
     return;
 }
 
@@ -100,6 +123,7 @@ void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera con
     src.y = 0;
 
     SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), &src, &dst);
+    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, getHitbox(pEntity), pCamera); }
     pRenderWindow->nrOfRenderedEntites++;
     return;
 }
@@ -111,6 +135,7 @@ void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera con
     SDL_Rect src = playerGetSheetPosition(pPlayer);
 
     SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(playerGetBody(pPlayer)), &src, &dst);
+    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, getHitbox(playerGetBody(pPlayer)), pCamera); }
     return;
 } 
 

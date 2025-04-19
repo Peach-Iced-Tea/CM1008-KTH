@@ -8,6 +8,7 @@ void cleanUp(RenderWindow *pRW, SDL_Texture *pT, Player *pP1, Player *pP2, Dynam
     SDL_DestroyTexture(pT);
     destroyCamera(pC);
     destroyRenderWindow(pRW);
+    SDL_Quit();
     return;
 }
 
@@ -25,19 +26,19 @@ int main(int argv, char** args) {
     if (pWindow == NULL) { SDL_Quit(); return 1; }
 
     SDL_Texture *pGrassTexture = loadTexture(pWindow, "resources/purpg.png");
-    if (pGrassTexture == NULL) { cleanUp(pWindow, NULL, NULL, NULL, NULL, NULL, NULL); SDL_Quit(); return 1; }
+    if (pGrassTexture == NULL) { cleanUp(pWindow, NULL, NULL, NULL, NULL, NULL, NULL); return 1; }
 
     Player *pPlayer = createPlayer(createVector(32.0f, 32.0f), getRenderer(pWindow), PLAYER_1);
-    if (pPlayer == NULL) { cleanUp(pWindow, pGrassTexture, NULL, NULL, NULL, NULL, NULL); SDL_Quit(); return 1; }
+    if (pPlayer == NULL) { cleanUp(pWindow, pGrassTexture, NULL, NULL, NULL, NULL, NULL); return 1; }
 
     Player *pReference = createPlayer(createVector(256.0f, 256.0f), getRenderer(pWindow), PLAYER_2);
-    if (pReference == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, NULL, NULL, NULL, NULL); SDL_Quit(); return 1; }
+    if (pReference == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, NULL, NULL, NULL, NULL); return 1; }
 
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
-    if (pPlatformArray == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, NULL, NULL, NULL); SDL_Quit(); return 1; }
+    if (pPlatformArray == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, NULL, NULL, NULL); return 1; }
     // Add blocks along the bottom of the screen.
-    int windowHeight = (float)MAX_LOGICAL_WIDTH * mainDisplay.h/mainDisplay.w;
-    for(int i = 0; i < MAX_LOGICAL_WIDTH; i+=32) {
+    int windowHeight = (float)REFERENCE_WIDTH * mainDisplay.h/mainDisplay.w;
+    for(int i = 0; i < REFERENCE_WIDTH; i+=32) {
         addEntity(pPlatformArray, i, windowHeight-32, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
@@ -53,17 +54,17 @@ int main(int argv, char** args) {
     }
 
     addEntity(pPlatformArray, 0, 32, pGrassTexture, HITBOX_HALF_BLOCK);
-    addEntity(pPlatformArray, MAX_LOGICAL_WIDTH-32, 32, pGrassTexture, HITBOX_FULL_BLOCK);
+    addEntity(pPlatformArray, REFERENCE_WIDTH-32, 32, pGrassTexture, HITBOX_FULL_BLOCK);
 
 //--------------------------------------------------------------------------------------------------------------------//
     Camera *pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
-    if (pCamera == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, NULL, NULL); SDL_Quit(); return 1; }
+    if (pCamera == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, NULL, NULL); return 1; }
 
     cameraSetRenderer(pCamera, getRenderer(pWindow));
     cameraSetTargets(pCamera, playerGetBody(pPlayer), playerGetBody(pReference));
 
     Input *pInputs = createInputTracker();
-    if (pInputs == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, pCamera, NULL); SDL_Quit(); return 1; }
+    if (pInputs == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, pCamera, NULL); return 1; }
 //--------------------------------------------------------------------------------------------------------------------//
  
     const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
@@ -155,7 +156,6 @@ int main(int argv, char** args) {
     }
 
     cleanUp(pWindow, pGrassTexture, pPlayer, pReference, pPlatformArray, pCamera, pInputs);
-    SDL_Quit();
 
     return 0;
 }

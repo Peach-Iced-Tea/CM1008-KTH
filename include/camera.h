@@ -20,7 +20,7 @@ typedef struct camera Camera;
 
 #define MAX_ZOOM_IN 2.8f
 #define MAX_ZOOM_OUT 1.2f
-#define MAX_LOGICAL_WIDTH 1920
+#define REFERENCE_WIDTH 1920
 
 // Error codes are defined below here.
 typedef enum {
@@ -84,6 +84,11 @@ bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity);
 Returns the absolute position of the mouse cursor in the game world.
 */
 Vec2 cameraGetMousePosition(Camera *pCamera);
+
+/*
+Get the global scale used to make the rendered view consistent across resolutions.
+*/
+float cameraGetGlobalScale(Camera const *pCamera);
 
 /*
 Returns the logical width of the given Camera.

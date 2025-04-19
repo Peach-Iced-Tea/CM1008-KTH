@@ -3,11 +3,10 @@
 #define TRACKING_TIMER 6
 
 typedef struct {
-    int trueWidth;
-    int trueHeight;
-    int adjustedWidth;
-    int adjustedHeight;
+    int width;
+    int height;
     int refreshRate;
+    float globalScale;
 } Display;
 
 struct camera {
@@ -29,17 +28,10 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
     pCamera->position = createVector(0.0f, 0.0f);
     pCamera->velocity = createVector(0.0f, 0.0f);
 
-    pCamera->display.trueWidth = width;
-    pCamera->display.trueHeight = height;
+    pCamera->display.width = width;
+    pCamera->display.height = height;
     pCamera->display.refreshRate = refreshRate;
-    if (width > MAX_LOGICAL_WIDTH) {
-        pCamera->display.adjustedWidth = MAX_LOGICAL_WIDTH;
-        pCamera->display.adjustedHeight = MAX_LOGICAL_WIDTH * height/width;
-    }
-    else {
-        pCamera->display.adjustedWidth = width;
-        pCamera->display.adjustedHeight = height;
-    }
+    pCamera->display.globalScale = (float)width/REFERENCE_WIDTH;
 
     pCamera->logicalWidth = 0;
     pCamera->logicalHeight = 0;
@@ -103,8 +95,8 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
     if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
     else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
 
-    pCamera->logicalWidth = round(pCamera->display.adjustedWidth / zoomScale);
-    pCamera->logicalHeight = round(pCamera->display.adjustedHeight / zoomScale);
+    pCamera->logicalWidth = round(pCamera->display.width / zoomScale);
+    pCamera->logicalHeight = round(pCamera->display.height / zoomScale);
     pCamera->currentZoom = zoomScale;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
     return 0;
@@ -124,8 +116,8 @@ void cameraScaleToTargets(Camera *pCamera) {
     Vec2 difference;
     vectorSub(&difference, position1, position2);
 
-    float zoomX = pCamera->display.adjustedWidth/(fabsf(difference.x)*1.5f);
-    float zoomY = pCamera->display.adjustedHeight/(fabsf(difference.y)*1.5f);
+    float zoomX = pCamera->display.width/(fabsf(difference.x)*1.5f*pCamera->display.globalScale);
+    float zoomY = pCamera->display.height/(fabsf(difference.y)*1.5f*pCamera->display.globalScale);
     float zoomToApply;
 
     if (zoomX < zoomY) { zoomToApply = zoomX; }
@@ -209,10 +201,17 @@ Vec2 cameraGetMousePosition(Camera *pCamera) {
     Vec2 mousePosition = createVector(0.0f, 0.0f);
     int x, y;
     SDL_GetMouseState(&x, &y);
-    float actualZoom = ((float)pCamera->display.trueWidth/pCamera->display.adjustedWidth)*pCamera->currentZoom;
-    mousePosition.x = (float)x/actualZoom + pCamera->position.x - pCamera->logicalWidth*0.5f;
-    mousePosition.y = (float)y/actualZoom + pCamera->position.y - pCamera->logicalHeight*0.5f;
+    float cameraOffsetX = ((float)x - (float)pCamera->display.width*0.5f)/(pCamera->currentZoom * pCamera->display.globalScale);
+    float cameraOffsetY = ((float)y - (float)pCamera->display.height*0.5f)/(pCamera->currentZoom * pCamera->display.globalScale);
+    mousePosition.x = pCamera->position.x + cameraOffsetX;
+    mousePosition.y = pCamera->position.y + cameraOffsetY;
     return mousePosition;
+}
+
+float cameraGetGlobalScale(Camera const *pCamera) {
+    if (pCamera == NULL) { return IS_NULL; }
+
+    return pCamera->display.globalScale;
 }
 
 int cameraGetWidth(Camera const *pCamera) {
