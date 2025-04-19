@@ -22,7 +22,7 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
     }
 
     pRenderWindow->fullscreen = false;
-    SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("resources/windowIcon.png"));
+    SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("resources/gameIcon.png"));
 
     return pRenderWindow;
 }
@@ -30,10 +30,12 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
 void toggleFullscreen(RenderWindow *pRenderWindow) {
     if (pRenderWindow->fullscreen) {
         SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+        printf("Fullscreen: Disabled!\n");
         pRenderWindow->fullscreen = false;
     }
     else {
         SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN);
+        printf("Fullscreen: Enabled!\n");
         pRenderWindow->fullscreen = true;
     }
     
@@ -41,8 +43,13 @@ void toggleFullscreen(RenderWindow *pRenderWindow) {
 }
 
 void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
+    Uint32 flags = SDL_GetWindowFlags(pRenderWindow->pWindow);
+    if ((flags&SDL_WINDOW_INPUT_FOCUS)==0) {
+        if (pRenderWindow->fullscreen) { toggleFullscreen(pRenderWindow); }
+        SDL_MinimizeWindow(pRenderWindow->pWindow);
+    }
+
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_RETURN)) { toggleFullscreen(pRenderWindow); }
-    if (checkKeyCombo(pInputs, KEY_ALT, KEY_TAB) && pRenderWindow->fullscreen) { toggleFullscreen(pRenderWindow); }
 
     return;
 }
