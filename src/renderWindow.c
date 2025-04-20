@@ -74,27 +74,6 @@ void clearWindow(RenderWindow *pRenderWindow) {
     return;
 }
 
-void adjustToCamera(Camera const *pCamera, SDL_FRect *dst, Vec2 *vector) {
-    float globalScale = cameraGetGlobalScale(pCamera);
-    float offsetWidth = cameraGetWidth(pCamera)*0.5f;
-    float offsetHeight = cameraGetHeight(pCamera)*0.5f;
-    Vec2 cameraPosition = cameraGetPosition(pCamera);
-
-    if (dst != NULL) {
-        dst->x = dst->x*globalScale + offsetWidth - cameraPosition.x*globalScale;
-        dst->y = dst->y*globalScale + offsetHeight - cameraPosition.y*globalScale;
-        dst->w *= globalScale;
-        dst->h *= globalScale;
-    }
-
-    if (vector != NULL) {
-        vector->x = vector->x*globalScale + offsetWidth - cameraPosition.x*globalScale;
-        vector->y = vector->y*globalScale + offsetHeight - cameraPosition.y*globalScale;
-    }
-
-    return;
-}
-
 void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
     Vec2 halfSize = getHitboxHalfSize(pHitbox);
     Vec2 topLeftCorner;

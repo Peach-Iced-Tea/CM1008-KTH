@@ -37,9 +37,8 @@ int main(int argv, char** args) {
     DynamicArray *pPlatformArray = createDynamicArray(ARRAY_ENTITIES);
     if (pPlatformArray == NULL) { cleanUp(pWindow, pGrassTexture, pPlayer, pReference, NULL, NULL, NULL); return 1; }
     // Add blocks along the bottom of the screen.
-    int windowHeight = (float)REFERENCE_WIDTH * mainDisplay.h/mainDisplay.w;
     for(int i = 0; i < REFERENCE_WIDTH; i+=32) {
-        addEntity(pPlatformArray, i, windowHeight-32, pGrassTexture, HITBOX_FULL_BLOCK);
+        addEntity(pPlatformArray, i, REFERENCE_HEIGHT-32, pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
     for (int i = 0; i < 6*32; i+=32) {

@@ -21,6 +21,7 @@ typedef struct camera Camera;
 #define MAX_ZOOM_IN 2.8f
 #define MAX_ZOOM_OUT 1.2f
 #define REFERENCE_WIDTH 1920
+#define REFERENCE_HEIGHT 1080
 
 // Error codes are defined below here.
 typedef enum {
@@ -39,24 +40,24 @@ Handles key inputs related to the functions of the Camera data type.
 
 Such as setting what mode the given Camera should be set to.
 */
-void cameraHandleInput(Camera *pCamera, Input const *pInputs);
+void cameraHandleInput(Camera *camera, Input const *inputs);
 
 /*
 Set the SDL_Renderer* that the given Camera should use when scaling.
 */
-int cameraSetRenderer(Camera *pCamera, SDL_Renderer *pRenderer);
+int cameraSetRenderer(Camera *camera, SDL_Renderer *renderer);
 
 /*
 Set which targets the Camera should use for its calculations.
 
 CAMERA_SCALING expects both Targets to be set.
 */
-int cameraSetTargets(Camera *pCamera, Entity *pTarget1, Entity *pTarget2);
+int cameraSetTargets(Camera *camera, Entity *target1, Entity *target2);
 
 /*
 Set what mode the given Camera should be set to.
 */
-int cameraSetMode(Camera *pCamera, int newMode);
+int cameraSetMode(Camera *camera, int newMode);
 
 /*
 Set the camera to a specific zoom level.
@@ -64,57 +65,64 @@ Set the camera to a specific zoom level.
 A higher zoomScale means that the Camera is closer up, 
 and a lower zoomScale means that the Camera is further away.
 */
-int cameraSetZoom(Camera *pCamera, float zoomScale);
+int cameraSetZoom(Camera *camera, float zoomScale);
 
 /*
 Update the position as well as the zoom level of the given Camera.
 
 What this does function does depends on what mode the given Camera is set to.
 */
-int cameraUpdate(Camera *pCamera);
+int cameraUpdate(Camera *camera);
 
 /*
 Check if the given Entity is visible inside the dimensions of the given Camera.
 
 Returns 'true' if it is inside the camera view, 'false' if it is outside the camera view.
 */
-bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity);
+bool entityIsVisible(Camera const *camera, SDL_FRect const entity);
+
+/*
+Use this function to adjust the position of a SDL_FRect and/or a Vec2 to the given Camera.
+
+Either *dst or *position can be set as NULL.
+*/
+void adjustToCamera(Camera const *camera, SDL_FRect *dst, Vec2 *position);
 
 /*
 Returns the absolute position of the mouse cursor in the game world.
 */
-Vec2 cameraGetMousePosition(Camera *pCamera);
+Vec2 cameraGetMousePosition(Camera const *camera);
 
 /*
 Get the global scale used to make the rendered view consistent across resolutions.
 */
-float cameraGetGlobalScale(Camera const *pCamera);
+float cameraGetGlobalScale(Camera const *camera);
 
 /*
 Returns the logical width of the given Camera.
 
 The logical dimensions are the width and height of the camera itself, not the actual resolution of the game.
 */
-int cameraGetWidth(Camera const *pCamera);
+int cameraGetWidth(Camera const *camera);
 
 /*
 Returns the logical height of the given Camera.
 
 The logical dimensions are the width and height of the camera itself, not the actual resolution of the game.
 */
-int cameraGetHeight(Camera const *pCamera);
+int cameraGetHeight(Camera const *camera);
 
 /*
 Returns a Vec2 containing the position(x,y) of the given Camera.
 */
-Vec2 cameraGetPosition(Camera const *pCamera);
+Vec2 cameraGetPosition(Camera const *camera);
 
 /*
 Returns the current mode that the given Camera is set to.
 */
-int cameraGetMode(Camera const *pCamera);
+int cameraGetMode(Camera const *camera);
 
 /*
 Use this function to destroy the given Camera pointer and free up memory.
 */
-void destroyCamera(Camera *pCamera);
+void destroyCamera(Camera *camera);

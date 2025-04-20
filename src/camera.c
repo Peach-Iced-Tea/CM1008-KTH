@@ -6,6 +6,7 @@ typedef struct {
     int width;
     int height;
     int refreshRate;
+    float aspectRatio;
     float globalScale;
 } Display;
 
@@ -31,16 +32,30 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
     pCamera->display.width = width;
     pCamera->display.height = height;
     pCamera->display.refreshRate = refreshRate;
-    pCamera->display.globalScale = (float)width/REFERENCE_WIDTH;
+    pCamera->display.aspectRatio = (float)width/height;
+    if (width != REFERENCE_WIDTH && height != REFERENCE_HEIGHT) {
+        float globalScaleW = (float)width/REFERENCE_WIDTH;
+        float globalScaleH = (float)height/REFERENCE_HEIGHT;
+        if (globalScaleW <= globalScaleH) {
+            pCamera->display.globalScale = globalScaleW;
+        }
+        else {
+            pCamera->display.globalScale = globalScaleH;
+        }
+    }
+    else if (width == REFERENCE_WIDTH || height == REFERENCE_HEIGHT) {
+        pCamera->display.globalScale = 1.0f;
+    }
 
-    pCamera->logicalWidth = 0;
-    pCamera->logicalHeight = 0;
+    pCamera->logicalWidth = (float)width/MAX_ZOOM_IN;
+    pCamera->logicalHeight = (float)height/MAX_ZOOM_IN;
     pCamera->pRenderer = NULL;
 
     pCamera->pTarget1 = NULL;
     pCamera->pTarget2 = NULL;
 
     pCamera->mode = cameraMode;
+    pCamera->currentZoom = MAX_ZOOM_IN;
     pCamera->trackTimer = TRACKING_TIMER;
 
     return pCamera;
@@ -51,8 +66,8 @@ void cameraHandleInput(Camera *pCamera, Input const *pInputs) {
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_2)) { cameraSetMode(pCamera, TRACKING_T1); }
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_3)) { cameraSetMode(pCamera, TRACKING_T2); }
     if (getKeyState(pInputs, KEY_ALT) && pCamera->mode != SCALING) {
-        if (getKeyState(pInputs, KEY_COMMA)) { cameraSetZoom(pCamera, pCamera->currentZoom-0.02f); }
-        if (getKeyState(pInputs, KEY_PERIOD)) { cameraSetZoom(pCamera, pCamera->currentZoom+0.02f); }
+        if (getKeyState(pInputs, KEY_COMMA)) { cameraSetZoom(pCamera, pCamera->currentZoom-0.025f); }
+        if (getKeyState(pInputs, KEY_PERIOD)) { cameraSetZoom(pCamera, pCamera->currentZoom+0.025f); }
     }
 
     return;
@@ -62,6 +77,16 @@ int cameraSetRenderer(Camera *pCamera, SDL_Renderer *pRenderer) {
     if (pCamera == NULL) { return IS_NULL; }
 
     pCamera->pRenderer = pRenderer;
+    switch (pCamera->mode) {
+        case SCALING:
+            break;
+        case TRACKING_T1:
+        case TRACKING_T2:
+        case FIXED:
+            SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
+            break;
+    }
+
     return 0;
 }
 
@@ -197,7 +222,28 @@ bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity) {
     return isVisible;
 }
 
-Vec2 cameraGetMousePosition(Camera *pCamera) {
+void adjustToCamera(Camera const *pCamera, SDL_FRect *pDst, Vec2 *pVector) {
+    float globalScale = pCamera->display.globalScale;
+    float offsetWidth = pCamera->logicalWidth*0.5f;
+    float offsetHeight = pCamera->logicalHeight*0.5f;
+    Vec2 cameraPosition = pCamera->position;
+
+    if (pDst != NULL) {
+        pDst->x = (pDst->x - cameraPosition.x)*globalScale + offsetWidth;
+        pDst->y = (pDst->y - cameraPosition.y)*globalScale + offsetHeight;
+        pDst->w *= globalScale;
+        pDst->h *= globalScale;
+    }
+
+    if (pVector != NULL) {
+        pVector->x = (pVector->x - cameraPosition.x)*globalScale + offsetWidth;
+        pVector->y = (pVector->y - cameraPosition.y)*globalScale + offsetHeight;
+    }
+
+    return;
+}
+
+Vec2 cameraGetMousePosition(Camera const *pCamera) {
     Vec2 mousePosition = createVector(0.0f, 0.0f);
     int x, y;
     SDL_GetMouseState(&x, &y);
