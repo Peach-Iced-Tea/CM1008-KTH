@@ -18,7 +18,7 @@ typedef enum {
 
 typedef struct camera Camera;
 
-#define MAX_ZOOM_IN 2.8f
+#define MAX_ZOOM_IN 2.5f
 #define MAX_ZOOM_OUT 1.2f
 #define REFERENCE_WIDTH 1920
 #define REFERENCE_HEIGHT 1080

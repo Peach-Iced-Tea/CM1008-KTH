@@ -3,7 +3,7 @@
 #define TRACKING_TIMER 2
 #define TRACKING_MODIFIER 5 // This is used to make the camera movement less jumpy when tracking a target.
 #define CAMERA_OFFSET_X 32
-#define CAMERA_OFFSET_Y 96
+#define CAMERA_OFFSET_Y 72
 
 typedef struct {
     int width;
