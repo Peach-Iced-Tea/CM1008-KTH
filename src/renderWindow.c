@@ -1,9 +1,14 @@
 #include "renderWindow.h"
 
+typedef enum {
+    WINDOWED, BORDERLESS, FULLSCREEN, EXCLUSIVE, ALT_TABBED
+} WindowState;
+
 struct renderWindow {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
-    bool fullscreen;
+    WindowState state;
+    WindowState lastState;
     bool renderHitboxes;
     int nrOfRenderedEntites;    // Used for debugging purposes.
 };
@@ -22,7 +27,8 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
         return NULL;
     }
 
-    pRenderWindow->fullscreen = false;
+    pRenderWindow->state = FULLSCREEN;
+    pRenderWindow->lastState = pRenderWindow->state;
     pRenderWindow->renderHitboxes = false;
     SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("resources/gameIcon.png"));
 
@@ -30,15 +36,24 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
 }
 
 void toggleFullscreen(RenderWindow *pRenderWindow) {
-    if (pRenderWindow->fullscreen) {
-        SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        printf("Fullscreen: Disabled!\n");
-        pRenderWindow->fullscreen = false;
-    }
-    else {
-        SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN);
-        printf("Fullscreen: Enabled!\n");
-        pRenderWindow->fullscreen = true;
+    switch (pRenderWindow->state) {
+        case WINDOWED:
+            SDL_SetWindowFullscreen(pRenderWindow->pWindow, 0);
+            SDL_SetWindowBordered(pRenderWindow->pWindow, SDL_TRUE);
+            printf("Window State: Windowed\n");
+            break;
+        case BORDERLESS:
+            SDL_SetWindowBordered(pRenderWindow->pWindow, SDL_FALSE);
+            printf("Window State: Borderless\n");
+            break;
+        case FULLSCREEN:
+            SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+            printf("Window State: Fullscreen\n");
+            break;
+        case EXCLUSIVE:
+            SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN);
+            printf("Window State: Exclusive Fullscreen\n");
+            break;
     }
     
     return;
@@ -47,11 +62,31 @@ void toggleFullscreen(RenderWindow *pRenderWindow) {
 void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
     Uint32 flags = SDL_GetWindowFlags(pRenderWindow->pWindow);
     if ((flags&SDL_WINDOW_INPUT_FOCUS)==0) {
-        if (pRenderWindow->fullscreen) { toggleFullscreen(pRenderWindow); }
-        SDL_MinimizeWindow(pRenderWindow->pWindow);
+        switch (pRenderWindow->state) {
+            case EXCLUSIVE:
+                pRenderWindow->lastState = pRenderWindow->state;
+                pRenderWindow->state = WINDOWED;
+                toggleFullscreen(pRenderWindow);
+                pRenderWindow->state = ALT_TABBED;
+            case FULLSCREEN:
+                if ((flags&SDL_WINDOW_MINIMIZED)==0) { SDL_MinimizeWindow(pRenderWindow->pWindow); }
+                break;
+        }
+    }
+    else {
+        switch (pRenderWindow->state) {
+            case ALT_TABBED:
+                pRenderWindow->state = pRenderWindow->lastState;
+                toggleFullscreen(pRenderWindow);
+                break;
+        }
     }
 
-    if (checkKeyCombo(pInputs, KEY_ALT, KEY_RETURN)) { toggleFullscreen(pRenderWindow); }
+    if (checkKeyCombo(pInputs, KEY_ALT, KEY_RETURN)) {
+        pRenderWindow->state++;
+        if (pRenderWindow->state >= ALT_TABBED) { pRenderWindow->state = WINDOWED; }
+        toggleFullscreen(pRenderWindow);
+    }
     if (checkKeyCombo(pInputs, KEY_ALT, KEY_T)) { pRenderWindow->renderHitboxes = !pRenderWindow->renderHitboxes; }
 
     return;
