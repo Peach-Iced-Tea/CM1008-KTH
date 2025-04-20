@@ -1,6 +1,7 @@
 #include "camera.h"
 
-#define TRACKING_TIMER 6
+#define TRACKING_TIMER 2
+#define TRACKING_MODIFIER 5 // This is used to make the camera movement less jumpy when tracking a target.
 
 typedef struct {
     int width;
@@ -169,7 +170,7 @@ void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
             pCamera->velocity.x = distance.x;
             if (fabsf(distance.y) > 16.0f && fabsf(distance.y) < 32.0f) { pCamera->velocity.y = distance.y*0.5f; }
             else { pCamera->velocity.y = distance.y; }
-            float scalar = 1.0f/((TRACKING_TIMER*pCamera->display.refreshRate/60)*1.75f);
+            float scalar = 1.0f/(TRACKING_TIMER*TRACKING_MODIFIER);
             vectorScale(&pCamera->velocity, scalar);
             
             pCamera->trackTimer = TRACKING_TIMER;
