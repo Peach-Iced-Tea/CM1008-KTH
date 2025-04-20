@@ -160,6 +160,13 @@ void cameraScaleToTargets(Camera *pCamera) {
 void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
     if (pCamera == NULL) { return; }
 
+    if (pCamera->position.x == referencePosition.x && pCamera->position.y == referencePosition.y) { 
+        pCamera->velocity.x = 0.0f;
+        pCamera->velocity.y = 0.0f;
+        pCamera->trackTimer = TRACKING_TIMER;
+        return;
+    }
+
     if (pCamera->trackTimer > 0) {
         vectorAdd(&pCamera->position, pCamera->position, pCamera->velocity);
         pCamera->trackTimer--;
