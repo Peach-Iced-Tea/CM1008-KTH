@@ -2,6 +2,8 @@
 
 #define TRACKING_TIMER 2
 #define TRACKING_MODIFIER 5 // This is used to make the camera movement less jumpy when tracking a target.
+#define CAMERA_OFFSET_X 32
+#define CAMERA_OFFSET_Y 96
 
 typedef struct {
     int width;
@@ -10,6 +12,14 @@ typedef struct {
     float aspectRatio;
     float globalScale;
 } Display;
+
+typedef struct {
+    int offsetX;
+    int offsetY;
+    bool followX;
+    bool followY;
+    int timer;
+} Tracker;
 
 struct camera {
     Vec2 position;
@@ -21,8 +31,8 @@ struct camera {
     Entity *pTarget1;
     Entity *pTarget2;
     CameraMode mode;
+    Tracker tracker;
     float currentZoom;
-    int trackTimer;
 };
 
 Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
@@ -55,9 +65,9 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
     pCamera->pTarget1 = NULL;
     pCamera->pTarget2 = NULL;
 
-    pCamera->mode = cameraMode;
+    cameraSetMode(pCamera, cameraMode);
     pCamera->currentZoom = MAX_ZOOM_IN;
-    pCamera->trackTimer = TRACKING_TIMER;
+    pCamera->tracker.timer = TRACKING_TIMER;
 
     return pCamera;
 }
@@ -104,9 +114,18 @@ int cameraSetMode(Camera *pCamera, int newMode) {
 
     switch (newMode) {
         case SCALING:
+        case FIXED:
+            pCamera->tracker.offsetX = 0;
+            pCamera->tracker.offsetY = 0;
+            pCamera->tracker.followX = false;
+            pCamera->tracker.followY = false;
+            break;
         case TRACKING_T1:
         case TRACKING_T2:
-        case FIXED:
+            pCamera->tracker.offsetX = CAMERA_OFFSET_X;
+            pCamera->tracker.offsetY = CAMERA_OFFSET_Y;
+            pCamera->tracker.followX = false;
+            pCamera->tracker.followY = false;
             break;
     }
 
@@ -163,24 +182,42 @@ void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
     if (pCamera->position.x == referencePosition.x && pCamera->position.y == referencePosition.y) { 
         pCamera->velocity.x = 0.0f;
         pCamera->velocity.y = 0.0f;
-        pCamera->trackTimer = TRACKING_TIMER;
+        pCamera->tracker.timer = TRACKING_TIMER;
+        pCamera->tracker.followY = false;
         return;
     }
 
-    if (pCamera->trackTimer > 0) {
-        vectorAdd(&pCamera->position, pCamera->position, pCamera->velocity);
-        pCamera->trackTimer--;
+    if (fabsf(pCamera->position.x-referencePosition.x) < 1.0f && fabsf(pCamera->position.y-referencePosition.y) < 1.0f) {
+        pCamera->position.x = referencePosition.x;
+        pCamera->position.y = referencePosition.y;
+        pCamera->tracker.followY = false;
+        return;
+    }
 
-        if (pCamera->trackTimer == 0) {
+    if (pCamera->tracker.timer > 0) {
+        vectorAdd(&pCamera->position, pCamera->position, pCamera->velocity);
+        pCamera->tracker.timer--;
+
+        if (pCamera->tracker.timer == 0) {
             Vec2 distance;
             vectorSub(&distance, referencePosition, pCamera->position);
             pCamera->velocity.x = distance.x;
-            if (fabsf(distance.y) > 16.0f && fabsf(distance.y) < 32.0f) { pCamera->velocity.y = distance.y*0.5f; }
-            else { pCamera->velocity.y = distance.y; }
+            pCamera->velocity.y = 0.0f;
+            if (distance.y > 0.0f) {
+                pCamera->velocity.y = distance.y*pCamera->display.aspectRatio*2;
+                pCamera->tracker.followY = false;
+            }
+            else if (pCamera->tracker.followY) {
+                pCamera->velocity.y = distance.y*0.5f;
+            }
+            else if (distance.y < -CAMERA_OFFSET_Y) {
+                pCamera->velocity.y = distance.y*0.5f;
+                pCamera->tracker.followY = true;
+            }
+
             float scalar = 1.0f/(TRACKING_TIMER*TRACKING_MODIFIER);
             vectorScale(&pCamera->velocity, scalar);
-            
-            pCamera->trackTimer = TRACKING_TIMER;
+            pCamera->tracker.timer = TRACKING_TIMER;
         }
     }
     
@@ -217,8 +254,9 @@ int cameraUpdate(Camera *pCamera) {
 
 bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity) {
     bool isVisible = true;
+    float offsetY = pCamera->tracker.offsetY;
     float deltaDistanceX = fabsf(pCamera->position.x-entity.x);
-    float deltaDistanceY = fabsf(pCamera->position.y-entity.y);
+    float deltaDistanceY = fabsf((pCamera->position.y-offsetY)-entity.y);
 
     if (deltaDistanceX > pCamera->logicalWidth*0.5f+entity.w) {
         isVisible = false;
@@ -234,18 +272,19 @@ void adjustToCamera(Camera const *pCamera, SDL_FRect *pDst, Vec2 *pVector) {
     float globalScale = pCamera->display.globalScale;
     float offsetWidth = pCamera->logicalWidth*0.5f;
     float offsetHeight = pCamera->logicalHeight*0.5f;
+    float offsetY = pCamera->tracker.offsetY;
     Vec2 cameraPosition = pCamera->position;
 
     if (pDst != NULL) {
         pDst->x = (pDst->x - cameraPosition.x)*globalScale + offsetWidth;
-        pDst->y = (pDst->y - cameraPosition.y)*globalScale + offsetHeight;
+        pDst->y = (pDst->y - cameraPosition.y+offsetY)*globalScale + offsetHeight;
         pDst->w *= globalScale;
         pDst->h *= globalScale;
     }
 
     if (pVector != NULL) {
         pVector->x = (pVector->x - cameraPosition.x)*globalScale + offsetWidth;
-        pVector->y = (pVector->y - cameraPosition.y)*globalScale + offsetHeight;
+        pVector->y = (pVector->y - cameraPosition.y+offsetY)*globalScale + offsetHeight;
     }
 
     return;
@@ -257,8 +296,9 @@ Vec2 cameraGetMousePosition(Camera const *pCamera) {
     SDL_GetMouseState(&x, &y);
     float cameraOffsetX = ((float)x - (float)pCamera->display.width*0.5f)/(pCamera->currentZoom * pCamera->display.globalScale);
     float cameraOffsetY = ((float)y - (float)pCamera->display.height*0.5f)/(pCamera->currentZoom * pCamera->display.globalScale);
+    float offsetY = pCamera->tracker.offsetY;
     mousePosition.x = pCamera->position.x + cameraOffsetX;
-    mousePosition.y = pCamera->position.y + cameraOffsetY;
+    mousePosition.y = pCamera->position.y-offsetY + cameraOffsetY;
     return mousePosition;
 }
 
@@ -283,7 +323,10 @@ int cameraGetHeight(Camera const *pCamera) {
 Vec2 cameraGetPosition(Camera const *pCamera) {
     if (pCamera == NULL) { return createVector(0.0f, 0.0f); }
 
-    return pCamera->position;
+    Vec2 position = pCamera->position;
+    position.y -= pCamera->tracker.offsetY;
+
+    return position;
 }
 
 int cameraGetMode(Camera const *pCamera) {
