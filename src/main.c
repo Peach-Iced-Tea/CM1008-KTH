@@ -120,8 +120,6 @@ int main(int argv, char** args) {
                 playerUpdatePosition(pPlayer, deltaTime);
                 break;
         }
-            
-        cameraUpdate(pCamera);
 
         bool standingOnPlatform = false;
         for (int i = 0; i < arrayGetSize(pPlatformArray); i++) {
@@ -135,6 +133,8 @@ int main(int argv, char** args) {
         }
 
         if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
+
+        cameraUpdate(pCamera);
 
         clearWindow(pWindow);
 
