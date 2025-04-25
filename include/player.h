@@ -32,10 +32,8 @@ Update the given Player based on what PlayerState it is in currently.
 
 This will update things such as current acceleration applied by gravity
 and the current sprite that is shown.
-
-Call this function inside a timestep controlled if-statement.
 */
-void playerUpdateState(Player *pPlayer, float deltaTime);
+void playerUpdateState(Player *pPlayer);
 
 /*
 Updates the given Player's positional values based on which PlayerState it is currently in.

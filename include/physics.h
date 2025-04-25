@@ -17,7 +17,7 @@
 #define MAX_PLAYER_VELOCITY 380.0f  // The absolute max value of the velocity a player can reach.
 #define MAX_GRAVITY_VELOCITY 660.0f // The absolute max value that the velocity of gravity can reach.
 
-#define GRAVITY_ACCELERATION 1960.0f    // The simulation of gravity uses this constant.
+#define GRAVITY_ACCELERATION 60.0f    // The simulation of gravity uses this constant.
 
 typedef struct hitbox Hitbox;
 

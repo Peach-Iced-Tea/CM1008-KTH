@@ -1,9 +1,9 @@
 #include "player.h"
 
-#define JUMP_TIMER 20
-#define PLAYER_VELOCITY 60.0f   // Initial velocity to be applied on a player upon moving.
-#define PLAYER_ACCELERATION 580.0f  // A constant for the acceleration of a player, this value gets modified by deltaTime before updating velocity.
-#define JUMP_VELOCITY 550.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
+#define JUMP_TIMER 15
+#define PLAYER_VELOCITY 300.0f   // Initial velocity to be applied on a player upon moving.
+#define PLAYER_ACCELERATION 50.0f  // A constant for the acceleration of a player, this value gets modified by deltaTime before updating velocity.
+#define JUMP_VELOCITY 780.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
 #define ROTATION_SPEED 100
 
 #define MOVE_UP_INPUT KEY_W
@@ -15,17 +15,12 @@
 #define ROTATE_RIGHT_INPUT KEY_E
 #define TOGGLE_GODMODE_INPUT KEY_G
 
-typedef enum {
-    NEUTRAL, LEFT, RIGHT, UP, DOWN, BLOCKED, ROT_RIGHT, ROT_LEFT
-} Direction;
-
 struct player {
     Entity *pBody;
     Entity *pTongue;
     PlayerState state;
-    Direction directionX;
-    Direction directionY;
-    Direction rotateDirection;
+    Vec2 velocity;
+    float rotateVelocity;
     bool mouseClicked;
     float gravityModifier;
     int jumpTimer;
@@ -57,9 +52,8 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     pPlayer->pTongue = NULL;
 
     pPlayer->state = FALLING;
-    pPlayer->directionX = NEUTRAL;
-    pPlayer->directionY = NEUTRAL;
-    pPlayer->rotateDirection = NEUTRAL;
+    pPlayer->velocity = createVector(0.0f, 0.0f);
+    pPlayer->rotateVelocity = 0.0f;
 
     pPlayer->mouseClicked = false;
     pPlayer->gravityModifier = 0.0f;
@@ -76,86 +70,64 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
 }
 
 void playerHandleInput(Player *pPlayer, Input const *pInputs) {
-    if (getKeyState(pInputs, MOVE_UP_INPUT)) {
-        switch (pPlayer->directionY) {
-            case NEUTRAL:
-                pPlayer->directionY = UP;
-                break;
-            case DOWN:
-                pPlayer->directionY = BLOCKED;
+    Vec2 movement = createVector(0.0f, 0.0f);
+    if (getKeyState(pInputs, MOVE_UP_INPUT)) { movement.y = -PLAYER_VELOCITY; }
+
+    if (getKeyState(pInputs, MOVE_DOWN_INPUT)) { movement.y += PLAYER_VELOCITY; }
+
+    if (getKeyState(pInputs, MOVE_LEFT_INPUT)) { movement.x = -PLAYER_VELOCITY; }
+
+    if (getKeyState(pInputs, MOVE_RIGHT_INPUT)) { movement.x += PLAYER_VELOCITY; }
+
+    if (getKeyState(pInputs, JUMP_INPUT)) {
+        switch (pPlayer->state) {
+            case IDLE:
+            case RUNNING:
+                pPlayer->velocity.y = -JUMP_VELOCITY;
+                pPlayer->jumpTimer = JUMP_TIMER;
+                pPlayer->state = JUMPING;
                 break;
         }
     }
     else {
-        switch (pPlayer->directionY) {
-            case BLOCKED:
-                pPlayer->directionY = DOWN;
-                break;
-            case UP:
-                pPlayer->directionY = NEUTRAL;
+        switch (pPlayer->state) {
+            case JUMPING:
+                pPlayer->state = FALLING;
                 break;
         }
     }
 
-    if (getKeyState(pInputs, MOVE_DOWN_INPUT)) {
-        switch (pPlayer->directionY) {
-            case NEUTRAL:
-                pPlayer->directionY = DOWN;
-                break;
-            case UP:
-                pPlayer->directionY = BLOCKED;
-                break;
-        }
-    }
-    else {
-        switch (pPlayer->directionY) {
-            case BLOCKED:
-                pPlayer->directionY = UP;
-                break;
-            case DOWN:
-                pPlayer->directionY = NEUTRAL;
-                break;
+    if (movement.x < 0.0f || movement.x > 0.0f) {
+        switch (pPlayer->state) {
+            case IDLE:
+                pPlayer->state = RUNNING;
         }
     }
 
-    if (getKeyState(pInputs, MOVE_LEFT_INPUT)) {
-        switch (pPlayer->directionX) {
-            case NEUTRAL:
-                pPlayer->directionX = LEFT;
-                break;
-            case RIGHT:
-                pPlayer->directionX = BLOCKED;
-                break;
-        }
-    }
-    else {
-        switch (pPlayer->directionX) {
-            case BLOCKED:
-                pPlayer->directionX = RIGHT;
-                break;
-            case LEFT:
-                pPlayer->directionX = NEUTRAL;
-                break;
-        }
+    pPlayer->velocity.x = movement.x;
+    switch (pPlayer->state) {
+        case FALLING:
+        case JUMPING:
+            break;
+        default:
+            pPlayer->velocity.y = movement.y;
+            break;
     }
 
-    if (getKeyState(pInputs, MOVE_RIGHT_INPUT)) {
-        switch (pPlayer->directionX) {
-            case NEUTRAL:
-                pPlayer->directionX = RIGHT;
-                break;
-            case LEFT:
-                pPlayer->directionX = BLOCKED;
-                break;
-        }
+    pPlayer->rotateVelocity = 0.0f;
+    if (getKeyState(pInputs, ROTATE_LEFT_INPUT)) {
+        pPlayer->rotateVelocity = -ROTATION_SPEED;
     }
-    else {
-        switch (pPlayer->directionX) {
-            case BLOCKED:
-                pPlayer->directionX = LEFT;
-                break;
-            case RIGHT:
-                pPlayer->directionX = NEUTRAL;
+
+    if (getKeyState(pInputs, ROTATE_RIGHT_INPUT)) {
+        pPlayer->rotateVelocity += ROTATION_SPEED;
+    }
+
+    pPlayer->mouseClicked = getMouseState(pInputs, MOUSE_LEFT);
+    if (!pPlayer->mouseClicked) {
+        switch (pPlayer->state) {
+            case ROTATING:
+                pPlayer->state = FALLING;
                 break;
         }
     }
@@ -170,102 +142,27 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    if (getKeyState(pInputs, ROTATE_LEFT_INPUT)) {
-        switch (pPlayer->rotateDirection) {
-            case NEUTRAL:
-                pPlayer->rotateDirection = ROT_LEFT;
-                break;
-            case ROT_RIGHT:
-                pPlayer->rotateDirection = BLOCKED;
-                break;
-        }
-    }
-    else {
-        switch (pPlayer->rotateDirection) {
-            case BLOCKED:
-                pPlayer->rotateDirection = ROT_RIGHT;
-                break;
-            case ROT_LEFT:
-                pPlayer->rotateDirection = NEUTRAL;
-                break;
-        }
-    }
-
-    if (getKeyState(pInputs, ROTATE_RIGHT_INPUT)) {
-        switch (pPlayer->rotateDirection) {
-            case NEUTRAL:
-                pPlayer->rotateDirection = ROT_RIGHT;
-                break;
-            case ROT_LEFT:
-                pPlayer->rotateDirection = BLOCKED;
-                break;
-        }
-    }
-    else {
-        switch (pPlayer->rotateDirection) {
-            case BLOCKED:
-                pPlayer->rotateDirection = ROT_LEFT;
-                break;
-            case ROT_RIGHT:
-                pPlayer->rotateDirection = NEUTRAL;
-                break;
-        }
-    }
-
-    if (getKeyState(pInputs, JUMP_INPUT)) {
-        switch (pPlayer->state) {
-            case IDLE:
-            case RUNNING:
-                pPlayer->state = JUMPING;
-            break;
-        }
-    }
-    else {
-        switch (pPlayer->state) {
-            case JUMPING:
-                pPlayer->state = FALLING;
-                break;
-        }
-    }
-
-    pPlayer->mouseClicked = getMouseState(pInputs, MOUSE_LEFT);
-    if (!pPlayer->mouseClicked) {
-        switch (pPlayer->state) {
-            case ROTATING:
-                pPlayer->state = FALLING;
-                break;
-        }
-    }
-
     return;
 }
 
-void playerUpdateState(Player *pPlayer, float deltaTime) {
+void playerUpdateState(Player *pPlayer) {
     int offset = 0;
-    switch (pPlayer->directionX) {
-        case LEFT:
-            offset = 32;
-            break;
-        case RIGHT:
-            offset = 0;
-            break;
-        case NEUTRAL:
-        case BLOCKED:
-            offset = pPlayer->sheetPosition.x;
-            break;
+    if (pPlayer->velocity.x < 0.0f) {
+        offset = 32;
+    }
+    else if (pPlayer->velocity.x == 0.0f) {
+        offset = pPlayer->sheetPosition.x;
     }
     
     switch (pPlayer->state) {
         case IDLE:
         case RUNNING:
             pPlayer->gravityModifier = 0.0f;
-            setVelocityY(pPlayer->pBody, 0.0f);
 
             pPlayer->sheetPosition.y = 0;
             break;
         case FALLING:
             if (pPlayer->jumpTimer > 0) {
-                setVelocityY(pPlayer->pBody, 0.0f);
                 pPlayer->jumpTimer = 0;
             }
             pPlayer->gravityModifier = 1.0f;
@@ -273,14 +170,10 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
             pPlayer->sheetPosition.y = 64;
             break;
         case JUMPING:
-            if (pPlayer->jumpTimer == 0) {
-                pPlayer->jumpTimer = JUMP_TIMER;
-                pPlayer->gravityModifier = 0.5f;
-                setVelocityY(pPlayer->pBody, -JUMP_VELOCITY);
-            }
-            else if (pPlayer->jumpTimer > 0) {
+            pPlayer->gravityModifier = 0.75f;
+            if (pPlayer->jumpTimer > 0) {
                 pPlayer->jumpTimer--;
-                if(pPlayer->jumpTimer == 0) {pPlayer->state = FALLING;}
+                if (pPlayer->jumpTimer == 0) {pPlayer->state = FALLING;}
             }
 
             pPlayer->sheetPosition.y = 32;
@@ -299,85 +192,21 @@ void playerUpdateState(Player *pPlayer, float deltaTime) {
     }
 
     pPlayer->sheetPosition.x = offset;
-    setAccelerationY(pPlayer->pBody, GRAVITY_ACCELERATION*pPlayer->gravityModifier);
-    updateVelocity(pPlayer->pBody, deltaTime);
-    return;
-}
-
-void standardCalculations(Player *pPlayer) {
-    switch (pPlayer->directionX) {
-        case LEFT:
-            if (getVelocity(pPlayer->pBody).x >= 0.0f) {
-                setVelocityX(pPlayer->pBody, -PLAYER_VELOCITY);
-                setAccelerationX(pPlayer->pBody, -PLAYER_ACCELERATION);
-            }
-            break;
-        case RIGHT:
-            if (getVelocity(pPlayer->pBody).x <= 0.0f) {
-                setVelocityX(pPlayer->pBody, PLAYER_VELOCITY);
-                setAccelerationX(pPlayer->pBody, PLAYER_ACCELERATION);
-            }
-            break;
-        case NEUTRAL:
-        case BLOCKED:
-            setVelocityX(pPlayer->pBody, 0.0f);
-            setAccelerationX(pPlayer->pBody, 0.0f);
-            break;    
+    if (pPlayer->velocity.y >= MAX_GRAVITY_VELOCITY) {
+        pPlayer->velocity.y = MAX_GRAVITY_VELOCITY;
+    }
+    else {
+        printf("pre-gravity: %f\n", pPlayer->velocity.y);
+        pPlayer->velocity.y += GRAVITY_ACCELERATION*pPlayer->gravityModifier;
     }
 
-    return;
-}
-
-void flyingCalculations(Player *pPlayer) {
-    switch (pPlayer->directionX) {
-        case LEFT:
-            if (getVelocity(pPlayer->pBody).x >= 0.0f) {
-                setVelocityX(pPlayer->pBody, -MAX_PLAYER_VELOCITY*0.75f);
-            }
-            break;
-        case RIGHT:
-            if (getVelocity(pPlayer->pBody).x <= 0.0f) {
-                setVelocityX(pPlayer->pBody, MAX_PLAYER_VELOCITY*0.75f);
-            }
-            break;
-        case NEUTRAL:
-        case BLOCKED:
-            setVelocityX(pPlayer->pBody, 0.0f);
-            setAccelerationX(pPlayer->pBody, 0.0f);
-            break;
-    }
-
-    switch (pPlayer->directionY) {
-        case UP:
-            if (getVelocity(pPlayer->pBody).y >= 0.0f) {
-                setVelocityY(pPlayer->pBody, -MAX_PLAYER_VELOCITY*0.75f);
-            }
-            break;
-        case DOWN:
-            if (getVelocity(pPlayer->pBody).y <= 0.0f) {
-                setVelocityY(pPlayer->pBody, MAX_PLAYER_VELOCITY*0.75f);
-            }
-            break;
-        case NEUTRAL:
-        case BLOCKED:
-            setVelocityY(pPlayer->pBody, 0.0f);
-            setAccelerationY(pPlayer->pBody, 0.0f);
-            break;
-    }
-
+    printf("gravity: %f\n", pPlayer->velocity.y);
     return;
 }
 
 Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
     Vec2 newPosition;
-    switch (pPlayer->rotateDirection) {
-        case ROT_LEFT:
-            pPlayer->referenceAngle -= (M_PI/180) * deltaTime * ROTATION_SPEED;
-            break;
-        case ROT_RIGHT:
-            pPlayer->referenceAngle += (M_PI/180) * deltaTime * ROTATION_SPEED;
-            break;
-    }   
+    pPlayer->referenceAngle += (M_PI/180) * deltaTime * pPlayer->rotateVelocity;   
 
     newPosition.x =(getMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
     newPosition.y =(getMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
@@ -388,20 +217,14 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
 Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
     Vec2 returnVector;
     switch(pPlayer->state) {
-        case FALLING:
-        case JUMPING:
-        case IDLE:
-        case RUNNING:
-            standardCalculations(pPlayer);
-            updatePosition(pPlayer->pBody, deltaTime);
-            break;
         case ROTATING:
             returnVector = rotationCalculations(pPlayer, deltaTime);
             break;
-        case FLYING:
-            flyingCalculations(pPlayer);
-            updatePosition(pPlayer->pBody, deltaTime);
-            break;
+        default:
+            Vec2 scaledVelocity = pPlayer->velocity;
+            vectorScale(&scaledVelocity, deltaTime);
+            printf("vel: x=%f, y=%f\n", scaledVelocity.x, scaledVelocity.y);
+            entityMove(pPlayer->pBody, scaledVelocity);
     }
 
     return returnVector;

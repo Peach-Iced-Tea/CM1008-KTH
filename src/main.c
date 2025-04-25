@@ -99,7 +99,7 @@ int main(int argv, char** args) {
             }
         }
 
-        if (accumulator >= timestep) {    
+        while (accumulator >= timestep) {    
             // Add physics related calculations here...
             inputHoldTimer(pInputs);
             playerUpdateState(pPlayer, timestep);
@@ -109,12 +109,10 @@ int main(int argv, char** args) {
         switch (playerGetState(pPlayer)) {
             case ROTATING:
                 Entity *pBodyP2 = playerGetBody(pReference);
-                Vec2 rotateVelocity;
+                Vec2 velocity;
                 Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
-                vectorSub(&rotateVelocity, newRotPos, getMidPoint(pBodyP2));
-                setVelocityX(pBodyP2, rotateVelocity.x);
-                setVelocityY(pBodyP2, rotateVelocity.y);
-                updatePosition(pBodyP2, 1.0f);
+                vectorSub(&velocity, newRotPos, getMidPoint(pBodyP2));
+                entityMove(pBodyP2, velocity);
                 break;
             default:
                 playerUpdatePosition(pPlayer, deltaTime);
