@@ -88,7 +88,7 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void serverHandleTick(Server *pServer, ClientPayload payload, float const timestep) {
+void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     if (payload.player.tick <= pServer->payload.players[payload.playerID].tick) { return; }
 
     Player *pPlayer = pServer->players[payload.playerID];
@@ -144,6 +144,8 @@ int main(int argv, char** args) {
 
         switch (server.state) {
             case SERVER_WAITING:
+                if (SDL_PollEvent(&event)) { if (event.type == SDL_QUIT) { server.state = SERVER_CLOSING; } }
+
                 if (SDLNet_UDP_Recv(server.socket, server.pPacket) == 1) {
                     if (addIP(server.clients, server.pPacket->address, &(server.nrOfPlayers))) {
                         server.payload.playerID = server.nrOfPlayers-1;
@@ -161,10 +163,7 @@ int main(int argv, char** args) {
                 break;
             case SERVER_RUNNING:
                 accumulator += deltaTime;
-                if (SDL_PollEvent(&event)) {
-                    if (event.type == SDL_QUIT) { server.state = SERVER_CLOSING; }
-                    if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) { server.state = SERVER_CLOSING; }
-                }
+                if (SDL_PollEvent(&event)) { if (event.type == SDL_QUIT) { server.state = SERVER_CLOSING; } }
 
                 while (accumulator >= timestep) {
                     sendDataToClients(&server);
@@ -172,7 +171,7 @@ int main(int argv, char** args) {
                         memcpy(&clientPayload, server.pPacket->data, server.pPacket->len);
                         switch (clientPayload.clientState) {
                             case CONNECTED:
-                                serverHandleTick(&server, clientPayload, timestep);
+                                handleTick(&server, clientPayload, timestep);
                                 break;
                             case DISCONNECTED:
                                 if (clientPayload.playerID < server.nrOfPlayers-1) {
@@ -194,6 +193,7 @@ int main(int argv, char** args) {
                 break;
             case SERVER_CLOSING:
                 closeServer(&server);
+                printf("Server Closed!\n");
                 serverRunning = false;
                 break;
         }
@@ -201,6 +201,5 @@ int main(int argv, char** args) {
         SDL_Delay(delay);
     }
 
-    printf("Server Closed!\n");
     return 0;
 }

@@ -94,14 +94,9 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
     return;
 }
 
-void handleTick(Game *pGame, bool newState, bool newPacket) {
+void handleTick(Game *pGame) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
-    if (newState) {
-        StateData state;
-        state.position = playerGetPosition(pPlayer);
-        state.state = playerGetState(pPlayer);
-        clientAddStateToBuffer(pGame->pClient, state);
-    }
+    playerUpdateState(pPlayer);
 
     InputData input;
     input.input = playerGetVelocity(pPlayer);
@@ -118,15 +113,6 @@ void handleTick(Game *pGame, bool newState, bool newPacket) {
             else {
                 entitySetPosition(playerGetBody(pGame->players[i]), payload.players[i].position);
             }
-        }
-    }
-    
-    if (newPacket) {
-        //printf("Check packet\n");
-        StateData state = clientGetLatestState(pGame->pClient);
-        state.tick -= 2;
-        if(clientCheckServerPayload(pGame->pClient, state)) {
-            clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
         }
     }
 
@@ -161,8 +147,6 @@ int main(int argv, char** args) {
     cameraSetRenderer(game.pCamera, getRenderer(game.pWindow));
     cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
 
-    bool newState = false;
-    bool newPacket = false;
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
     while (gameRunning) {
@@ -212,14 +196,14 @@ int main(int argv, char** args) {
         
                 while (accumulator >= timestep) {    
                     // Add physics related calculations here...
-                    if (getKeyState(game.pInput, KEY_R) == KEY_STATE_DOWN) { newPacket = true; }
                     inputHoldTimer(game.pInput);
-                    handleTick(&game, &newState, newPacket);
-                    newState = false;
-        
-                    playerUpdateState(pPlayer);
+                    handleTick(&game);
+                    
                     updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
-                    newState = true;
+                    StateData state;
+                    state.position = playerGetPosition(pPlayer);
+                    state.state = playerGetState(pPlayer);
+                    clientAddStateToBuffer(game.pClient, state);
         
                     accumulator -= timestep;
                 }
