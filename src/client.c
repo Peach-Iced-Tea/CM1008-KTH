@@ -16,7 +16,7 @@ struct client {
 void initClientPayload(ClientPayload *pPayload) {
     pPayload->player.input = createVector(0.0f, 0.0f);
     pPayload->player.tick = 0;
-    pPayload->playerID = -1;
+    pPayload->playerID = 0;
     pPayload->clientState = DISCONNECTED;
     return;
 }
@@ -59,6 +59,17 @@ void clientConnectToServer(Client *pClient) {
 
     printf("Connected: id=%d\n", pClient->payload.playerID);
     return;
+}
+
+void clientWaitForServer(Client *pClient) {
+    bool waitingForServer = true;
+    while (waitingForServer) {
+        if (SDLNet_UDP_Recv(pClient->socket, pClient->pPacket)) {
+            ServerPayload payload;
+            memcpy(&payload, pClient->pPacket->data, pClient->pPacket->len);
+            if (payload.serverState == SERVER_RUNNING) { waitingForServer = false; }
+        }
+    }
 }
 
 bool clientReceivePacket(Client *pClient, ServerPayload *pPayload) {

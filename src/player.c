@@ -34,18 +34,20 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
 
     Player *pPlayer = malloc(sizeof(Player));
     SDL_Texture *pTexture;
-    switch (id) {
-        case PLAYER_1:
-            pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
-            break;
-        case PLAYER_2:
-            pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
-            break;
-    }
+    if (pRenderer != NULL) {
+        switch (id) {
+            case PLAYER_1:
+                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
+                break;
+            case PLAYER_2:
+                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
+                break;
+        }
 
-    if (pTexture == NULL) {
-        printf("Error: %s\n", SDL_GetError());
-        return NULL;
+        if (pTexture == NULL) {
+            printf("Error: %s\n", SDL_GetError());
+            return NULL;
+        }
     }
 
     pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);

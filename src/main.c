@@ -95,7 +95,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
 }
 
 void handleTick(Game *pGame, bool newState, bool newPacket) {
-    Player *pPlayer = pGame->players[0];
+    Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     if (newState) {
         StateData state;
         state.position = playerGetPosition(pPlayer);
@@ -107,6 +107,20 @@ void handleTick(Game *pGame, bool newState, bool newPacket) {
     input.input = playerGetVelocity(pPlayer);
     clientAddInputToBuffer(pGame->pClient, input);
 
+    ServerPayload payload;
+    while (clientReceivePacket(pGame->pClient, &payload)) {
+        for (int i = 0; i < MAX_PLAYERS; i++) {
+            if (i == clientGetPlayerID(pGame->pClient)) {
+                if(clientCheckServerPayload(pGame->pClient, payload.players[i])) {
+                    clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
+                }
+            }
+            else {
+                //
+            }
+        }
+    }
+    
     if (newPacket) {
         //printf("Check packet\n");
         StateData state = clientGetLatestState(pGame->pClient);
@@ -149,72 +163,94 @@ int main(int argv, char** args) {
 
     bool newState = false;
     bool newPacket = false;
+    int gameState = GAME_CONNECTING;
     bool gameRunning = true;
     while (gameRunning) {
-        Uint64 currentTime = SDL_GetTicks64();
-        deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
-        lastTime = currentTime;
-        accumulator += deltaTime;
-
-        Vec2 mousePosition = cameraGetMousePosition(game.pCamera);
-
-        gameRunning = checkUserInput(game.pInput);
-        playerHandleInput(pPlayer, game.pInput);
-        cameraHandleInput(game.pCamera, game.pInput);
-        windowHandleInput(game.pWindow, game.pInput);
-
-        if (playerGetMouseClick(pPlayer)) {
-            Entity *pBodyP1 = playerGetBody(pPlayer);
-            if (vectorLength(mousePosition, entityGetMidPoint(pBodyP1)) < 240.0f) {
-                Entity *pBodyP2 = playerGetBody(pTeammate);
-                if (pointVsRect(entityGetHitbox(pBodyP2), mousePosition)) {
-                    playerSetState(pPlayer, ROTATING);
-                    float radius = vectorLength(entityGetMidPoint(pBodyP1), entityGetMidPoint(pBodyP2));
-                    float alpha = vectorGetAngle(entityGetMidPoint(pBodyP1), entityGetMidPoint(pBodyP2));
-                    playerSetRadius(pPlayer, radius);
-                    playerSetReferenceAngle(pPlayer, alpha);
+        switch (gameState) {
+            case GAME_CONNECTING:
+                clientConnectToServer(game.pClient);
+                pPlayer = game.players[clientGetPlayerID(game.pClient)];
+                if (clientGetPlayerID(game.pClient) == 0) {
+                    pTeammate = game.players[1];
                 }
-            }
-        }
+                else if (clientGetPlayerID(game.pClient) == 1) {
+                    pTeammate = game.players[0];
+                }
 
-        while (accumulator >= timestep) {    
-            // Add physics related calculations here...
-            if (getKeyState(game.pInput, KEY_R) == KEY_STATE_DOWN) { newPacket = true; }
-            inputHoldTimer(game.pInput);
-            handleTick(&game, &newState, newPacket);
-            newState = false;
-            newPacket = false;
-
-            /*StateData state = clientGetLatestState(game.pClient);
-            printf("id: %d || state: x=%f, y=%f\n", state.tick, state.position.x, state.position.y);
-            InputData input2 = clientGetLatestInput(game.pClient);
-            printf("id: %d || input: x=%f, y=%f\n", input2.tick, input2.input.x, input2.input.y);*/
-
-            playerUpdateState(pPlayer);
-            updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
-            newState = true;
-
-            accumulator -= timestep;
-        }
-
-        cameraUpdate(game.pCamera);
-
-        clearWindow(game.pWindow);
-
-        renderPlayer(game.pWindow, pPlayer, game.pCamera);
-        renderPlayer(game.pWindow, pTeammate, game.pCamera);
-        for (int i = 0; i < arrayGetSize(game.pPlatforms); i++) {
-            Entity *pEntity = arrayGetObject(game.pPlatforms, i);
-            if (entityIsVisible(game.pCamera, entityGetCurrentFrame(pEntity))) {
-                renderEntity(game.pWindow, pEntity, game.pCamera);
-            }
-        }
-
-        if (playerGetMouseClick(pPlayer)) {
-            drawLine(game.pWindow, mousePosition, entityGetMidPoint(playerGetBody(pPlayer)), game.pCamera);
-        }
+                cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
+                clientWaitForServer(game.pClient);
+                lastTime = SDL_GetTicks64();
+                gameState = GAME_RUNNING;
+                break;
+            case GAME_RUNNING:
+                Uint64 currentTime = SDL_GetTicks64();
+                deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
+                lastTime = currentTime;
+                accumulator += deltaTime;
         
-        displayWindow(game.pWindow);
+                Vec2 mousePosition = cameraGetMousePosition(game.pCamera);
+        
+                gameRunning = checkUserInput(game.pInput);
+                playerHandleInput(pPlayer, game.pInput);
+                cameraHandleInput(game.pCamera, game.pInput);
+                windowHandleInput(game.pWindow, game.pInput);
+        
+                if (playerGetMouseClick(pPlayer)) {
+                    Entity *pBodyP1 = playerGetBody(pPlayer);
+                    if (vectorLength(mousePosition, entityGetMidPoint(pBodyP1)) < 240.0f) {
+                        Entity *pBodyP2 = playerGetBody(pTeammate);
+                        if (pointVsRect(entityGetHitbox(pBodyP2), mousePosition)) {
+                            playerSetState(pPlayer, ROTATING);
+                            float radius = vectorLength(entityGetMidPoint(pBodyP1), entityGetMidPoint(pBodyP2));
+                            float alpha = vectorGetAngle(entityGetMidPoint(pBodyP1), entityGetMidPoint(pBodyP2));
+                            playerSetRadius(pPlayer, radius);
+                            playerSetReferenceAngle(pPlayer, alpha);
+                        }
+                    }
+                }
+        
+                while (accumulator >= timestep) {    
+                    // Add physics related calculations here...
+                    if (getKeyState(game.pInput, KEY_R) == KEY_STATE_DOWN) { newPacket = true; }
+                    inputHoldTimer(game.pInput);
+                    handleTick(&game, &newState, newPacket);
+                    newState = false;
+                    newPacket = false;
+        
+                    /*StateData state = clientGetLatestState(game.pClient);
+                    printf("id: %d || state: x=%f, y=%f\n", state.tick, state.position.x, state.position.y);
+                    InputData input2 = clientGetLatestInput(game.pClient);
+                    printf("id: %d || input: x=%f, y=%f\n", input2.tick, input2.input.x, input2.input.y);*/
+        
+                    playerUpdateState(pPlayer);
+                    updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
+                    newState = true;
+        
+                    accumulator -= timestep;
+                }
+        
+                cameraUpdate(game.pCamera);
+        
+                clearWindow(game.pWindow);
+        
+                renderPlayer(game.pWindow, pPlayer, game.pCamera);
+                renderPlayer(game.pWindow, pTeammate, game.pCamera);
+                for (int i = 0; i < arrayGetSize(game.pPlatforms); i++) {
+                    Entity *pEntity = arrayGetObject(game.pPlatforms, i);
+                    if (entityIsVisible(game.pCamera, entityGetCurrentFrame(pEntity))) {
+                        renderEntity(game.pWindow, pEntity, game.pCamera);
+                    }
+                }
+        
+                if (playerGetMouseClick(pPlayer)) {
+                    drawLine(game.pWindow, mousePosition, entityGetMidPoint(playerGetBody(pPlayer)), game.pCamera);
+                }
+                
+                displayWindow(game.pWindow);
+                break;
+            case GAME_CLOSING:
+                break;
+        }
     }
 
     cleanUp(&game);

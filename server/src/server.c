@@ -161,7 +161,10 @@ int main(int argv, char** args) {
                 break;
             case SERVER_RUNNING:
                 accumulator += deltaTime;
-                if (SDL_PollEvent(&event)) { if (event.type == SDL_QUIT) { server.state = SERVER_CLOSING; } }
+                if (SDL_PollEvent(&event)) {
+                    if (event.type == SDL_QUIT) { server.state = SERVER_CLOSING; }
+                    if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) { server.state = SERVER_CLOSING; }
+                }
 
                 while (accumulator >= timestep) {
                     sendDataToClients(&server);
