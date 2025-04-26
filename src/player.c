@@ -53,7 +53,7 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
     pPlayer->pTongue = NULL;
 
-    pPlayer->state = FALLING;
+    pPlayer->state = IDLE;
     pPlayer->velocity = createVector(0.0f, 0.0f);
     pPlayer->rotateVelocity = 0.0f;
 
@@ -229,14 +229,13 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
     return returnVector;
 }
 
-int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
+int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
     int collisionDetected = 0;    
     Hitbox *pPlayerHitbox = entityGetHitbox(pPlayer->pBody);
-    Hitbox *pEntityHitbox = entityGetHitbox(pEntity);
-    if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
-        Vec2 correction = rectVsRect(pPlayerHitbox, pEntityHitbox);
+    if (checkCollision(pPlayerHitbox, pObject)) {
+        Vec2 correction = rectVsRect(pPlayerHitbox, pObject);
         entityCollisionResponse(pPlayer->pBody, correction);
-        collisionDetected = hitboxOrientation(pPlayerHitbox, pEntityHitbox);
+        collisionDetected = hitboxOrientation(pPlayerHitbox, pObject);
         switch (collisionDetected) {
             case OBJECT_IS_NORTH:
                 playerSetState(pPlayer, IDLE);

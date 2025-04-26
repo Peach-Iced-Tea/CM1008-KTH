@@ -47,7 +47,7 @@ Check whether the given Player has collided with the given Entity.
 
 Returns an int value based on where the Player is in relation to the Entity (returns 0 if no collision was detected).
 */
-int playerCheckCollision(Player *pPlayer, Entity *pEntity);
+int playerCheckCollision(Player *pPlayer, Hitbox *pObject);
 
 /*
 

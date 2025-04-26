@@ -87,6 +87,7 @@ bool clientReceivePacket(Client *pClient, ServerPayload *pPayload) {
 void clientSendPacket(Client *pClient) {
     int bufferIndex = pClient->currentTick % BUFFER_SIZE;
     pClient->payload.player = pClient->inputBuffer[bufferIndex];
+    printf("tick %d: x=%f, y=%f\n", pClient->payload.player.tick, pClient->payload.player.input.x, pClient->payload.player.input.y);
     pClient->payload.player.tick = pClient->currentTick;
 
     memcpy(pClient->pPacket->data, &(pClient->payload), sizeof(ClientPayload));
@@ -106,6 +107,7 @@ void clientAddInputToBuffer(Client *pClient, InputData input) {
 
 void clientAddStateToBuffer(Client *pClient, StateData state) {
     int bufferIndex = pClient->currentTick % BUFFER_SIZE;
+    printf("tick %d: || pos: x=%f, y=%f\n", pClient->currentTick, state.position.x, state.position.y);
     state.tick = pClient->currentTick;
     pClient->stateBuffer[bufferIndex] = state;
     pClient->currentTick++;

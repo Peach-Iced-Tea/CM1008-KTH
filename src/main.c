@@ -81,12 +81,12 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
 
     bool standingOnPlatform = false;
     for (int i = 0; i < arrayGetSize(pObjects); i++) {
-        if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
+        if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pObjects, i))) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }
 
-    if (playerCheckCollision(pPlayer, playerGetBody(pTeammate)) == OBJECT_IS_NORTH) {
+    if (playerCheckCollision(pPlayer, playerGetBodyHitbox(pTeammate)) == OBJECT_IS_NORTH) {
         standingOnPlatform = true;
     }
 
@@ -101,6 +101,7 @@ void handleTick(Game *pGame) {
     InputData input;
     input.input = playerGetVelocity(pPlayer);
     clientAddInputToBuffer(pGame->pClient, input);
+    clientSendPacket(pGame->pClient);
 
     ServerPayload payload;
     while (clientReceivePacket(pGame->pClient, &payload)) {

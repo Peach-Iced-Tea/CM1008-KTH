@@ -80,6 +80,7 @@ void sendDataToClients(Server *pServer) {
     pServer->payload.serverState = pServer->state;
     for (int i = 0; i < pServer->nrOfPlayers; i++) {
         pServer->payload.playerID = i;
+        printf("player%d: x=%f, y=%f\n", i, pServer->payload.players[i].position.x, pServer->payload.players[i].position.y);
         memcpy(pServer->pPacket->data, &(pServer->payload), sizeof(ServerPayload));
         pServer->pPacket->len = sizeof(ServerPayload);
         pServer->pPacket->address = pServer->clients[i];
@@ -89,10 +90,13 @@ void sendDataToClients(Server *pServer) {
 }
 
 void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
-    if (payload.player.tick <= pServer->payload.players[payload.playerID].tick) { return; }
+    if (payload.player.tick < pServer->payload.players[payload.playerID].tick) { return; }
 
+    printf("tick: %d || player%d: x=%f, y=%f\n", payload.player.tick, payload.playerID, payload.player.input.x, payload.player.input.y);
     Player *pPlayer = pServer->players[payload.playerID];
-    entityMove(playerGetBody(pPlayer), payload.player.input);
+    Vec2 velocity = payload.player.input;
+    vectorScale(&velocity, timestep);
+    entityMove(playerGetBody(pPlayer), velocity);
 
     bool standingOnPlatform = false;
     for (int i = 0; i < arrayGetSize(pServer->pObjects); i++) {
@@ -168,6 +172,7 @@ int main(int argv, char** args) {
                 while (accumulator >= timestep) {
                     sendDataToClients(&server);
                     while (SDLNet_UDP_Recv(server.socket, server.pPacket) == 1) {
+                        printf("input\n");
                         memcpy(&clientPayload, server.pPacket->data, server.pPacket->len);
                         switch (clientPayload.clientState) {
                             case CONNECTED:
