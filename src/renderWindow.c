@@ -127,7 +127,7 @@ void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera con
 }
 
 void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera) {
-    SDL_FRect dst = getCurrentFrame(pEntity);
+    SDL_FRect dst = entityGetCurrentFrame(pEntity);
     adjustToCamera(pCamera, &dst, NULL);
 
     SDL_Rect src;
@@ -136,20 +136,20 @@ void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera con
     src.x = 0;
     src.y = 0;
 
-    SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(pEntity), &src, &dst);
-    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, getHitbox(pEntity), pCamera); }
+    SDL_RenderCopyF(pRenderWindow->pRenderer, entityGetTexture(pEntity), &src, &dst);
+    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, entityGetHitbox(pEntity), pCamera); }
     pRenderWindow->nrOfRenderedEntites++;
     return;
 }
 
 void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera) {
-    SDL_FRect dst = getCurrentFrame(playerGetBody(pPlayer));
+    SDL_FRect dst = entityGetCurrentFrame(playerGetBody(pPlayer));
     adjustToCamera(pCamera, &dst, NULL);
 
     SDL_Rect src = playerGetSheetPosition(pPlayer);
 
-    SDL_RenderCopyF(pRenderWindow->pRenderer, getTexture(playerGetBody(pPlayer)), &src, &dst);
-    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, getHitbox(playerGetBody(pPlayer)), pCamera); }
+    SDL_RenderCopyF(pRenderWindow->pRenderer, playerGetBodyTexture(pPlayer), &src, &dst);
+    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
     return;
 } 
 

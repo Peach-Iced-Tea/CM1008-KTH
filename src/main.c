@@ -26,7 +26,7 @@ int initGame(Game *pGame) {
     if (pGame->pGrassTexture == NULL) { return 1; }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pGame->players[i] = createPlayer(createVector(48.0f, 48.0f), getRenderer(pGame->pWindow), i);
+        pGame->players[i] = createPlayer(createVector(PLAYER_START_X, PLAYER_START_Y), getRenderer(pGame->pWindow), i);
         if (pGame->players[i] == NULL) { return 1; }
     }
 
@@ -99,12 +99,12 @@ int main(int argv, char** args) {
 
         if (playerGetMouseClick(pPlayer)) {
             Entity *pBodyP1 = playerGetBody(pPlayer);
-            if (vectorLength(mousePosition, getMidPoint(pBodyP1)) < 240.0f) {
+            if (vectorLength(mousePosition, entityGetMidPoint(pBodyP1)) < 240.0f) {
                 Entity *pBodyP2 = playerGetBody(pTeammate);
-                if (pointVsRect(getHitbox(pBodyP2), mousePosition)) {
+                if (pointVsRect(entityGetHitbox(pBodyP2), mousePosition)) {
                     playerSetState(pPlayer, ROTATING);
-                    float radius = vectorLength(getMidPoint(pBodyP1), getMidPoint(pBodyP2));
-                    float alpha = vectorGetAngle(getMidPoint(pBodyP1), getMidPoint(pBodyP2));
+                    float radius = vectorLength(entityGetMidPoint(pBodyP1), entityGetMidPoint(pBodyP2));
+                    float alpha = vectorGetAngle(entityGetMidPoint(pBodyP1), entityGetMidPoint(pBodyP2));
                     playerSetRadius(pPlayer, radius);
                     playerSetReferenceAngle(pPlayer, alpha);
                 }
@@ -123,7 +123,7 @@ int main(int argv, char** args) {
                 Entity *pBodyP2 = playerGetBody(pTeammate);
                 Vec2 velocity;
                 Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
-                vectorSub(&velocity, newRotPos, getMidPoint(pBodyP2));
+                vectorSub(&velocity, newRotPos, entityGetMidPoint(pBodyP2));
                 entityMove(pBodyP2, velocity);
                 break;
             default:
@@ -152,13 +152,13 @@ int main(int argv, char** args) {
         renderPlayer(game.pWindow, pTeammate, game.pCamera);
         for (int i = 0; i < arrayGetSize(game.pPlatforms); i++) {
             Entity *pEntity = arrayGetObject(game.pPlatforms, i);
-            if (entityIsVisible(game.pCamera, getCurrentFrame(pEntity))) {
+            if (entityIsVisible(game.pCamera, entityGetCurrentFrame(pEntity))) {
                 renderEntity(game.pWindow, pEntity, game.pCamera);
             }
         }
 
         if (playerGetMouseClick(pPlayer)) {
-            drawLine(game.pWindow, mousePosition, getMidPoint(playerGetBody(pPlayer)), game.pCamera);
+            drawLine(game.pWindow, mousePosition, entityGetMidPoint(playerGetBody(pPlayer)), game.pCamera);
         }
         
         displayWindow(game.pWindow);

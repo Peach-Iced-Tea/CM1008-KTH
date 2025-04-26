@@ -150,8 +150,8 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
 void cameraScaleToTargets(Camera *pCamera) {
     if (pCamera == NULL) { return; }
 
-    Vec2 position1 = getMidPoint(pCamera->pTarget1);
-    Vec2 position2 = getMidPoint(pCamera->pTarget2);
+    Vec2 position1 = entityGetMidPoint(pCamera->pTarget1);
+    Vec2 position2 = entityGetMidPoint(pCamera->pTarget2);
     Vec2 middlePoint;
     vectorMidPoint(&middlePoint, position1, position2);
 
@@ -239,11 +239,11 @@ int cameraUpdate(Camera *pCamera) {
             break;
         case TRACKING_T1:
             if (pCamera->pTarget1 == NULL) { return MISSING_TARGET1; }
-            cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget1));
+            cameraTrackTarget(pCamera, entityGetMidPoint(pCamera->pTarget1));
             break;
         case TRACKING_T2:
             if (pCamera->pTarget2 == NULL) { return MISSING_TARGET2; }
-            cameraTrackTarget(pCamera, getMidPoint(pCamera->pTarget2));
+            cameraTrackTarget(pCamera, entityGetMidPoint(pCamera->pTarget2));
             break;
         case FIXED:
             break;

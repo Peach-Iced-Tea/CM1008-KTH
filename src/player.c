@@ -64,7 +64,7 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     pPlayer->sheetPosition.x = 0;
     pPlayer->sheetPosition.y = 0;
     pPlayer->sheetPosition.w = 32;
-    pPlayer->sheetPosition.h = 32; 
+    pPlayer->sheetPosition.h = 32;
 
     return pPlayer;
 }
@@ -196,11 +196,9 @@ void playerUpdateState(Player *pPlayer) {
         pPlayer->velocity.y = MAX_GRAVITY_VELOCITY;
     }
     else {
-        printf("pre-gravity: %f\n", pPlayer->velocity.y);
         pPlayer->velocity.y += GRAVITY_ACCELERATION*pPlayer->gravityModifier;
     }
 
-    printf("gravity: %f\n", pPlayer->velocity.y);
     return;
 }
 
@@ -208,8 +206,8 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
     Vec2 newPosition;
     pPlayer->referenceAngle += (M_PI/180) * deltaTime * pPlayer->rotateVelocity;   
 
-    newPosition.x =(getMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
-    newPosition.y =(getMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
+    newPosition.x =(entityGetMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
+    newPosition.y =(entityGetMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
     
     return newPosition;
 }
@@ -223,7 +221,6 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
         default:
             Vec2 scaledVelocity = pPlayer->velocity;
             vectorScale(&scaledVelocity, deltaTime);
-            printf("vel: x=%f, y=%f\n", scaledVelocity.x, scaledVelocity.y);
             entityMove(pPlayer->pBody, scaledVelocity);
     }
 
@@ -232,11 +229,11 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
 
 int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
     int collisionDetected = 0;    
-    Hitbox *pPlayerHitbox = getHitbox(pPlayer->pBody);
-    Hitbox *pEntityHitbox = getHitbox(pEntity);
+    Hitbox *pPlayerHitbox = entityGetHitbox(pPlayer->pBody);
+    Hitbox *pEntityHitbox = entityGetHitbox(pEntity);
     if (checkCollision(pPlayerHitbox, pEntityHitbox)) {
         Vec2 correction = rectVsRect(pPlayerHitbox, pEntityHitbox);
-        collisionResponse(pPlayer->pBody, correction);
+        entityCollisionResponse(pPlayer->pBody, correction);
         collisionDetected = hitboxOrientation(pPlayerHitbox, pEntityHitbox);
         switch (collisionDetected) {
             case OBJECT_IS_NORTH:
@@ -257,6 +254,11 @@ int playerCheckCollision(Player *pPlayer, Entity *pEntity) {
     }
 
     return collisionDetected;
+}
+
+void playerSetPosition(Player *pPlayer, Vec2 newPosition) {
+    entitySetPosition(pPlayer->pBody, newPosition);
+    return;
 }
 
 bool playerSetState(Player *pPlayer, int newState) {
@@ -317,6 +319,22 @@ Entity *playerGetBody(Player const *pPlayer) {
     return pPlayer->pBody;
 }
 
+Hitbox *playerGetBodyHitbox(Player const *pPlayer) {
+    return entityGetHitbox(pPlayer->pBody);
+}
+
+SDL_Texture *playerGetBodyTexture(Player const *pPlayer) {
+    return entityGetTexture(pPlayer->pBody);
+}
+
+Vec2 playerGetPosition(Player const *pPlayer) {
+    return entityGetPosition(pPlayer->pBody);
+}
+
+Vec2 playerGetVelocity(Player const *pPlayer) {
+    return pPlayer->velocity;
+}
+
 SDL_Rect playerGetSheetPosition(Player const *pPlayer) {
     return pPlayer->sheetPosition;
 }
@@ -328,10 +346,10 @@ bool playerGetMouseClick(Player const *pPlayer) {
 void destroyPlayer(Player *pPlayer) {
     if (pPlayer == NULL) { return; }
 
+    SDL_DestroyTexture(entityGetTexture(pPlayer->pBody));
+    //SDL_DestroyTexture(entityGetTexture(pPlayer->pTongue));
     destroyEntity(pPlayer->pBody);
     destroyEntity(pPlayer->pTongue);
-    SDL_DestroyTexture(getTexture(pPlayer->pBody));
-    //SDL_DestroyTexture(getTexture(pPlayer->pTongue));
     free(pPlayer);
     return;
 }

@@ -29,25 +29,26 @@ Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int entityType, int h
     return pEntity;
 }
 
-SDL_Texture *getTexture(Entity const *pEntity) {
+SDL_Texture *entityGetTexture(Entity const *pEntity) {
     return pEntity->pTexture;
 }
 
-SDL_FRect getCurrentFrame(Entity const *pEntity) {
+SDL_FRect entityGetCurrentFrame(Entity const *pEntity) {
     return pEntity->currentFrame;
 }
 
-void collisionResponse(Entity *pEntity, Vec2 const correction) {
+void entityCollisionResponse(Entity *pEntity, Vec2 const correction) {
     pEntity->currentFrame.x += correction.x;
     pEntity->currentFrame.y += correction.y;
     hitboxPositionAdd(pEntity->pHitbox, correction);
     return;
 }
 
-void setPosition(Entity *pEntity, Vec2 const vector) {
-    pEntity->currentFrame.x = vector.x;
-    pEntity->currentFrame.y = vector.y;
-    hitboxPositionAdd(pEntity->pHitbox, vector);
+void entitySetPosition(Entity *pEntity, Vec2 const newPosition) {
+    pEntity->currentFrame.x = newPosition.x;
+    pEntity->currentFrame.y = newPosition.y;
+    destroyHitbox(pEntity->pHitbox);
+    pEntity->pHitbox = createHitbox(newPosition, pEntity->currentFrame.w, pEntity->currentFrame.h, HITBOX_PLAYER);
     return;
 }
 
@@ -58,18 +59,18 @@ void entityMove(Entity *pEntity, Vec2 velocity) {
     return;
 }
 
-Vec2 getPosition(Entity const *pEntity) {
+Vec2 entityGetPosition(Entity const *pEntity) {
     return createVector(pEntity->currentFrame.x, pEntity->currentFrame.y);
 }
 
-Vec2 getMidPoint(Entity const *pEntity) {
+Vec2 entityGetMidPoint(Entity const *pEntity) {
     Vec2 midpoint;
     midpoint.x = pEntity->currentFrame.x + pEntity->currentFrame.w * 0.5f;
     midpoint.y = pEntity->currentFrame.y + pEntity->currentFrame.h * 0.5f;
     return midpoint;
 }
 
-Hitbox *getHitbox(Entity const *pEntity) {
+Hitbox *entityGetHitbox(Entity const *pEntity) {
     return pEntity->pHitbox;
 }
 

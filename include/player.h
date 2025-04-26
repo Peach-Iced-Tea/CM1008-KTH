@@ -50,6 +50,11 @@ Returns an int value based on where the Player is in relation to the Entity (ret
 int playerCheckCollision(Player *pPlayer, Entity *pEntity);
 
 /*
+
+*/
+void playerSetPosition(Player *pPlayer, Vec2 newPosition);
+
+/*
 Override the current PlayerState of the given Player with a new state.
 
 Some PlayerStates will not allow you to override them, which will result in the function returning 'false',
@@ -80,6 +85,26 @@ int playerGetState(Player *pPlayer);
 Get the current Entity representing the given Player's body.
 */
 Entity *playerGetBody(Player const *pPlayer);
+
+/*
+
+*/
+Hitbox *playerGetBodyHitbox(Player const *pPlayer);
+
+/*
+
+*/
+SDL_Texture *playerGetBodyTexture(Player const *pPlayer);
+
+/*
+
+*/
+Vec2 playerGetPosition(Player const *pPlayer);
+
+/*
+
+*/
+Vec2 playerGetVelocity(Player const *pPlayer);
 
 /*
 Get the current sprite sheet position of the given Player.

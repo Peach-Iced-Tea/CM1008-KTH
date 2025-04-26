@@ -11,8 +11,7 @@
 #include "renderWindow.h" 
 #include "utils.h"
 #include "player.h"
-
-#define MAX_PLAYERS 2
+#include "networkData.h"
 
 typedef struct {
     RenderWindow *pWindow;
