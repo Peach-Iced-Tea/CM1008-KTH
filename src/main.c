@@ -94,6 +94,31 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
     return;
 }
 
+void handleTick(Game *pGame, bool newState, bool newPacket) {
+    Player *pPlayer = pGame->players[0];
+    if (newState) {
+        StateData state;
+        state.position = playerGetPosition(pPlayer);
+        state.state = playerGetState(pPlayer);
+        clientAddStateToBuffer(pGame->pClient, state);
+    }
+
+    InputData input;
+    input.input = playerGetVelocity(pPlayer);
+    clientAddInputToBuffer(pGame->pClient, input);
+
+    if (newPacket) {
+        //printf("Check packet\n");
+        StateData state = clientGetLatestState(pGame->pClient);
+        state.tick -= 2;
+        if(clientCheckServerPayload(pGame->pClient, state)) {
+            clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
+        }
+    }
+
+    return;
+}
+
 int main(int argv, char** args) {
     if (SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
@@ -122,6 +147,8 @@ int main(int argv, char** args) {
     cameraSetRenderer(game.pCamera, getRenderer(game.pWindow));
     cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
 
+    bool newState = false;
+    bool newPacket = false;
     bool gameRunning = true;
     while (gameRunning) {
         Uint64 currentTime = SDL_GetTicks64();
@@ -152,12 +179,23 @@ int main(int argv, char** args) {
 
         while (accumulator >= timestep) {    
             // Add physics related calculations here...
+            if (getKeyState(game.pInput, KEY_R) == KEY_STATE_DOWN) { newPacket = true; }
             inputHoldTimer(game.pInput);
+            handleTick(&game, &newState, newPacket);
+            newState = false;
+            newPacket = false;
+
+            /*StateData state = clientGetLatestState(game.pClient);
+            printf("id: %d || state: x=%f, y=%f\n", state.tick, state.position.x, state.position.y);
+            InputData input2 = clientGetLatestInput(game.pClient);
+            printf("id: %d || input: x=%f, y=%f\n", input2.tick, input2.input.x, input2.input.y);*/
+
             playerUpdateState(pPlayer);
+            updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
+            newState = true;
+
             accumulator -= timestep;
         }
-
-        updatePlayer(pPlayer, pTeammate, game.pPlatforms, deltaTime);
 
         cameraUpdate(game.pCamera);
 
