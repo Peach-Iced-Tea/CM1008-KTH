@@ -46,6 +46,23 @@ int addEntity(DynamicArray *pArray, float x, float y, SDL_Texture *pTexture, int
     return 0;
 }
 
+int addHitbox(DynamicArray *pArray, float x, float y, int w, int h, int hitboxType) {
+    if (pArray == NULL) { return -2; }
+    if (pArray->arrayType != ARRAY_HITBOXES) { return -3; }
+
+    if (pArray->size == pArray->capacity) {
+        pArray->capacity *= 2;
+        pArray->objects = realloc(pArray->objects, pArray->capacity * sizeof(Hitbox*));
+        if (!pArray->objects) {
+            printf("Error failed to reallocate memory for array\n");
+            return -1;
+        }
+    }
+
+    pArray->objects[pArray->size++] = createHitbox(createVector(x, y), w, h, hitboxType);
+    return 0;
+}
+
 void *arrayGetObject(DynamicArray *pArray, int index) {
     return pArray->objects[index];
 }
