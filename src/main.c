@@ -28,7 +28,7 @@ int initGame(Game *pGame) {
     if (pGame->pGrassTexture == NULL) { return 1; }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pGame->players[i] = createPlayer(createVector(PLAYER_START_X, PLAYER_START_Y), getRenderer(pGame->pWindow), i);
+        pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), getRenderer(pGame->pWindow), i);
         if (pGame->players[i] == NULL) { return 1; }
     }
 
@@ -86,9 +86,9 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
         }
     }
 
-    if (playerCheckCollision(pPlayer, playerGetBodyHitbox(pTeammate)) == OBJECT_IS_NORTH) {
+    /*if (playerCheckCollision(pPlayer, playerGetBodyHitbox(pTeammate)) == OBJECT_IS_NORTH) {
         standingOnPlatform = true;
-    }
+    }*/
 
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
     return;
