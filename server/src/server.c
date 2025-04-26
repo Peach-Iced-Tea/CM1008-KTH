@@ -153,7 +153,7 @@ int main(int argv, char** args) {
                     }
                 }
 
-                if (server.nrOfPlayers == MAX_PLAYERS-1) {
+                if (server.nrOfPlayers == MAX_PLAYERS) {
                     printf("Starting\n");
                     server.state = SERVER_RUNNING;
                     sendDataToClients(&server);
@@ -190,6 +190,7 @@ int main(int argv, char** args) {
                     accumulator -= timestep;
                 }
 
+                if (server.nrOfPlayers == 0) { server.state = SERVER_CLOSING; }
                 break;
             case SERVER_CLOSING:
                 closeServer(&server);

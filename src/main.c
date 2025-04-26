@@ -116,7 +116,7 @@ void handleTick(Game *pGame, bool newState, bool newPacket) {
                 }
             }
             else {
-                //
+                entitySetPosition(playerGetBody(pGame->players[i]), payload.players[i].position);
             }
         }
     }
@@ -166,6 +166,10 @@ int main(int argv, char** args) {
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
     while (gameRunning) {
+        Uint64 currentTime = SDL_GetTicks64();
+        deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
+        lastTime = currentTime;
+
         switch (gameState) {
             case GAME_CONNECTING:
                 clientConnectToServer(game.pClient);
@@ -183,9 +187,6 @@ int main(int argv, char** args) {
                 gameState = GAME_RUNNING;
                 break;
             case GAME_RUNNING:
-                Uint64 currentTime = SDL_GetTicks64();
-                deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
-                lastTime = currentTime;
                 accumulator += deltaTime;
         
                 Vec2 mousePosition = cameraGetMousePosition(game.pCamera);
@@ -215,12 +216,6 @@ int main(int argv, char** args) {
                     inputHoldTimer(game.pInput);
                     handleTick(&game, &newState, newPacket);
                     newState = false;
-                    newPacket = false;
-        
-                    /*StateData state = clientGetLatestState(game.pClient);
-                    printf("id: %d || state: x=%f, y=%f\n", state.tick, state.position.x, state.position.y);
-                    InputData input2 = clientGetLatestInput(game.pClient);
-                    printf("id: %d || input: x=%f, y=%f\n", input2.tick, input2.input.x, input2.input.y);*/
         
                     playerUpdateState(pPlayer);
                     updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
@@ -233,8 +228,10 @@ int main(int argv, char** args) {
         
                 clearWindow(game.pWindow);
         
-                renderPlayer(game.pWindow, pPlayer, game.pCamera);
-                renderPlayer(game.pWindow, pTeammate, game.pCamera);
+                for (int i = 0; i < MAX_PLAYERS; i++) {
+                    renderPlayer(game.pWindow, game.players[i], game.pCamera);
+                }
+
                 for (int i = 0; i < arrayGetSize(game.pPlatforms); i++) {
                     Entity *pEntity = arrayGetObject(game.pPlatforms, i);
                     if (entityIsVisible(game.pCamera, entityGetCurrentFrame(pEntity))) {
