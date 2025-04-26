@@ -10,6 +10,8 @@ void cleanUp(Game *pGame) {
     SDL_DestroyTexture(pGame->pGrassTexture);
     destroyCamera(pGame->pCamera);
     destroyRenderWindow(pGame->pWindow);
+    destroyClient(pGame->pClient);
+    SDLNet_Quit();
     SDL_Quit();
     return;
 }
@@ -57,7 +59,39 @@ int initGame(Game *pGame) {
     pGame->pInput = createInputTracker();
     if (pGame->pInput == NULL) { return 1; }
 
+    pGame->pClient = createClient(0);
+    if (pGame->pClient == NULL) { return 1; }
+
     return 0;
+}
+
+void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float deltaTime) {
+    switch (playerGetState(pPlayer)) {
+        case ROTATING:
+            Entity *pBodyP2 = playerGetBody(pTeammate);
+            Vec2 velocity;
+            Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
+            vectorSub(&velocity, newRotPos, entityGetMidPoint(pBodyP2));
+            entityMove(pBodyP2, velocity);
+            break;
+        default:
+            playerUpdatePosition(pPlayer, deltaTime);
+            break;
+    }
+
+    bool standingOnPlatform = false;
+    for (int i = 0; i < arrayGetSize(pObjects); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
+            standingOnPlatform = true;
+        }
+    }
+
+    if (playerCheckCollision(pPlayer, playerGetBody(pTeammate)) == OBJECT_IS_NORTH) {
+        standingOnPlatform = true;
+    }
+
+    if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
+    return;
 }
 
 int main(int argv, char** args) {
@@ -66,26 +100,31 @@ int main(int argv, char** args) {
         return 1;
     }
 
+    if (SDLNet_Init()) {
+        SDL_Quit();
+        printf("Error: %s\n", SDLNet_GetError());
+        return 1;
+    }
+
     Game game;
     if (initGame(&game)) {
         cleanUp(&game);
         return 1;
     }
-
-    cameraSetRenderer(game.pCamera, getRenderer(game.pWindow));
  
-    const float timestep = 1.0f/60.0f; // Fixed timestep (60 Updates per second)
-    Uint32 lastTime = SDL_GetTicks();
+    const float timestep = 1.0f/TICK_RATE;
+    Uint64 lastTime = SDL_GetTicks64();
     float deltaTime = 0.0f;
     float accumulator = 0.0f;
 
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
+    cameraSetRenderer(game.pCamera, getRenderer(game.pWindow));
     cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
 
     bool gameRunning = true;
     while (gameRunning) {
-        Uint32 currentTime = SDL_GetTicks();
+        Uint64 currentTime = SDL_GetTicks64();
         deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder
         lastTime = currentTime;
         accumulator += deltaTime;
@@ -118,31 +157,7 @@ int main(int argv, char** args) {
             accumulator -= timestep;
         }
 
-        switch (playerGetState(pPlayer)) {
-            case ROTATING:
-                Entity *pBodyP2 = playerGetBody(pTeammate);
-                Vec2 velocity;
-                Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
-                vectorSub(&velocity, newRotPos, entityGetMidPoint(pBodyP2));
-                entityMove(pBodyP2, velocity);
-                break;
-            default:
-                playerUpdatePosition(pPlayer, deltaTime);
-                break;
-        }
-
-        bool standingOnPlatform = false;
-        for (int i = 0; i < arrayGetSize(game.pPlatforms); i++) {
-            if (playerCheckCollision(pPlayer, arrayGetObject(game.pPlatforms, i)) == OBJECT_IS_NORTH) {
-                standingOnPlatform = true;
-            }
-        }
-
-        if (playerCheckCollision(pPlayer, playerGetBody(pTeammate)) == OBJECT_IS_NORTH) {
-            standingOnPlatform = true;
-        }
-
-        if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
+        updatePlayer(pPlayer, pTeammate, game.pPlatforms, deltaTime);
 
         cameraUpdate(game.pCamera);
 

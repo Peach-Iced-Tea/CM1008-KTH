@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_net.h>
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -12,6 +13,7 @@
 #include "utils.h"
 #include "player.h"
 #include "networkData.h"
+#include "client.h"
 
 typedef struct {
     RenderWindow *pWindow;
@@ -20,4 +22,5 @@ typedef struct {
     SDL_Texture *pGrassTexture;
     DynamicArray *pPlatforms;
     Input *pInput;
+    Client *pClient;
 } Game;

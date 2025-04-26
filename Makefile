@@ -3,11 +3,11 @@ INCDIR=./include
 CC=gcc
 ifeq ($(OS),Windows_NT)
 	INCLUDE = -IC:/msys64/mingw64/include/SDL2 -I$(INCDIR) 
-	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -mwindows -lm -mconsole
+	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole
 	DELCMD = del
 else
 	INCLUDE = -I$(INCDIR)
-	LDFLAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lm
+	LDFLAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -lm
 	DELCMD = rm
 endif
 
@@ -15,8 +15,8 @@ CFLAGS = -g $(INCLUDE) -c
 TARGET = ToTheTop.exe
 
 
-$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o
-	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o $(LDFLAGS)
+$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o
+	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o $(LDFLAGS)
 
 main.o: $(SRCDIR)/main.c $(INCDIR)/main.h
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c
@@ -44,6 +44,9 @@ player.o: $(SRCDIR)/player.c $(INCDIR)/player.h
 
 input.o: $(SRCDIR)/input.c $(INCDIR)/input.h
 	$(CC) $(CFLAGS) $(SRCDIR)/input.c
+
+client.o: $(SRCDIR)/client.c $(INCDIR)/client.h
+	$(CC) $(CFLAGS) $(SRCDIR)/client.c
 
 
 clean:

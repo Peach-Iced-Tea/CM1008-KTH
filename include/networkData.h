@@ -35,11 +35,11 @@ typedef struct {
 typedef struct {
     StateData players[MAX_PLAYERS];
     int playerID;
-    ServerState state;
+    ServerState serverState;
 } ServerPayload;
 
 typedef struct {
     InputData player;
     int playerID;
-    ClientState state;
+    ClientState clientState;
 } ClientPayload;
