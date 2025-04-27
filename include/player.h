@@ -74,7 +74,13 @@ Set the angle between the center of the given Player and a point in space.
 
 The point in space could be the midpoint of another Player, an Entity or a the position of the mouse.
 */
-void playerSetReferenceAngle(Player *pPlayer, float newAngle);
+bool playerSetReferenceAngle(Player *pPlayer, float newAngle);
+
+/*
+Set the current sheet position of the given Player.
+This should most likely only be called when the server wants to override info.
+*/
+bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition);
 
 /*
 Get the current PlayerState of the given Player.

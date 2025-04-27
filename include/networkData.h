@@ -24,12 +24,13 @@ typedef enum {
 
 typedef struct {
     Vec2 position;
-    PlayerState state;
+    Vec2 sheetPosition;
     int tick;
 } StateData;
 
 typedef struct {
     Vec2 input;
+    Vec2 sheetPosition;
     int tick;
 } InputData;
 

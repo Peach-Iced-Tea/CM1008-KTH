@@ -87,7 +87,6 @@ bool clientReceivePacket(Client *pClient, ServerPayload *pPayload) {
 void clientSendPacket(Client *pClient) {
     int bufferIndex = pClient->currentTick % BUFFER_SIZE;
     pClient->payload.player = pClient->inputBuffer[bufferIndex];
-    printf("tick %d: x=%f, y=%f\n", pClient->payload.player.tick, pClient->payload.player.input.x, pClient->payload.player.input.y);
     pClient->payload.player.tick = pClient->currentTick;
 
     memcpy(pClient->pPacket->data, &(pClient->payload), sizeof(ClientPayload));
@@ -107,7 +106,6 @@ void clientAddInputToBuffer(Client *pClient, InputData input) {
 
 void clientAddStateToBuffer(Client *pClient, StateData state) {
     int bufferIndex = pClient->currentTick % BUFFER_SIZE;
-    printf("tick %d: || pos: x=%f, y=%f\n", pClient->currentTick, state.position.x, state.position.y);
     state.tick = pClient->currentTick;
     pClient->stateBuffer[bufferIndex] = state;
     pClient->currentTick++;
@@ -144,7 +142,8 @@ void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicA
 
         StateData state;
         state.position = playerGetPosition(pPlayer);
-        state.state = playerGetState(pPlayer);
+        state.sheetPosition.x = playerGetSheetPosition(pPlayer).x;
+        state.sheetPosition.y = playerGetSheetPosition(pPlayer).y;
         state.tick = tickToProcess;
         pClient->stateBuffer[bufferIndex] = state;
         tickToProcess++;
@@ -155,16 +154,11 @@ void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicA
 
 int clientCheckServerPayload(Client *pClient, StateData latestServerState) {
     if (!statesAreEqual(pClient->lastProcessedState, latestServerState)) {
-        //printf("not same packet\n");
         pClient->lastProcessedState = latestServerState;
         int bufferIndex = latestServerState.tick % BUFFER_SIZE;
         float positionError = vectorLength(latestServerState.position, pClient->stateBuffer[bufferIndex].position);
         if (positionError > 0.001f) {
-            /* printf("Above error threshold\n");
-            printf("tick: %d || server: x=%f, y=%f\n", latestServerState.tick, latestServerState.position.x, latestServerState.position.y);
-            printf("tick: %d || client: x=%f, y=%f\n", pClient->stateBuffer[bufferIndex].tick, pClient->stateBuffer[bufferIndex].position.x, pClient->stateBuffer[bufferIndex].position.y); */
             pClient->stateBuffer[bufferIndex] = latestServerState;
-
             return 1;
         }
     }

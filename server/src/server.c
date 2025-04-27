@@ -56,7 +56,8 @@ int initServer(Server *pServer) {
     pServer->payload.serverState = SERVER_WAITING;
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pServer->payload.players[i].position = playerGetPosition(pServer->players[i]);
-        pServer->payload.players[i].state = playerGetState(pServer->players[i]);
+        pServer->payload.players[i].sheetPosition.x = playerGetSheetPosition(pServer->players[i]).x;
+        pServer->payload.players[i].sheetPosition.y = playerGetSheetPosition(pServer->players[i]).y;
         pServer->payload.players[i].tick = 0;
     }
 
@@ -93,6 +94,7 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
 
     Player *pPlayer = pServer->players[payload.playerID];
     Vec2 velocity = payload.player.input;
+    playerSetSheetPosition(pPlayer, payload.player.sheetPosition);
     vectorScale(&velocity, timestep);
     entityMove(playerGetBody(pPlayer), velocity);
 
@@ -106,7 +108,8 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 
     pServer->payload.players[payload.playerID].position = playerGetPosition(pPlayer);
-    pServer->payload.players[payload.playerID].state = playerGetState(pPlayer);
+    pServer->payload.players[payload.playerID].sheetPosition.x = playerGetSheetPosition(pPlayer).x;
+    pServer->payload.players[payload.playerID].sheetPosition.y = playerGetSheetPosition(pPlayer).y;
     pServer->payload.players[payload.playerID].tick = payload.player.tick;
     return;
 }

@@ -307,9 +307,17 @@ bool playerSetRadius(Player *pPlayer, float radius) {
     return true;
 }
 
-void playerSetReferenceAngle(Player *pPlayer, float newAngle) {
+bool playerSetReferenceAngle(Player *pPlayer, float newAngle) {
     pPlayer->referenceAngle = newAngle;
-    return;
+    return true;
+}
+
+bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition) {
+    if (newPosition.x < 0.0f || newPosition.y < 0.0f) { return false; }
+
+    pPlayer->sheetPosition.x = newPosition.x;
+    pPlayer->sheetPosition.y = newPosition.y;
+    return true;
 }
 
 int playerGetState(Player *pPlayer) {

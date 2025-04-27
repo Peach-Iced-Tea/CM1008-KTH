@@ -100,6 +100,8 @@ void handleTick(Game *pGame) {
 
     InputData input;
     input.input = playerGetVelocity(pPlayer);
+    input.sheetPosition.x = playerGetSheetPosition(pPlayer).x;
+    input.sheetPosition.y = playerGetSheetPosition(pPlayer).y;
     clientAddInputToBuffer(pGame->pClient, input);
     clientSendPacket(pGame->pClient);
 
@@ -113,6 +115,7 @@ void handleTick(Game *pGame) {
             }
             else {
                 entitySetPosition(playerGetBody(pGame->players[i]), payload.players[i].position);
+                playerSetSheetPosition(pGame->players[i], payload.players[i].sheetPosition);
             }
         }
     }
@@ -203,7 +206,8 @@ int main(int argv, char** args) {
                     updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
                     StateData state;
                     state.position = playerGetPosition(pPlayer);
-                    state.state = playerGetState(pPlayer);
+                    state.sheetPosition.x = playerGetSheetPosition(pPlayer).x;
+                    state.sheetPosition.y = playerGetSheetPosition(pPlayer).y;
                     clientAddStateToBuffer(game.pClient, state);
         
                     accumulator -= timestep;
