@@ -204,7 +204,11 @@ int main(int argv, char** args) {
         
                 Vec2 mousePosition = cameraGetMousePosition(game.pCamera);
         
-                gameRunning = checkUserInput(game.pInput);
+                if (checkUserInput(game.pInput) == 0) {
+                    gameState = GAME_CLOSING;
+                    continue;
+                }
+
                 playerHandleInput(pPlayer, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
@@ -242,11 +246,15 @@ int main(int argv, char** args) {
                 
                 break;
             case GAME_CLOSING:
+                clientDisconnectFromServer(game.pClient);
+                printf("Disconnected from server!\n");
+                gameRunning = false;
                 break;
         }
     }
 
     cleanUp(&game);
+    printf("Game closed!\n");
 
     return 0;
 }

@@ -16,6 +16,8 @@ Client *createClient(int port);
 
 void clientConnectToServer(Client *pClient);
 
+void clientDisconnectFromServer(Client *pClient);
+
 void clientWaitForServer(Client *pClient);
 
 bool clientReceivePacket(Client *pClient, ServerPayload *pPayload);

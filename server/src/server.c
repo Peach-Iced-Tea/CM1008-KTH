@@ -114,6 +114,18 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     return;
 }
 
+void handlePlayerDisconnect(Server *pServer, ClientPayload payload) {
+    if (payload.playerID < pServer->nrOfPlayers-1) {
+        for (int i = payload.playerID; i < pServer->nrOfPlayers-1; i++) {
+            pServer->clients[i] = pServer->clients[i+1];
+        }
+    }
+
+    printf("Client disconnected (id: %d)\n", payload.playerID);
+    pServer->nrOfPlayers--;
+    return;
+}
+
 int main(int argv, char** args) {
     if (SDL_Init(SDL_INIT_EVENTS)!=0) {
         printf("Error: %s\n",SDL_GetError());
@@ -179,13 +191,7 @@ int main(int argv, char** args) {
                                 handleTick(&server, clientPayload, timestep);
                                 break;
                             case DISCONNECTED:
-                                if (clientPayload.playerID < server.nrOfPlayers-1) {
-                                    for (int i = clientPayload.playerID; i < server.nrOfPlayers-1; i++) {
-                                        server.clients[i] = server.clients[i+1];
-                                    }
-                                }
-
-                                server.nrOfPlayers--;
+                                handlePlayerDisconnect(&server, clientPayload);
                                 break;
                         }
                     }

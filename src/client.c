@@ -61,6 +61,12 @@ void clientConnectToServer(Client *pClient) {
     return;
 }
 
+void clientDisconnectFromServer(Client *pClient) {
+    pClient->payload.clientState = DISCONNECTED;
+    clientSendPacket(pClient);
+    return;
+}
+
 void clientWaitForServer(Client *pClient) {
     bool waitingForServer = true;
     while (waitingForServer) {
