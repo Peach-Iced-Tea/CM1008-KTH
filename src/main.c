@@ -153,6 +153,36 @@ void handleTick(Game *pGame) {
     return;
 }
 
+bool initiateConnection(Game *pGame, Player *pPlayer, Player *pTeammate) {
+    bool gameRunning = true;
+    IPaddress serverAddress;
+    gameRunning = mainMenu(pGame->pMenu, pGame->pWindow, &serverAddress);
+    if (!gameRunning) { return gameRunning; }
+
+    clearWindow(pGame->pWindow);
+    renderText(pGame->pWindow, "Connecting to server...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
+    displayWindow(pGame->pWindow);
+    gameRunning = clientConnectToServer(pGame->pClient, serverAddress);
+    if (!gameRunning) { return gameRunning; }
+
+    pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
+    if (clientGetPlayerID(pGame->pClient) == 0) {
+        pTeammate = pGame->players[1];
+    }
+    else if (clientGetPlayerID(pGame->pClient) == 1) {
+        pTeammate = pGame->players[0];
+    }
+
+    cameraSetTargets(pGame->pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
+
+    clearWindow(pGame->pWindow);
+    renderText(pGame->pWindow, "Waiting for other players...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
+    displayWindow(pGame->pWindow);
+    gameRunning = clientWaitForServer(pGame->pClient);
+
+    return gameRunning;
+}
+
 int main(int argv, char** args) {
     if (SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
@@ -197,21 +227,9 @@ int main(int argv, char** args) {
 
         switch (gameState) {
             case GAME_CONNECTING:
-                IPaddress serverAddress;
-                gameRunning = mainMenu(game.pMenu, game.pWindow, &serverAddress);
+                gameRunning = initiateConnection(&game, pPlayer, pTeammate);
                 if (!gameRunning) { continue; }
-
-                clientConnectToServer(game.pClient, serverAddress);
-                pPlayer = game.players[clientGetPlayerID(game.pClient)];
-                if (clientGetPlayerID(game.pClient) == 0) {
-                    pTeammate = game.players[1];
-                }
-                else if (clientGetPlayerID(game.pClient) == 1) {
-                    pTeammate = game.players[0];
-                }
-
-                cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
-                clientWaitForServer(game.pClient);
+                
                 lastTime = SDL_GetTicks64();
                 gameState = GAME_RUNNING;
                 break;

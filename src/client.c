@@ -1,6 +1,7 @@
 #include "client.h"
 
-#define IP_MAX_LENGTH 16
+#define MAX_WAIT_TIME 20    // This constant represents time elapsed in seconds.
+#define DELAY_TICK 120
 
 struct client {
     UDPsocket socket;
@@ -42,15 +43,27 @@ Client *createClient(int port) {
     return pClient;
 }
 
-void clientConnectToServer(Client *pClient, IPaddress serverAddress) {
+bool clientConnectToServer(Client *pClient, IPaddress serverAddress) {
     pClient->serverAddress = serverAddress;
-    pClient->pPacket->address = pClient->serverAddress;
-    memcpy(pClient->pPacket->data, &(pClient->payload), sizeof(ClientPayload));
-    pClient->pPacket->len = sizeof(ClientPayload);
     clientSendPacket(pClient);
 
+    Input *pInput = createInputTracker();
+    int timer = 0;
+    bool gameRunning = true;
     bool waitForAnswer = true;
     while (waitForAnswer) {
+        gameRunning = checkUserInput(pInput);
+        if (!gameRunning) { break; }
+
+        if (timer%DELAY_TICK == DELAY_TICK-1) {
+            clientSendPacket(pClient);
+        }
+
+        if (timer == DELAY_TICK*MAX_WAIT_TIME) {
+            gameRunning = false;
+            break;
+        }
+
         if (SDLNet_UDP_Recv(pClient->socket, pClient->pPacket)) {
             waitForAnswer = false;
             ServerPayload serverPayload;
@@ -58,10 +71,17 @@ void clientConnectToServer(Client *pClient, IPaddress serverAddress) {
             pClient->payload.playerID = serverPayload.playerID;
             pClient->payload.clientState = CONNECTED;
         }
+
+        timer++;
+        SDL_Delay(1000/DELAY_TICK);
     }
 
-    printf("Connected: id=%d\n", pClient->payload.playerID);
-    return;
+    if (gameRunning) {
+        printf("Connected: id=%d\n", pClient->payload.playerID);
+    }
+
+    destroyInputTracker(pInput);
+    return gameRunning;
 }
 
 void clientDisconnectFromServer(Client *pClient) {
@@ -70,15 +90,32 @@ void clientDisconnectFromServer(Client *pClient) {
     return;
 }
 
-void clientWaitForServer(Client *pClient) {
+bool clientWaitForServer(Client *pClient) {
+    Input *pInput = createInputTracker();
+    int timer = 0;
+    bool gameRunning = true;
     bool waitingForServer = true;
     while (waitingForServer) {
+        gameRunning = checkUserInput(pInput);
+        if (!gameRunning) { break; }
+
+        if (timer == DELAY_TICK*MAX_WAIT_TIME*2) {
+            gameRunning = false;
+            break;
+        }
+
         if (SDLNet_UDP_Recv(pClient->socket, pClient->pPacket)) {
             ServerPayload payload;
             memcpy(&payload, pClient->pPacket->data, pClient->pPacket->len);
             if (payload.serverState == SERVER_RUNNING) { waitingForServer = false; }
         }
+
+        timer++;
+        SDL_Delay(1000/DELAY_TICK);
     }
+
+    destroyInputTracker(pInput);
+    return gameRunning;
 }
 
 bool clientReceivePacket(Client *pClient, ServerPayload *pPayload) {

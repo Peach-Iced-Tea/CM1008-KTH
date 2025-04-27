@@ -14,11 +14,11 @@ typedef struct client Client;
 
 Client *createClient(int port);
 
-void clientConnectToServer(Client *pClient, IPaddress serverAddress);
+bool clientConnectToServer(Client *pClient, IPaddress serverAddress);
 
 void clientDisconnectFromServer(Client *pClient);
 
-void clientWaitForServer(Client *pClient);
+bool clientWaitForServer(Client *pClient);
 
 bool clientReceivePacket(Client *pClient, ServerPayload *pPayload);
 

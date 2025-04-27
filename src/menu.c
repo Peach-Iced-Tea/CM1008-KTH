@@ -90,7 +90,7 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
         renderMenu(pWindow, pMenu->pMenuTexture, pMenu->menuButtons, pMenu->menuPositions, pMenu->nrOfButtons);
     }
     displayWindow(pWindow);
-    
+
     int connectionState = 0;
     int currentPosition = -1;
     int hover = 0;
@@ -153,6 +153,7 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
         }
     }
 
+    destroyInputTracker(pInput);
     return gameRunning;
 }
 
