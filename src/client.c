@@ -15,6 +15,8 @@ struct client {
 
 void initClientPayload(ClientPayload *pPayload) {
     pPayload->player.input = createVector(0.0f, 0.0f);
+    pPayload->player.sheetPosition.x = 0.0f;
+    pPayload->player.sheetPosition.y = 0.0f;
     pPayload->player.tick = 0;
     pPayload->playerID = 0;
     pPayload->clientState = DISCONNECTED;
@@ -148,8 +150,8 @@ void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicA
 
         StateData state;
         state.position = playerGetPosition(pPlayer);
-        state.sheetPosition.x = playerGetSheetPosition(pPlayer).x;
-        state.sheetPosition.y = playerGetSheetPosition(pPlayer).y;
+        state.sheetPosition.x = (float)playerGetSheetPosition(pPlayer).x;
+        state.sheetPosition.y = (float)playerGetSheetPosition(pPlayer).y;
         state.tick = tickToProcess;
         pClient->stateBuffer[bufferIndex] = state;
         tickToProcess++;
