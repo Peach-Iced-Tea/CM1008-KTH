@@ -94,6 +94,31 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
     return;
 }
 
+void updateDisplay(Game *pGame, Vec2 mousePosition) {
+    Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
+    cameraUpdate(pGame->pCamera);
+        
+    clearWindow(pGame->pWindow);
+
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        renderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
+    }
+
+    for (int i = 0; i < arrayGetSize(pGame->pPlatforms); i++) {
+        Entity *pEntity = arrayGetObject(pGame->pPlatforms, i);
+        if (entityIsVisible(pGame->pCamera, entityGetCurrentFrame(pEntity))) {
+            renderEntity(pGame->pWindow, pEntity, pGame->pCamera);
+        }
+    }
+
+    if (playerGetMouseClick(pPlayer)) {
+        drawLine(pGame->pWindow, mousePosition, entityGetMidPoint(playerGetBody(pPlayer)), pGame->pCamera);
+    }
+    
+    displayWindow(pGame->pWindow);
+    return;
+}
+
 void handleTick(Game *pGame) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     playerUpdateState(pPlayer);
@@ -213,26 +238,8 @@ int main(int argv, char** args) {
                     accumulator -= timestep;
                 }
         
-                cameraUpdate(game.pCamera);
-        
-                clearWindow(game.pWindow);
-        
-                for (int i = 0; i < MAX_PLAYERS; i++) {
-                    renderPlayer(game.pWindow, game.players[i], game.pCamera);
-                }
-
-                for (int i = 0; i < arrayGetSize(game.pPlatforms); i++) {
-                    Entity *pEntity = arrayGetObject(game.pPlatforms, i);
-                    if (entityIsVisible(game.pCamera, entityGetCurrentFrame(pEntity))) {
-                        renderEntity(game.pWindow, pEntity, game.pCamera);
-                    }
-                }
-        
-                if (playerGetMouseClick(pPlayer)) {
-                    drawLine(game.pWindow, mousePosition, entityGetMidPoint(playerGetBody(pPlayer)), game.pCamera);
-                }
+                updateDisplay(&game, mousePosition);
                 
-                displayWindow(game.pWindow);
                 break;
             case GAME_CLOSING:
                 break;
