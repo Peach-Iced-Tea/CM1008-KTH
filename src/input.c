@@ -49,6 +49,12 @@ int keyInputs(Input *pInputs, SDL_Event event) {
         case SDL_SCANCODE_G:
             pressedKey = KEY_G;
             break;
+        case SDL_SCANCODE_H:
+            pressedKey = KEY_H;
+            break;
+        case SDL_SCANCODE_J:
+            pressedKey = KEY_J;
+            break;
         case SDL_SCANCODE_Q:
             pressedKey = KEY_Q;
             break;
@@ -103,6 +109,9 @@ int keyInputs(Input *pInputs, SDL_Event event) {
             break;
         case SDL_SCANCODE_TAB:
             pressedKey = KEY_TAB;
+            break;
+        case SDL_SCANCODE_BACKSPACE:
+            pressedKey = KEY_BACKSPACE;
             break;
     }
 

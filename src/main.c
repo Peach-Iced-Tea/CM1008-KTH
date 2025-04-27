@@ -10,8 +10,10 @@ void cleanUp(Game *pGame) {
     SDL_DestroyTexture(pGame->pGrassTexture);
     destroyCamera(pGame->pCamera);
     destroyRenderWindow(pGame->pWindow);
+    destroyMenu(pGame->pMenu);
     destroyClient(pGame->pClient);
     SDLNet_Quit();
+    TTF_Quit();
     SDL_Quit();
     return;
 }
@@ -58,6 +60,9 @@ int initGame(Game *pGame) {
 
     pGame->pInput = createInputTracker();
     if (pGame->pInput == NULL) { return 1; }
+
+    pGame->pMenu = createMenu(pGame->pWindow);
+    if (pGame->pMenu == NULL) { return 1; }
 
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
@@ -154,7 +159,14 @@ int main(int argv, char** args) {
         return 1;
     }
 
+    if (TTF_Init()) {
+        SDL_Quit();
+        printf("Error: %s\n", TTF_GetError());
+        return 1;
+    }
+
     if (SDLNet_Init()) {
+        TTF_Quit();
         SDL_Quit();
         printf("Error: %s\n", SDLNet_GetError());
         return 1;
@@ -185,7 +197,10 @@ int main(int argv, char** args) {
 
         switch (gameState) {
             case GAME_CONNECTING:
-                clientConnectToServer(game.pClient);
+                IPaddress serverAddress;
+                gameRunning = mainMenu(game.pMenu, game.pWindow, &serverAddress);
+
+                clientConnectToServer(game.pClient, serverAddress);
                 pPlayer = game.players[clientGetPlayerID(game.pClient)];
                 if (clientGetPlayerID(game.pClient) == 0) {
                     pTeammate = game.players[1];

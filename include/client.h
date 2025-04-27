@@ -14,7 +14,7 @@ typedef struct client Client;
 
 Client *createClient(int port);
 
-void clientConnectToServer(Client *pClient);
+void clientConnectToServer(Client *pClient, IPaddress serverAddress);
 
 void clientDisconnectFromServer(Client *pClient);
 

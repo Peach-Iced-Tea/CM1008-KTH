@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
 
 #include "entity.h"
@@ -31,6 +32,16 @@ Clear the previous frame off of the given RenderWindow.
 Use this in preparation for the next displayWindow().
 */
 void clearWindow(RenderWindow *pRenderWindow);
+
+/*
+
+*/
+void renderMenu(RenderWindow *pRenderWindow, SDL_FRect menuFrame, SDL_Texture *pTexture);
+
+/*
+
+*/
+void renderText(RenderWindow *pRenderWindow, char const textToRender[], int x, int y);
 
 /*
 Renders the given Entity on the screen if it is visible inside the camera dimensions.

@@ -1,5 +1,7 @@
 #include "renderWindow.h"
 
+#define MENU_SCALER 12
+
 typedef enum {
     WINDOWED, BORDERLESS, FULLSCREEN, EXCLUSIVE, ALT_TABBED
 } WindowState;
@@ -7,8 +9,11 @@ typedef enum {
 struct renderWindow {
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
+    TTF_Font *pFont;
     WindowState state;
     WindowState lastState;
+    int width;
+    int height;
     bool renderHitboxes;
     int nrOfRenderedEntites;    // Used for debugging purposes.
 };
@@ -27,8 +32,17 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
         return NULL;
     }
 
+    pRenderWindow->pFont = TTF_OpenFont("resources/arial.ttf", 100);
+    if (!pRenderWindow->pFont) {
+        printf("Error: %s\n", TTF_GetError());
+        return NULL;
+    }
+
     pRenderWindow->state = FULLSCREEN;
     pRenderWindow->lastState = pRenderWindow->state;
+
+    pRenderWindow->width = w;
+    pRenderWindow->height = h;
     pRenderWindow->renderHitboxes = false;
     SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("resources/gameIcon.png"));
 
@@ -123,6 +137,44 @@ void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera con
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
     SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
+    return;
+}
+
+void renderMenu(RenderWindow *pRenderWindow, SDL_FRect menuFrame, SDL_Texture *pTexture) {
+    float extraScale = (float)pRenderWindow->width/REFERENCE_WIDTH;
+    float extraScaleH = (float)pRenderWindow->height/REFERENCE_HEIGHT;
+    if (extraScaleH < extraScale) {
+        extraScale = extraScaleH;
+    }
+
+    menuFrame.w *= MENU_SCALER*extraScale;
+    menuFrame.h *= MENU_SCALER*extraScale;
+    menuFrame.x -= menuFrame.w*0.5f;
+    menuFrame.y -= menuFrame.h*0.5f;
+
+    SDL_RenderCopyF(pRenderWindow->pRenderer, pTexture, NULL, &menuFrame);
+    return;
+}
+
+void renderText(RenderWindow *pRenderWindow, char const textToRender[], int x, int y) {
+    SDL_Color color = { 255, 255, 255 };
+    SDL_Surface *pSurface = TTF_RenderText_Solid(pRenderWindow->pFont, textToRender, color);
+    if (pSurface == NULL) {
+        printf("Error: %s\n", TTF_GetError());
+        return;
+    }
+
+    SDL_Texture *pTexture = SDL_CreateTextureFromSurface(pRenderWindow->pRenderer, pSurface);
+    if (pTexture == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_Rect dst;
+    dst.x = x;
+    dst.y = y;
+    SDL_QueryTexture(pTexture, NULL, NULL, &dst.w, &dst.h);
+    SDL_RenderCopy(pRenderWindow->pRenderer, pTexture, NULL, &dst);
     return;
 }
 

@@ -14,6 +14,7 @@
 #include "player.h"
 #include "networkData.h"
 #include "client.h"
+#include "menu.h"
 
 typedef struct {
     RenderWindow *pWindow;
@@ -22,5 +23,6 @@ typedef struct {
     SDL_Texture *pGrassTexture;
     DynamicArray *pPlatforms;
     Input *pInput;
+    Menu *pMenu;
     Client *pClient;
 } Game;

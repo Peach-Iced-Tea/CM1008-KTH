@@ -36,13 +36,14 @@ Client *createClient(int port) {
         return NULL;
     }
 
-    SDLNet_ResolveHost(&(pClient->serverAddress), "127.0.0.1", 50505);
+    SDLNet_ResolveHost(&(pClient->serverAddress), "127.0.0.1", SERVER_PORT);
     pClient->currentTick = 0;
 
     return pClient;
 }
 
-void clientConnectToServer(Client *pClient) {
+void clientConnectToServer(Client *pClient, IPaddress serverAddress) {
+    pClient->serverAddress = serverAddress;
     pClient->pPacket->address = pClient->serverAddress;
     memcpy(pClient->pPacket->data, &(pClient->payload), sizeof(ClientPayload));
     pClient->pPacket->len = sizeof(ClientPayload);
