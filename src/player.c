@@ -39,10 +39,10 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     if (pRenderer != NULL) {
         switch (id) {
             case PLAYER_1:
-                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
+                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer.png");
                 break;
             case PLAYER_2:
-                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer1.png");
+                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer.png");
                 break;
         }
 
@@ -212,6 +212,18 @@ void playerUpdateState(Player *pPlayer) {
 
             offset = pPlayer->sheetPosition.x;
             pPlayer->sheetPosition.y = 0;
+            break;
+        case SHOOTING:
+            pPlayer->gravityModifier = 0.0f;
+
+            if (3*M_PI*0.5f < pPlayer->referenceAngle < 7*M_PI*0.25f) {
+                offset = 64;
+                pPlayer->sheetPosition.y = 0;
+            }
+            /* else if (0.401426f > pPlayer->referenceAngle > 0) {
+                offset = 64;
+                pPlayer->sheetPosition.y = 32;
+            } */
             break;
     }
 
@@ -433,3 +445,4 @@ void retractTongue(Player *pPlayer) {
     //setVelocityX(pPlayer->pTongue, tongueVec.x);
     //setVelocityY(pPlayer->pTongue, tongueVec.y);
 } 
+
