@@ -199,6 +199,7 @@ int main(int argv, char** args) {
             case GAME_CONNECTING:
                 IPaddress serverAddress;
                 gameRunning = mainMenu(game.pMenu, game.pWindow, &serverAddress);
+                if (!gameRunning) { continue; }
 
                 clientConnectToServer(game.pClient, serverAddress);
                 pPlayer = game.players[clientGetPlayerID(game.pClient)];

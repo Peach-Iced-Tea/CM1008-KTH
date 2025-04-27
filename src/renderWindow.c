@@ -1,7 +1,5 @@
 #include "renderWindow.h"
 
-#define MENU_SCALER 12
-
 typedef enum {
     WINDOWED, BORDERLESS, FULLSCREEN, EXCLUSIVE, ALT_TABBED
 } WindowState;
@@ -140,19 +138,14 @@ void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera con
     return;
 }
 
-void renderMenu(RenderWindow *pRenderWindow, SDL_FRect menuFrame, SDL_Texture *pTexture) {
-    float extraScale = (float)pRenderWindow->width/REFERENCE_WIDTH;
-    float extraScaleH = (float)pRenderWindow->height/REFERENCE_HEIGHT;
-    if (extraScaleH < extraScale) {
-        extraScale = extraScaleH;
+void renderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
+    for (int i = 0; i < nrOfButtons; i++) {
+        SDL_Rect src = menuButtons[i];
+        SDL_Rect dst = menuPosition[i];
+
+        SDL_RenderCopy(pRenderWindow->pRenderer, pTexture, &src, &dst);
     }
-
-    menuFrame.w *= MENU_SCALER*extraScale;
-    menuFrame.h *= MENU_SCALER*extraScale;
-    menuFrame.x -= menuFrame.w*0.5f;
-    menuFrame.y -= menuFrame.h*0.5f;
-
-    SDL_RenderCopyF(pRenderWindow->pRenderer, pTexture, NULL, &menuFrame);
+    
     return;
 }
 
@@ -171,9 +164,9 @@ void renderText(RenderWindow *pRenderWindow, char const textToRender[], int x, i
     }
 
     SDL_Rect dst;
-    dst.x = x;
-    dst.y = y;
     SDL_QueryTexture(pTexture, NULL, NULL, &dst.w, &dst.h);
+    dst.x = x-dst.w*0.5f;
+    dst.y = y-dst.h*0.5f;
     SDL_RenderCopy(pRenderWindow->pRenderer, pTexture, NULL, &dst);
     return;
 }
@@ -222,6 +215,14 @@ void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *p
 
 SDL_Renderer *getRenderer(RenderWindow const *pRenderWindow) {
     return pRenderWindow->pRenderer;
+}
+
+int windowGetWidth(RenderWindow const *pRenderWindow) {
+    return pRenderWindow->width;
+}
+
+int windowGetHeight(RenderWindow const *pRenderWindow) {
+    return pRenderWindow->height;
 }
 
 void destroyRenderWindow(RenderWindow *pRenderWindow) {

@@ -36,7 +36,7 @@ void clearWindow(RenderWindow *pRenderWindow);
 /*
 
 */
-void renderMenu(RenderWindow *pRenderWindow, SDL_FRect menuFrame, SDL_Texture *pTexture);
+void renderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons);
 
 /*
 
@@ -65,6 +65,16 @@ void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *p
 Get the SDL_Renderer* from the given RenderWindow.
 */
 SDL_Renderer *getRenderer(RenderWindow const *pRenderWindow);
+
+/*
+
+*/
+int windowGetWidth(RenderWindow const *pRenderWindow);
+
+/*
+
+*/
+int windowGetHeight(RenderWindow const *pRenderWindow);
 
 /*
 Use this function to destroy the given RenderWindow pointer and free up memory.
