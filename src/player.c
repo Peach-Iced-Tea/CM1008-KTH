@@ -149,10 +149,10 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
     else if (!getMouseState(pInputs, MOUSE_LEFT)) {
         switch (pPlayer->state) {
             case SHOOTING:
-                pPlayer->state = IDLE;
+                pPlayer->state = RETRACTING;
                 break;  
             case ROTATING:
-                pPlayer->state = FALLING;
+                pPlayer->state = RETRACTING;
         }
     }
 
@@ -240,9 +240,14 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
     Vec2 returnVector;
     switch(pPlayer->state) {
         case SHOOTING:
-            Vec2 scaledTongueVelocity = pPlayer->tongueVel;
-            vectorScale(&scaledTongueVelocity, deltaTime);
-            entityMove(pPlayer->pTongue, scaledTongueVelocity);
+            Vec2 scaledShootingVelocity = pPlayer->tongueVel;
+            vectorScale(&scaledShootingVelocity, deltaTime);
+            entityMove(pPlayer->pTongue, scaledShootingVelocity);
+            break;
+        case RETRACTING:
+            Vec2 scaledRetractingVelocity = pPlayer->tongueVel;
+            vectorScale(&scaledRetractingVelocity, deltaTime);
+            entityMove(pPlayer->pTongue, scaledRetractingVelocity);
             break;
         case ROTATING:
             returnVector = rotationCalculations(pPlayer, deltaTime);
@@ -267,6 +272,7 @@ int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
         switch (collisionDetected) {
             case OBJECT_IS_NORTH:
                 if (pPlayer->state == SHOOTING) {break;}
+                if (pPlayer->state == RETRACTING) {break;}
                 playerSetState(pPlayer, IDLE);
                 break;
             case OBJECT_IS_SOUTH:
@@ -318,6 +324,10 @@ bool playerSetState(Player *pPlayer, int newState) {
             break;
         case ROTATING:
             stateWasChanged = true;
+            break;
+        case RETRACTING:
+            stateWasChanged = true;
+            break;
         default:
             break;   
     }
@@ -410,5 +420,16 @@ void shootTongue(Player *pPlayer, Vec2 mousePosition) {
     pPlayer->tongueVel = tongueVec;
     //setVelocityX(pPlayer->pTongue, tongueVec.x);
     //setVelocityY(pPlayer->pTongue, tongueVec.y);
-
 }
+
+void retractTongue(Player *pPlayer) {
+    Entity *player = playerGetBody(pPlayer);
+    Vec2 tongueVec;
+    vectorSub(&tongueVec, entityGetMidPoint(pPlayer->pBody), entityGetMidPoint(pPlayer->pTongue));
+    vectorNorm(&tongueVec);
+
+    vectorScale(&tongueVec, TONGUE_SPEED);
+    pPlayer->tongueVel = tongueVec;
+    //setVelocityX(pPlayer->pTongue, tongueVec.x);
+    //setVelocityY(pPlayer->pTongue, tongueVec.y);
+} 
