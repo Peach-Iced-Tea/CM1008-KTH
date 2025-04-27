@@ -34,6 +34,11 @@ int initGame(Game *pGame) {
         if (pGame->players[i] == NULL) { return 1; }
     }
 
+    pGame->pGurkaTexture = loadTexture(pGame->pWindow, "resources/player1.png");
+
+    pGame->pGurka = createEntity(createVector(64.0f, 64.0f), pGame->pGurkaTexture, 0, HITBOX_FULL_BLOCK);
+
+
     pGame->pPlatforms = createDynamicArray(ARRAY_ENTITIES);
     if (pGame->pPlatforms == NULL) { return 1; }
     // Add blocks along the bottom of the screen.
@@ -70,14 +75,21 @@ int initGame(Game *pGame) {
     return 0;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float deltaTime) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float deltaTime, Game *pGame) {
     switch (playerGetState(pPlayer)) {
         case ROTATING:
+            /* 
             Entity *pBodyP2 = playerGetBody(pTeammate);
             Vec2 velocity;
             Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
             vectorSub(&velocity, newRotPos, entityGetMidPoint(pBodyP2));
             entityMove(pBodyP2, velocity);
+            */
+            Vec2 rotateVelocity;
+            Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
+            vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(pGame->pGurka));
+            entityMove(pGame->pGurka, rotateVelocity);
+
             break;
         default:
             playerUpdatePosition(pPlayer, deltaTime);
@@ -108,6 +120,11 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         renderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
     }
+    //-------------------------------TONGUE RENDER----------------------------------
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        renderEntity(pGame->pWindow, playerGetTongue(pPlayer), pGame->pCamera);
+    }
+    renderEntity(pGame->pWindow, pGame->pGurka, pGame->pCamera);
 
     for (int i = 0; i < arrayGetSize(pGame->pPlatforms); i++) {
         Entity *pEntity = arrayGetObject(pGame->pPlatforms, i);
@@ -199,6 +216,9 @@ int main(int argv, char** args) {
         return 1;
     }
  
+    Vec2 ref;
+    float alpha;
+
     const float timestep = 1.0f/TICK_RATE;
     Uint64 lastTime = SDL_GetTicks64();
     float deltaTime = 0.0f;
@@ -246,7 +266,8 @@ int main(int argv, char** args) {
                 playerHandleInput(pPlayer, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
-        
+
+                /*         
                 if (playerGetMouseClick(pPlayer)) {
                     Entity *pBodyP1 = playerGetBody(pPlayer);
                     if (vectorLength(mousePosition, entityGetMidPoint(pBodyP1)) < 240.0f) {
@@ -260,13 +281,36 @@ int main(int argv, char** args) {
                         }
                     }
                 }
-        
+                */      
+                if (getMouseState(game.pInput, MOUSE_LEFT) == KEY_STATE_DOWN) {  ref = mousePosition; }
+
+                if (playerGetState(pPlayer) == SHOOTING) {
+                    Entity *pBodyP1 = playerGetBody(pPlayer);
+                    Entity *pTung = playerGetTongue(pPlayer);
+                    alpha = vectorGetAngle(entityGetMidPoint(pBodyP1), ref);
+                    playerSetReferenceAngle(pPlayer, alpha);
+                    shootTongue(pPlayer, ref);
+
+                    if (checkCollision(entityGetHitbox(game.pGurka), entityGetHitbox(pTung))) {
+                        playerSetState(pPlayer, ROTATING);
+
+                        float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(game.pGurka));
+                        playerSetRadius(pPlayer, radius);
+                        alpha = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(game.pGurka));
+                        playerSetReferenceAngle(pPlayer, alpha);
+                    }
+                }
+
+
+
+                
+
                 while (accumulator >= timestep) {    
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
                     handleTick(&game);
                     
-                    updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
+                    updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep, &game);
                     StateData state;
                     state.position = playerGetPosition(pPlayer);
                     state.sheetPosition.x = playerGetSheetPosition(pPlayer).x;

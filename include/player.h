@@ -10,7 +10,7 @@
 #define PLAYER_2 1
 
 typedef enum {
-    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING
+    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING
 } PlayerState;
 
 typedef struct player Player;
@@ -95,6 +95,11 @@ Entity *playerGetBody(Player const *pPlayer);
 /*
 
 */
+Entity *playerGetTongue(Player const *pPlayer);
+
+/*
+
+*/
 Hitbox *playerGetBodyHitbox(Player const *pPlayer);
 
 /*
@@ -126,3 +131,9 @@ bool playerGetMouseClick(Player const *pPlayer);
 Use this function to destroy the given Player pointer and free up memory.
 */
 void destroyPlayer(Player *pPlayer);
+
+
+void shootTongue(Player *pPlayer, Vec2 mousePosition);
+
+
+void retractTongue(Player *pPlayer);

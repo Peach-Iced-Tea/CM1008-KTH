@@ -25,4 +25,7 @@ typedef struct {
     Input *pInput;
     Menu *pMenu;
     Client *pClient;
+
+    Entity *pGurka;
+    SDL_Texture *pGurkaTexture;
 } Game;

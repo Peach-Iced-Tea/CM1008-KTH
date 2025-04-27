@@ -7,6 +7,7 @@
 #include "physics.h"
 
 #define ENTITY_PLAYER 1
+#define ENTITY_TONGUE 2
 
 typedef struct entity Entity;
 

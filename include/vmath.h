@@ -36,5 +36,4 @@ void vectorMidPoint(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2);
 float vectorGetAngle(Vec2 const vector1, Vec2 const vector2);
 
 
-
-
+void vectorNorm(Vec2 *vector);

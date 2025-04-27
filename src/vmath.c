@@ -65,3 +65,9 @@ float vectorGetAngle(Vec2 const vector1, Vec2 const vector2) {
     return atanf(dy/dx);
    
 }
+
+void vectorNorm(Vec2 *vector) {
+    int magnitude = sqrt(vector->x * vector->x + vector->y * vector->y);
+    vector->x = vector->x / magnitude;
+    vector->y = vector->y / magnitude;
+}
