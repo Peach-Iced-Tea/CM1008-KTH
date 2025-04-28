@@ -75,7 +75,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
     Vec2 movement = createVector(0.0f, 0.0f);
     switch (pPlayer->state) {
         case SHOOTING:
-        case RETRACTING:
+        case RELEASE:
         case ROTATING:
             break;
         default:
@@ -157,6 +157,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
             case SHOOTING:
             case ROTATING:
                 tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
+                pPlayer->state = RELEASE;
                 break;
         }
     }
@@ -230,6 +231,9 @@ void playerUpdateState(Player *pPlayer) {
                 pPlayer->sheetPosition.y = 32;
             } */
             break;
+        case RELEASE:
+            pPlayer->gravityModifier = 0.0f;
+            break;
     }
 
     pPlayer->sheetPosition.x = offset;
@@ -257,6 +261,7 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
     Vec2 returnVector;
     switch(pPlayer->state) {
         case SHOOTING:
+        case RELEASE:
             tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);
             if (tongueGetState(pPlayer->pTongue) == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
             if (tongueGetLength(pPlayer->pTongue) == 0.0f) { pPlayer->state = IDLE; }

@@ -208,7 +208,7 @@ void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *p
     adjustToCamera(pCamera, NULL, &pos1);
     adjustToCamera(pCamera, NULL, &pos2);
     
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 0, 0, 255);
     SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x, pos1.y, pos2.x, pos2.y);
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
     return;

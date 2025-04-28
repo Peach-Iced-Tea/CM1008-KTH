@@ -11,7 +11,7 @@
 #define PLAYER_2 1
 
 typedef enum {
-    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING
+    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING, RELEASE
 } PlayerState;
 
 typedef struct player Player;

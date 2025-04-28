@@ -1,6 +1,6 @@
 #include "tongue.h"
 
-#define TONGUE_VELOCITY 800
+#define TONGUE_VELOCITY 600
 #define MAX_TONGUE_LENGTH 250.0f
 
 struct tongue {
@@ -39,6 +39,8 @@ bool tongueSetMousePosition(Tongue *pTongue, Vec2 mousePosition) {
 }
 
 void tongueSetPosition(Tongue *pTongue, Vec2 newPosition) {
+    newPosition.x -= entityGetCurrentFrame(pTongue->pTip).w*0.5f;
+    newPosition.y -= entityGetCurrentFrame(pTongue->pTip).h*0.5f;
     entitySetPosition(pTongue->pTip, newPosition);
     return;
 }
@@ -48,6 +50,8 @@ void tongueSetVelocity(Tongue *pTongue, Vec2 centerPoint) {
     switch (pTongue->state) {
         case NEUTRAL:
             vectorSub(&tongueVec, pTongue->mousePosition, centerPoint);
+            vectorGetAngle(centerPoint, entityGetMidPoint(pTongue->pTip));
+
             vectorNorm(&tongueVec);
         
             vectorScale(&tongueVec, TONGUE_VELOCITY);
