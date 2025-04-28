@@ -368,7 +368,7 @@ bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition) {
     return true;
 }
 
-int playerGetState(Player *pPlayer) {
+int playerGetState(Player const *pPlayer) {
     return pPlayer->state;
 }
 
@@ -398,6 +398,10 @@ Vec2 playerGetVelocity(Player const *pPlayer) {
 
 SDL_Rect playerGetSheetPosition(Player const *pPlayer) {
     return pPlayer->sheetPosition;
+}
+
+float playerGetReferenceAngle(Player const *pPlayer) {
+    return pPlayer->referenceAngle;
 }
 
 void destroyPlayer(Player *pPlayer) {

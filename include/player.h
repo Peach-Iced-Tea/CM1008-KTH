@@ -86,7 +86,7 @@ bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition);
 /*
 Get the current PlayerState of the given Player.
 */
-int playerGetState(Player *pPlayer);
+int playerGetState(Player const *pPlayer);
 
 /*
 Get the current Entity representing the given Player's body.
@@ -122,6 +122,11 @@ Vec2 playerGetVelocity(Player const *pPlayer);
 Get the current sprite sheet position of the given Player.
 */
 SDL_Rect playerGetSheetPosition(Player const *pPlayer);
+
+/*
+
+*/
+float playerGetReferenceAngle(Player const *pPlayer);
 
 /*
 Use this function to destroy the given Player pointer and free up memory.

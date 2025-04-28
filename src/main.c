@@ -128,14 +128,15 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
         }
     }
 
-    switch (playerGetState(pPlayer)) {
+    /*switch (playerGetState(pPlayer)) {
         case SHOOTING:
+        case RELEASE:
             drawLine(pGame->pWindow, entityGetMidPoint(tongueGetTip(playerGetTongue(pPlayer))), entityGetMidPoint(playerGetBody(pPlayer)), pGame->pCamera);
             break;
         case ROTATING:
             drawLine(pGame->pWindow, entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka), pGame->pCamera);
             break;
-    }
+    }*/
     
     displayWindow(pGame->pWindow);
     return;

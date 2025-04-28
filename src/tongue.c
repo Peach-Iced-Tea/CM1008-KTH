@@ -9,7 +9,7 @@ struct tongue {
     Vec2 velocity;
     TongueState state;
     Vec2 mousePosition;
-    float length;
+    SDL_FRect shaftRect;
 };
 
 Tongue *createTongue(Vec2 position, SDL_Renderer *pRenderer) {
@@ -18,10 +18,13 @@ Tongue *createTongue(Vec2 position, SDL_Renderer *pRenderer) {
     pTongue->pTip = createEntity(position, pTexture, ENTITY_TONGUE, HITBOX_FULL_BLOCK);
     if (pTongue->pTip == NULL) { return NULL; }
 
-    //pTongue->pTongueTexture = loadTexture(pWindow, "resources/tongueShaft.png");
+    pTongue->pTongueTexture = IMG_LoadTexture(pRenderer, "resources/tongueShaft.png");
     pTongue->velocity = createVector(0.0f, 0.0f);
     pTongue->state = NEUTRAL;
-    pTongue->length = 0.0f;
+    pTongue->shaftRect.x = 0.0f;
+    pTongue->shaftRect.y = 0.0f;
+    pTongue->shaftRect.w = 0.0f;
+    pTongue->shaftRect.h = 24.0f;
 
     return pTongue;
 }
@@ -78,17 +81,22 @@ void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep) {
         entityMove(pTongue->pTip, scaledVelocity);
     }
 
-    pTongue->length = vectorLength(centerPoint, entityGetMidPoint(pTongue->pTip));
+    Vec2 midPoint;
+    vectorMidPoint(&midPoint, centerPoint, entityGetMidPoint(pTongue->pTip));
+    pTongue->shaftRect.x = midPoint.x;
+    pTongue->shaftRect.y = midPoint.y;
+    pTongue->shaftRect.w = vectorLength(centerPoint, entityGetMidPoint(pTongue->pTip));
     switch (pTongue->state) {
         case EXTENDING:
-            if (pTongue->length >= MAX_TONGUE_LENGTH) {
+            if (pTongue->shaftRect.w >= MAX_TONGUE_LENGTH) {
                 pTongue->state = MAX_EXTENSION;
+                pTongue->shaftRect.w = MAX_TONGUE_LENGTH;
             }
             break;
         case RETRACTING:
-            if (pTongue->length < 16.0f) {
+            if (pTongue->shaftRect.w < 16.0f) {
                 entitySetPosition(pTongue->pTip, centerPoint);
-                pTongue->length = 0.0f;
+                pTongue->shaftRect.w = 0.0f;
                 pTongue->state = NEUTRAL;
             }
             break;
@@ -105,6 +113,10 @@ Hitbox *tongueGetHitbox(Tongue const *pTongue) {
     return entityGetHitbox(pTongue->pTip);
 }
 
+SDL_Texture *tongueGetShaftTexture(Tongue const *pTongue) {
+    return pTongue->pTongueTexture;
+}
+
 Vec2 tongueGetPosition(Tongue const *pTongue) {
     return entityGetPosition(pTongue->pTip);
 }
@@ -114,7 +126,11 @@ Vec2 tongueGetMousePosition(Tongue const *pTongue) {
 }
 
 float tongueGetLength(Tongue const *pTongue) {
-    return pTongue->length;
+    return pTongue->shaftRect.w;
+}
+
+SDL_FRect tongueGetShaftRect(Tongue const *pTongue) {
+    return pTongue->shaftRect;
 }
 
 int tongueGetState(Tongue const *pTongue) {
@@ -128,3 +144,4 @@ void destroyTongue(Tongue *pTongue) {
     SDL_DestroyTexture(pTongue->pTongueTexture);
     return;
 }
+

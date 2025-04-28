@@ -25,6 +25,8 @@ Entity *tongueGetTip(Tongue const *pTongue);
 
 Hitbox *tongueGetHitbox(Tongue const *pTongue);
 
+SDL_Texture *tongueGetShaftTexture(Tongue const *pTongue);
+
 Vec2 tongueGetPosition(Tongue const *pTongue);
 
 Vec2 tongueGetMousePosition(Tongue const *pTongue);
@@ -32,5 +34,7 @@ Vec2 tongueGetMousePosition(Tongue const *pTongue);
 int tongueGetState(Tongue const *pTongue);
 
 float tongueGetLength(Tongue const *pTongue);
+
+SDL_FRect tongueGetShaftRect(Tongue const *pTongue);
 
 void destroyTongue(Tongue *pTongue);
