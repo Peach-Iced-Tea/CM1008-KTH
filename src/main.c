@@ -78,17 +78,12 @@ int initGame(Game *pGame) {
 void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float deltaTime, Game *pGame) {
     switch (playerGetState(pPlayer)) {
         case ROTATING:
-            /* 
-            Entity *pBodyP2 = playerGetBody(pTeammate);
-            Vec2 velocity;
-            Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
-            vectorSub(&velocity, newRotPos, entityGetMidPoint(pBodyP2));
-            entityMove(pBodyP2, velocity);
-            */
             Vec2 rotateVelocity;
             Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
             vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(pGame->pGurka));
             entityMove(pGame->pGurka, rotateVelocity);
+            vectorMidPoint(&newRotPos, entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka));
+            tongueSetShaftMidPoint(playerGetTongue(pPlayer), newRotPos);
 
             break;
         default:

@@ -17,6 +17,8 @@ bool tongueSetMousePosition(Tongue *pTongue, Vec2 mousePosition);
 
 void tongueSetPosition(Tongue *pTongue, Vec2 newPosition);
 
+void tongueSetShaftMidPoint(Tongue *pTongue, Vec2 newPosition);
+
 void tongueSetVelocity(Tongue *pTongue, Vec2 centerPoint);
 
 void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep);

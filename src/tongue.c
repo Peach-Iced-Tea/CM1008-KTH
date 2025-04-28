@@ -24,7 +24,7 @@ Tongue *createTongue(Vec2 position, SDL_Renderer *pRenderer) {
     pTongue->shaftRect.x = 0.0f;
     pTongue->shaftRect.y = 0.0f;
     pTongue->shaftRect.w = 0.0f;
-    pTongue->shaftRect.h = 24.0f;
+    pTongue->shaftRect.h = 20.0f;
 
     return pTongue;
 }
@@ -45,6 +45,12 @@ void tongueSetPosition(Tongue *pTongue, Vec2 newPosition) {
     newPosition.x -= entityGetCurrentFrame(pTongue->pTip).w*0.5f;
     newPosition.y -= entityGetCurrentFrame(pTongue->pTip).h*0.5f;
     entitySetPosition(pTongue->pTip, newPosition);
+    return;
+}
+
+void tongueSetShaftMidPoint(Tongue *pTongue, Vec2 newPosition) {
+    pTongue->shaftRect.x = newPosition.x;
+    pTongue->shaftRect.y = newPosition.y;
     return;
 }
 
