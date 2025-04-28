@@ -193,6 +193,7 @@ void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera con
 
     SDL_Rect src = playerGetSheetPosition(pPlayer);
 
+    renderEntity(pRenderWindow, tongueGetTip(playerGetTongue(pPlayer)), pCamera);
     SDL_RenderCopyF(pRenderWindow->pRenderer, playerGetBodyTexture(pPlayer), &src, &dst);
     if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
     return;

@@ -15,6 +15,7 @@
 #include "networkData.h"
 #include "client.h"
 #include "menu.h"
+#include "tongue.h"
 
 typedef struct {
     RenderWindow *pWindow;

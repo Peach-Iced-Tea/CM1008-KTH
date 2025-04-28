@@ -5,12 +5,13 @@
 #include "entity.h"
 #include "vmath.h"
 #include "input.h"
+#include "tongue.h"
 
 #define PLAYER_1 0
 #define PLAYER_2 1
 
 typedef enum {
-    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING, RETRACTING
+    IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING
 } PlayerState;
 
 typedef struct player Player;
@@ -95,7 +96,7 @@ Entity *playerGetBody(Player const *pPlayer);
 /*
 
 */
-Entity *playerGetTongue(Player const *pPlayer);
+Tongue *playerGetTongue(Player const *pPlayer);
 
 /*
 
@@ -123,17 +124,6 @@ Get the current sprite sheet position of the given Player.
 SDL_Rect playerGetSheetPosition(Player const *pPlayer);
 
 /*
-Get whether the given Player is currently pressing down on the left mouse button.
-*/
-bool playerGetMouseClick(Player const *pPlayer);
-
-/*
 Use this function to destroy the given Player pointer and free up memory.
 */
 void destroyPlayer(Player *pPlayer);
-
-
-void shootTongue(Player *pPlayer, Vec2 mousePosition);
-
-
-void retractTongue(Player *pPlayer);

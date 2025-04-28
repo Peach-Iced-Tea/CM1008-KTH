@@ -17,18 +17,15 @@
 
 struct player {
     Entity *pBody;
-    Entity *pTongue;
+    Tongue *pTongue;
     PlayerState state;
     Vec2 velocity;
     float rotateVelocity;
-    bool mouseClicked;
     float gravityModifier;
     int jumpTimer;
     float radius;
     float referenceAngle;
     SDL_Rect sheetPosition;
-
-    Vec2 tongueVel;
 };
 
 Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
@@ -55,13 +52,12 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
 
     pTexture = IMG_LoadTexture(pRenderer, "resources/tongueTip.png");
-    pPlayer->pTongue = createEntity(position, pTexture, ENTITY_TONGUE, HITBOX_FULL_BLOCK);
+    pPlayer->pTongue = createTongue(entityGetMidPoint(pPlayer->pBody), pRenderer);
 
     pPlayer->state = IDLE;
     pPlayer->velocity = createVector(0.0f, 0.0f);
     pPlayer->rotateVelocity = 0.0f;
 
-    pPlayer->mouseClicked = false;
     pPlayer->gravityModifier = 0.0f;
     pPlayer->jumpTimer = 0;
     pPlayer->radius = 0.0f;
@@ -77,13 +73,21 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
 
 void playerHandleInput(Player *pPlayer, Input const *pInputs) {
     Vec2 movement = createVector(0.0f, 0.0f);
-    if (getKeyState(pInputs, MOVE_UP_INPUT)) { movement.y = -PLAYER_VELOCITY; }
+    switch (pPlayer->state) {
+        case SHOOTING:
+        case RETRACTING:
+        case ROTATING:
+            break;
+        default:
+            if (getKeyState(pInputs, MOVE_UP_INPUT)) { movement.y = -PLAYER_VELOCITY; }
 
-    if (getKeyState(pInputs, MOVE_DOWN_INPUT)) { movement.y += PLAYER_VELOCITY; }
-
-    if (getKeyState(pInputs, MOVE_LEFT_INPUT)) { movement.x = -PLAYER_VELOCITY; }
-
-    if (getKeyState(pInputs, MOVE_RIGHT_INPUT)) { movement.x += PLAYER_VELOCITY; }
+            if (getKeyState(pInputs, MOVE_DOWN_INPUT)) { movement.y += PLAYER_VELOCITY; }
+        
+            if (getKeyState(pInputs, MOVE_LEFT_INPUT)) { movement.x = -PLAYER_VELOCITY; }
+        
+            if (getKeyState(pInputs, MOVE_RIGHT_INPUT)) { movement.x += PLAYER_VELOCITY; }
+    }
+    
 
     if (getKeyState(pInputs, JUMP_INPUT)) {
         switch (pPlayer->state) {
@@ -143,16 +147,17 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         switch (pPlayer->state) {
             case IDLE:
                 pPlayer->state = SHOOTING;
+                pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->pBody), tongueGetMousePosition(pPlayer->pTongue));
+                tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
                 break;
         }
     }
     else if (!getMouseState(pInputs, MOUSE_LEFT)) {
         switch (pPlayer->state) {
             case SHOOTING:
-                pPlayer->state = RETRACTING;
-                break;  
             case ROTATING:
-                pPlayer->state = RETRACTING;
+                tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
+                break;
         }
     }
 
@@ -216,7 +221,7 @@ void playerUpdateState(Player *pPlayer) {
         case SHOOTING:
             pPlayer->gravityModifier = 0.0f;
 
-            if (3*M_PI*0.5f < pPlayer->referenceAngle < 7*M_PI*0.25f) {
+            if (3*M_PI*0.5f < pPlayer->referenceAngle && pPlayer->referenceAngle < 7*M_PI*0.25f) {
                 offset = 64;
                 pPlayer->sheetPosition.y = 0;
             }
@@ -252,14 +257,9 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
     Vec2 returnVector;
     switch(pPlayer->state) {
         case SHOOTING:
-            Vec2 scaledShootingVelocity = pPlayer->tongueVel;
-            vectorScale(&scaledShootingVelocity, deltaTime);
-            entityMove(pPlayer->pTongue, scaledShootingVelocity);
-            break;
-        case RETRACTING:
-            Vec2 scaledRetractingVelocity = pPlayer->tongueVel;
-            vectorScale(&scaledRetractingVelocity, deltaTime);
-            entityMove(pPlayer->pTongue, scaledRetractingVelocity);
+            tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);
+            if (tongueGetState(pPlayer->pTongue) == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
+            if (tongueGetLength(pPlayer->pTongue) == 0.0f) { pPlayer->state = IDLE; }
             break;
         case ROTATING:
             returnVector = rotationCalculations(pPlayer, deltaTime);
@@ -268,7 +268,7 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
             Vec2 scaledVelocity = pPlayer->velocity;
             vectorScale(&scaledVelocity, deltaTime);
             entityMove(pPlayer->pBody, scaledVelocity);
-            entitySetPosition(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
+            tongueSetPosition(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
     }
 
     return returnVector;
@@ -283,9 +283,12 @@ int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
         collisionDetected = hitboxOrientation(pPlayerHitbox, pObject);
         switch (collisionDetected) {
             case OBJECT_IS_NORTH:
-                if (pPlayer->state == SHOOTING) {break;}
-                if (pPlayer->state == RETRACTING) {break;}
-                playerSetState(pPlayer, IDLE);
+                switch (pPlayer->state) {
+                    case RUNNING:
+                    case FALLING:
+                        pPlayer->state = IDLE;
+                        break;
+                }
                 break;
             case OBJECT_IS_SOUTH:
                 switch (pPlayer->state) {
@@ -312,17 +315,6 @@ void playerSetPosition(Player *pPlayer, Vec2 newPosition) {
 bool playerSetState(Player *pPlayer, int newState) {
     bool stateWasChanged = false;
     switch (newState) {
-        case IDLE:
-            switch (pPlayer->state) {
-                case JUMPING:
-                case FLYING:
-                case ROTATING:
-                    break;
-                default:
-                    stateWasChanged = true;
-                    break;
-            }
-            break;
         case FALLING:
             switch (pPlayer->state) {
                 case JUMPING:
@@ -379,7 +371,7 @@ Entity *playerGetBody(Player const *pPlayer) {
     return pPlayer->pBody;
 }
 
-Entity *playerGetTongue(Player const *pPlayer) {
+Tongue *playerGetTongue(Player const *pPlayer) {
     return pPlayer->pTongue;
 }
 
@@ -403,46 +395,12 @@ SDL_Rect playerGetSheetPosition(Player const *pPlayer) {
     return pPlayer->sheetPosition;
 }
 
-bool playerGetMouseClick(Player const *pPlayer) {
-    return pPlayer->mouseClicked;
-}
-
 void destroyPlayer(Player *pPlayer) {
     if (pPlayer == NULL) { return; }
 
     SDL_DestroyTexture(entityGetTexture(pPlayer->pBody));
-    //SDL_DestroyTexture(entityGetTexture(pPlayer->pTongue));
     destroyEntity(pPlayer->pBody);
-    destroyEntity(pPlayer->pTongue);
+    destroyTongue(pPlayer->pTongue);
     free(pPlayer);
     return;
 }
-
-#define TONGUE_SPEED 800
-
-void shootTongue(Player *pPlayer, Vec2 mousePosition) {
-    Entity *player =playerGetBody(pPlayer);
-    Vec2 tongueVec;
-
-    vectorSub(&tongueVec, mousePosition, entityGetMidPoint(pPlayer->pBody));
-    vectorNorm(&tongueVec);
-
-    vectorScale(&tongueVec, TONGUE_SPEED);
-
-    pPlayer->tongueVel = tongueVec;
-    //setVelocityX(pPlayer->pTongue, tongueVec.x);
-    //setVelocityY(pPlayer->pTongue, tongueVec.y);
-}
-
-void retractTongue(Player *pPlayer) {
-    Entity *player = playerGetBody(pPlayer);
-    Vec2 tongueVec;
-    vectorSub(&tongueVec, entityGetMidPoint(pPlayer->pBody), entityGetMidPoint(pPlayer->pTongue));
-    vectorNorm(&tongueVec);
-
-    vectorScale(&tongueVec, TONGUE_SPEED);
-    pPlayer->tongueVel = tongueVec;
-    //setVelocityX(pPlayer->pTongue, tongueVec.x);
-    //setVelocityY(pPlayer->pTongue, tongueVec.y);
-} 
-

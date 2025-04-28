@@ -113,8 +113,6 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
 
 void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
-    cameraUpdate(pGame->pCamera);
-        
     clearWindow(pGame->pWindow);
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -122,10 +120,6 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     }
     //-------------------------------TONGUE RENDER----------------------------------
     renderEntity(pGame->pWindow, pGame->pGurka, pGame->pCamera);
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        renderEntity(pGame->pWindow, playerGetTongue(pPlayer), pGame->pCamera);
-    }
-    
 
     for (int i = 0; i < arrayGetSize(pGame->pPlatforms); i++) {
         Entity *pEntity = arrayGetObject(pGame->pPlatforms, i);
@@ -134,12 +128,13 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
         }
     }
 
-    if (playerGetState(pPlayer) == ROTATING) {
-        drawLine(pGame->pWindow, entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka), pGame->pCamera);
-    }
-
-    if (playerGetMouseClick(pPlayer)) {
-        drawLine(pGame->pWindow, mousePosition, entityGetMidPoint(playerGetBody(pPlayer)), pGame->pCamera);
+    switch (playerGetState(pPlayer)) {
+        case SHOOTING:
+            drawLine(pGame->pWindow, entityGetMidPoint(tongueGetTip(playerGetTongue(pPlayer))), entityGetMidPoint(playerGetBody(pPlayer)), pGame->pCamera);
+            break;
+        case ROTATING:
+            drawLine(pGame->pWindow, entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka), pGame->pCamera);
+            break;
     }
     
     displayWindow(pGame->pWindow);
@@ -273,36 +268,19 @@ int main(int argv, char** args) {
                 windowHandleInput(game.pWindow, game.pInput);
    
                 //----------------TONGUE and ROTATION Logic------------------------------------------------
-                if (getMouseState(game.pInput, MOUSE_LEFT) == KEY_STATE_DOWN) {  ref = mousePosition; }
+                tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
 
-                if (playerGetState(pPlayer) == SHOOTING) {
-                    Entity *pBodyP1 = playerGetBody(pPlayer);
-                    Entity *pTung = playerGetTongue(pPlayer);
-                    alpha = vectorGetAngle(entityGetMidPoint(pBodyP1), ref);
-                    playerSetReferenceAngle(pPlayer, alpha);
-                    shootTongue(pPlayer, ref);
-
-                    float tongueLenght = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetTongue(pPlayer)));
-                    if (tongueLenght > 250.0f) { playerSetState(pPlayer, RETRACTING); }
-
-                    if (checkCollision(entityGetHitbox(game.pGurka), entityGetHitbox(pTung))) {
-                        playerSetState(pPlayer, ROTATING);
-
-                        float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(game.pGurka));
-                        playerSetRadius(pPlayer, radius);
-                        alpha = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(game.pGurka));
-                        playerSetReferenceAngle(pPlayer, alpha);
-                    }
-                }
-                if (playerGetState(pPlayer) == RETRACTING) {
-                    retractTongue(pPlayer);
-                    if (checkCollision(entityGetHitbox(playerGetBody(pPlayer)), entityGetHitbox(playerGetTongue(pPlayer)))) {
-                        playerSetState(pPlayer, IDLE);
-                    }
-                }
-                if (playerGetState(pPlayer) == ROTATING) {
-
-                    entitySetPosition(playerGetTongue(pPlayer), entityGetMidPoint(game.pGurka));
+                switch (playerGetState(pPlayer)) {
+                    case SHOOTING:
+                        if (checkCollision(entityGetHitbox(game.pGurka), tongueGetHitbox(playerGetTongue(pPlayer)))) {
+                            playerSetState(pPlayer, ROTATING);
+                            float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(game.pGurka));
+                            playerSetRadius(pPlayer, radius);
+                        }
+                        break;
+                    case ROTATING:
+                        tongueSetPosition(playerGetTongue(pPlayer), entityGetMidPoint(game.pGurka));
+                        break;
                 }
                 
 
@@ -312,6 +290,7 @@ int main(int argv, char** args) {
                     handleTick(&game);
                     
                     updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep, &game);
+                    cameraUpdate(game.pCamera);
                     StateData state;
                     state.position = playerGetPosition(pPlayer);
                     state.sheetPosition.x = playerGetSheetPosition(pPlayer).x;
