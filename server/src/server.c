@@ -56,8 +56,8 @@ int initServer(Server *pServer) {
     pServer->payload.serverState = SERVER_WAITING;
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pServer->payload.players[i].position = playerGetPosition(pServer->players[i]);
-        pServer->payload.players[i].sheetPosition.x = (float)playerGetSheetPosition(pServer->players[i]).x;
-        pServer->payload.players[i].sheetPosition.y = (float)playerGetSheetPosition(pServer->players[i]).y;
+        pServer->payload.players[i].tonguePosition = tongueGetPosition(playerGetTongue(pServer->players[i]));
+        pServer->payload.players[i].state = playerGetState(pServer->players[i]);
         pServer->payload.players[i].tick = 0;
     }
 
@@ -94,9 +94,21 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
 
     Player *pPlayer = pServer->players[payload.playerID];
     Vec2 velocity = payload.player.input;
-    playerSetSheetPosition(pPlayer, payload.player.sheetPosition);
+    playerOverrideState(pPlayer, payload.player.state);
     vectorScale(&velocity, timestep);
     entityMove(playerGetBody(pPlayer), velocity);
+    switch (payload.player.state) {
+        case SHOOTING:
+        case RELEASE:
+            velocity = payload.player.tongueInput;
+            vectorScale(&velocity, timestep);
+            entityMove(tongueGetTip(playerGetTongue(pPlayer)), velocity);
+            break;
+        case ROTATING:
+            break;
+        default:
+            tongueSetPosition(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)));
+    }
 
     bool standingOnPlatform = false;
     for (int i = 0; i < arrayGetSize(pServer->pObjects); i++) {
@@ -108,8 +120,8 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 
     pServer->payload.players[payload.playerID].position = playerGetPosition(pPlayer);
-    pServer->payload.players[payload.playerID].sheetPosition.x = (float)playerGetSheetPosition(pPlayer).x;
-    pServer->payload.players[payload.playerID].sheetPosition.y = (float)playerGetSheetPosition(pPlayer).y;
+    pServer->payload.players[payload.playerID].tonguePosition = tongueGetPosition(playerGetTongue(pPlayer));
+    pServer->payload.players[payload.playerID].state = playerGetState(pPlayer);
     pServer->payload.players[payload.playerID].tick = payload.player.tick;
     return;
 }

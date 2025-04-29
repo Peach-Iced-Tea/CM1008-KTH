@@ -175,7 +175,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
     return;
 }
 
-void playerUpdateState(Player *pPlayer) {
+void playerUpdateAnimation(Player *pPlayer) {
     int offset = 0;
     if (pPlayer->velocity.x < 0.0f) {
         offset = 32;
@@ -183,21 +183,75 @@ void playerUpdateState(Player *pPlayer) {
     else if (pPlayer->velocity.x == 0.0f) {
         offset = pPlayer->sheetPosition.x;
     }
-    
+
+    switch (pPlayer->state) {
+        case IDLE:
+        case RUNNING:
+        case FLYING:
+            pPlayer->sheetPosition.y = 0;
+            break;
+        case FALLING:
+            pPlayer->sheetPosition.y = 64;
+            break;
+        case JUMPING:
+            pPlayer->sheetPosition.y = 32;
+            break;
+        case SHOOTING:
+        case ROTATING:
+            if ((2 * M_PI - (M_PI / 12.0f)) < pPlayer->referenceAngle) {
+                offset = 64;
+                pPlayer->sheetPosition.y = 32;
+            }
+            else if (pPlayer->referenceAngle < (M_PI / 12.0f)) {
+                offset = 64;
+                pPlayer->sheetPosition.y = 32;
+            }
+            else if ((M_PI / 12.0f) < pPlayer->referenceAngle && pPlayer->referenceAngle < ((M_PI / 2.0f) - (M_PI / 12.0f))) {
+                offset = 64;
+                pPlayer->sheetPosition.y = 64;
+            }
+            else if (((M_PI / 2.0f) - (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < ((M_PI / 2.0f) + (M_PI / 12.0f))) {
+                offset = 64;
+                pPlayer->sheetPosition.y = 96;
+            }
+            else if (((M_PI / 2.0f) + (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (M_PI - (M_PI / 12.0f))) {
+                offset = 96;
+                pPlayer->sheetPosition.y = 64;
+            }
+            else if ((M_PI - (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (M_PI + (M_PI / 12.0f))) {
+                offset = 96;
+                pPlayer->sheetPosition.y = 32;
+            }
+            else if ((M_PI + (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (((3 * M_PI) / 2.0f) - (M_PI / 12.0f))) {
+                offset = 96;
+                pPlayer->sheetPosition.y = 0;
+            }
+            else if ((((3 * M_PI) / 2.0f) - (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (((3 * M_PI) / 2.0f) + (M_PI / 12.0f))) {
+                offset = 96;
+                pPlayer->sheetPosition.y = 96;
+            }
+            else if ((((3 * M_PI) / 2.0f) + (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (M_PI * 2.0f - (M_PI / 12.0f))) {
+                offset = 64;
+                pPlayer->sheetPosition.y = 0;
+            }
+            break;
+    }
+
+    pPlayer->sheetPosition.x = offset;
+    return;
+}
+
+void playerUpdateState(Player *pPlayer) {
     switch (pPlayer->state) {
         case IDLE:
         case RUNNING:
             pPlayer->gravityModifier = 0.0f;
-
-            pPlayer->sheetPosition.y = 0;
             break;
         case FALLING:
             if (pPlayer->jumpTimer > 0) {
                 pPlayer->jumpTimer = 0;
             }
             pPlayer->gravityModifier = 1.0f;
-
-            pPlayer->sheetPosition.y = 64;
             break;
         case JUMPING:
             pPlayer->gravityModifier = 0.75f;
@@ -205,38 +259,15 @@ void playerUpdateState(Player *pPlayer) {
                 pPlayer->jumpTimer--;
                 if (pPlayer->jumpTimer == 0) {pPlayer->state = FALLING;}
             }
-
-            pPlayer->sheetPosition.y = 32;
             break;
         case FLYING:
-            pPlayer->gravityModifier = 0.0f;
-
-            pPlayer->sheetPosition.y = 0;
-            break;
         case ROTATING:
-            pPlayer->gravityModifier = 0.0f;
-
-            offset = pPlayer->sheetPosition.x;
-            pPlayer->sheetPosition.y = 0;
-            break;
         case SHOOTING:
-            pPlayer->gravityModifier = 0.0f;
-
-            if (3*M_PI*0.5f < pPlayer->referenceAngle && pPlayer->referenceAngle < 7*M_PI*0.25f) {
-                offset = 64;
-                pPlayer->sheetPosition.y = 0;
-            }
-            /* else if (0.401426f > pPlayer->referenceAngle > 0) {
-                offset = 64;
-                pPlayer->sheetPosition.y = 32;
-            } */
-            break;
         case RELEASE:
             pPlayer->gravityModifier = 0.0f;
             break;
     }
 
-    pPlayer->sheetPosition.x = offset;
     if (pPlayer->velocity.y >= MAX_GRAVITY_VELOCITY) {
         pPlayer->velocity.y = MAX_GRAVITY_VELOCITY;
     }
@@ -268,6 +299,7 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
             break;
         case ROTATING:
             returnVector = rotationCalculations(pPlayer, deltaTime);
+            playerUpdateAnimation(pPlayer);
             break;
         default:
             Vec2 scaledVelocity = pPlayer->velocity;
@@ -402,6 +434,11 @@ SDL_Rect playerGetSheetPosition(Player const *pPlayer) {
 
 float playerGetReferenceAngle(Player const *pPlayer) {
     return pPlayer->referenceAngle;
+}
+
+void playerOverrideState(Player *pPlayer, PlayerState newState) {
+    pPlayer->state = newState;
+    return;
 }
 
 void destroyPlayer(Player *pPlayer) {

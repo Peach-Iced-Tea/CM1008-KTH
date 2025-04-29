@@ -187,40 +187,33 @@ void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera con
     return;
 }
 
-void renderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, float angle, Camera const *pCamera) {
+void renderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Camera const *pCamera) {
     SDL_FRect dst = tongueGetShaftRect(pTongue);
     adjustToCamera(pCamera, &dst, NULL);
-    angle = angle * (180.0f/M_PI);
+    float angle = tongueGetAngle(pTongue) * (180.0f/M_PI);
     dst.x -= dst.w*0.5f;
     dst.y -= dst.h*0.5f;
 
     SDL_RenderCopyExF(pRenderWindow->pRenderer, tongueGetShaftTexture(pTongue), NULL, &dst, angle, NULL, 0);
     renderEntity(pRenderWindow, tongueGetTip(pTongue), pCamera);
+    return;
 }
 
 void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera) {
     SDL_FRect dst = entityGetCurrentFrame(playerGetBody(pPlayer));
     adjustToCamera(pCamera, &dst, NULL);
 
-    SDL_Rect src = playerGetSheetPosition(pPlayer);
-
     switch (playerGetState(pPlayer)) {
         case SHOOTING:
         case RELEASE:
         case ROTATING:
-            renderTongue(pRenderWindow, playerGetTongue(pPlayer), playerGetReferenceAngle(pPlayer), pCamera);
+            renderTongue(pRenderWindow, playerGetTongue(pPlayer), pCamera);
             break;
-
     }
 
-
+    SDL_Rect src = playerGetSheetPosition(pPlayer);
     SDL_RenderCopyF(pRenderWindow->pRenderer, playerGetBodyTexture(pPlayer), &src, &dst);
     if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
-
-
-
-
-
     return;
 
 } 

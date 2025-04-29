@@ -10,6 +10,7 @@ struct tongue {
     TongueState state;
     Vec2 mousePosition;
     SDL_FRect shaftRect;
+    float angle;
 };
 
 Tongue *createTongue(Vec2 position, SDL_Renderer *pRenderer) {
@@ -87,28 +88,52 @@ void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep) {
         entityMove(pTongue->pTip, scaledVelocity);
     }
 
-    Vec2 midPoint;
-    vectorMidPoint(&midPoint, centerPoint, entityGetMidPoint(pTongue->pTip));
-    pTongue->shaftRect.x = midPoint.x;
-    pTongue->shaftRect.y = midPoint.y;
-    pTongue->shaftRect.w = vectorLength(centerPoint, entityGetMidPoint(pTongue->pTip));
+    tongueCalculateShaft(pTongue, centerPoint, entityGetMidPoint(pTongue->pTip));
     switch (pTongue->state) {
         case EXTENDING:
             if (pTongue->shaftRect.w >= MAX_TONGUE_LENGTH) {
-                pTongue->state = MAX_EXTENSION;
                 pTongue->shaftRect.w = MAX_TONGUE_LENGTH;
+                pTongue->velocity.x = 0.0f;
+                pTongue->velocity.y = 0.0f;
+                pTongue->state = MAX_EXTENSION;
             }
             break;
         case RETRACTING:
             if (pTongue->shaftRect.w < 16.0f) {
                 entitySetPosition(pTongue->pTip, centerPoint);
                 pTongue->shaftRect.w = 0.0f;
+                pTongue->velocity.x = 0.0f;
+                pTongue->velocity.y = 0.0f;
                 pTongue->state = NEUTRAL;
             }
             break;
     }
 
     return;
+}
+
+void tongueCalculateShaft(Tongue *pTongue, Vec2 centerPoint, Vec2 referencePoint) {
+    pTongue->shaftRect.w = vectorLength(centerPoint, referencePoint);
+    tongueSetPosition(pTongue, referencePoint);
+    Vec2 midPoint;
+    vectorMidPoint(&midPoint, centerPoint, referencePoint);
+    pTongue->shaftRect.x = midPoint.x;
+    pTongue->shaftRect.y = midPoint.y;
+    pTongue->angle = vectorGetAngle(centerPoint, referencePoint);
+    return;
+}
+
+bool tongueCheckCollision(Tongue *pTongue, Entity *pEntity) {
+    Hitbox *pTongueHitbox = entityGetHitbox(pTongue->pTip);
+    Hitbox *pEntityHitbox = entityGetHitbox(pEntity);
+    if (checkCollision(pTongueHitbox, pEntityHitbox)) {
+        tongueSetPosition(pTongue, entityGetMidPoint(pEntity));
+        pTongue->velocity.x = 0.0f;
+        pTongue->velocity.y = 0.0f;
+        return true;
+    }
+
+    return false;
 }
 
 Entity *tongueGetTip(Tongue const *pTongue) {
@@ -127,6 +152,10 @@ Vec2 tongueGetPosition(Tongue const *pTongue) {
     return entityGetPosition(pTongue->pTip);
 }
 
+Vec2 tongueGetVelocity(Tongue const *pTongue) {
+    return pTongue->velocity;
+}
+
 Vec2 tongueGetMousePosition(Tongue const *pTongue) {
     return pTongue->mousePosition;
 }
@@ -143,6 +172,10 @@ int tongueGetState(Tongue const *pTongue) {
     return pTongue->state;
 }
 
+float tongueGetAngle(Tongue const *pTongue) {
+    return pTongue->angle;
+}
+
 void destroyTongue(Tongue *pTongue) {
     if (pTongue == NULL) { return; }
 
@@ -150,4 +183,3 @@ void destroyTongue(Tongue *pTongue) {
     SDL_DestroyTexture(pTongue->pTongueTexture);
     return;
 }
-

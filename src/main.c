@@ -82,9 +82,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
             Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
             vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(pGame->pGurka));
             entityMove(pGame->pGurka, rotateVelocity);
-            vectorMidPoint(&newRotPos, entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka));
-            tongueSetShaftMidPoint(playerGetTongue(pPlayer), newRotPos);
-
+            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka));
             break;
         default:
             playerUpdatePosition(pPlayer, deltaTime);
@@ -113,7 +111,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         renderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
     }
-    //-------------------------------TONGUE RENDER----------------------------------
+
     renderEntity(pGame->pWindow, pGame->pGurka, pGame->pCamera);
 
     for (int i = 0; i < arrayGetSize(pGame->pPlatforms); i++) {
@@ -122,16 +120,6 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
             renderEntity(pGame->pWindow, pEntity, pGame->pCamera);
         }
     }
-
-    /*switch (playerGetState(pPlayer)) {
-        case SHOOTING:
-        case RELEASE:
-            drawLine(pGame->pWindow, entityGetMidPoint(tongueGetTip(playerGetTongue(pPlayer))), entityGetMidPoint(playerGetBody(pPlayer)), pGame->pCamera);
-            break;
-        case ROTATING:
-            drawLine(pGame->pWindow, entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka), pGame->pCamera);
-            break;
-    }*/
     
     displayWindow(pGame->pWindow);
     return;
@@ -139,12 +127,13 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
 
 void handleTick(Game *pGame) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
+    playerUpdateAnimation(pPlayer);
     playerUpdateState(pPlayer);
 
     InputData input;
     input.input = playerGetVelocity(pPlayer);
-    input.sheetPosition.x = playerGetSheetPosition(pPlayer).x;
-    input.sheetPosition.y = playerGetSheetPosition(pPlayer).y;
+    input.tongueInput = tongueGetVelocity(playerGetTongue(pPlayer));
+    input.state = playerGetState(pPlayer);
     clientAddInputToBuffer(pGame->pClient, input);
     clientSendPacket(pGame->pClient);
 
@@ -157,8 +146,11 @@ void handleTick(Game *pGame) {
                 }
             }
             else {
-                entitySetPosition(playerGetBody(pGame->players[i]), payload.players[i].position);
-                playerSetSheetPosition(pGame->players[i], payload.players[i].sheetPosition);
+                playerSetPosition(pGame->players[i], payload.players[i].position);
+                tongueSetPosition(playerGetTongue(pGame->players[i]), payload.players[i].tonguePosition);
+                tongueCalculateShaft(playerGetTongue(pGame->players[i]), entityGetMidPoint(playerGetBody(pGame->players[i])), payload.players[i].tonguePosition);
+                playerOverrideState(pGame->players[i], payload.players[i].state);
+                playerUpdateAnimation(pPlayer);
             }
         }
     }
@@ -262,24 +254,21 @@ int main(int argv, char** args) {
                 playerHandleInput(pPlayer, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
-   
-                //----------------TONGUE and ROTATION Logic------------------------------------------------
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
 
                 switch (playerGetState(pPlayer)) {
                     case SHOOTING:
-                        if (checkCollision(entityGetHitbox(game.pGurka), tongueGetHitbox(playerGetTongue(pPlayer)))) {
+                        if (tongueCheckCollision(playerGetTongue(pPlayer), game.pGurka)) {
                             playerSetState(pPlayer, ROTATING);
                             float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(game.pGurka));
                             playerSetRadius(pPlayer, radius);
                         }
                         break;
                     case ROTATING:
-                        tongueSetPosition(playerGetTongue(pPlayer), entityGetMidPoint(game.pGurka));
+                        tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(game.pGurka));
                         break;
                 }
                 
-
                 while (accumulator >= timestep) {    
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
@@ -289,8 +278,8 @@ int main(int argv, char** args) {
                     cameraUpdate(game.pCamera);
                     StateData state;
                     state.position = playerGetPosition(pPlayer);
-                    state.sheetPosition.x = playerGetSheetPosition(pPlayer).x;
-                    state.sheetPosition.y = playerGetSheetPosition(pPlayer).y;
+                    state.tonguePosition = tongueGetPosition(playerGetTongue(pPlayer));
+                    state.state = playerGetState(pPlayer);
                     clientAddStateToBuffer(game.pClient, state);
         
                     accumulator -= timestep;

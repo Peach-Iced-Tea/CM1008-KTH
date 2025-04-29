@@ -29,6 +29,11 @@ Such as moving the given Player left and right, as well as jumping.
 void playerHandleInput(Player *pPlayer, Input const *pInputs);
 
 /*
+
+*/
+void playerUpdateAnimation(Player *pPlayer);
+
+/*
 Update the given Player based on what PlayerState it is in currently.
 
 This will update things such as current acceleration applied by gravity
@@ -127,6 +132,11 @@ SDL_Rect playerGetSheetPosition(Player const *pPlayer);
 
 */
 float playerGetReferenceAngle(Player const *pPlayer);
+
+/*
+
+*/
+void playerOverrideState(Player *pPlayer, PlayerState newState);
 
 /*
 Use this function to destroy the given Player pointer and free up memory.
