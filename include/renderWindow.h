@@ -7,6 +7,8 @@
 #include "entity.h"
 #include "camera.h"
 #include "player.h"
+#include "mapParser.h"
+
 
 typedef struct renderWindow RenderWindow;
 

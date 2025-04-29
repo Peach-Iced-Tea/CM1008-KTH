@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <jansson.h>
-#include <libxml2/libxml/tree.h>
-#include <libxml2/libxml/parser.h>
+
+#include "mapParser.h"
 
 typedef struct tileset{
     xmlChar *imgRef;
@@ -9,10 +7,40 @@ typedef struct tileset{
     xmlChar *columns;
     xmlChar *width;
     xmlChar *height;
+};
 
-} tileSet;
+typedef struct map {
+    Tileset *layerTiles;
+    
+    json_t *data;
+    size_t size;
+};
 
-void parse_tileset(const char *filename, tileSet *devTiles) {
+Tileset *createTileset() {
+    Tileset *pTileset = malloc(sizeof(Tileset));
+
+    pTileset->imgRef = NULL;
+    pTileset->tilecount = NULL;
+    pTileset->columns = NULL;
+    pTileset->width = NULL;
+    pTileset->height = NULL;
+
+    return pTileset;
+}
+
+Map *createMap() {
+    Map *pMap = malloc(sizeof(Map));
+
+    pMap->layerTiles = createTileset();
+
+    pMap->data = NULL;  //array for the positions in map
+    pMap->size = NULL;  //size of the array
+    
+    return pMap;
+}
+
+
+void loadTileset(const char *filename, Tileset *devTiles) {
     xmlDoc *doc = xmlReadFile(filename, NULL, 0);
     if (!doc) {
         fprintf(stderr, "Failed to parse %s\n", filename);
@@ -43,11 +71,9 @@ void parse_tileset(const char *filename, tileSet *devTiles) {
     xmlFreeDoc(doc);
 }
 
-int main() {
-    tileSet devTiles;
-    parse_tileset("devTiles.tsx", &devTiles);
+void loadMap(const char *path, Map *pMap) {
     json_error_t error;
-    json_t *root = json_load_file("map.tmj", 0, &error);
+    json_t *root = json_load_file(path, 0, &error);
 
     if (!root) {
         fprintf(stderr, "Error loading TMJ: %s (line %d)\n", error.text, error.line);
@@ -74,23 +100,27 @@ int main() {
 		}
 	
 		// Get the "data" array inside that layer
-		json_t *data = json_object_get(layer, "data");
-		if (!json_is_array(data)) {
+		pMap->data = json_object_get(layer, "data");
+		if (!json_is_array(pMap->data)) {
 			fprintf(stderr, "\"data\" is not an array\n");
 			json_decref(root);
 			return 1;
 		}
 	
-		size_t size = json_array_size(data);
-		printf("Tile data (%zu tiles):\n", size);
+		pMap->size = json_array_size(pMap->data);
+		printf("Tile data (%zu tiles):\n", pMap->size);
 	
-		for (size_t j = 0; j < size; j++) {
-			json_t *tile = json_array_get(data, j);
+		for (size_t j = 0; j < pMap->size; j++) {
+			json_t *tile = json_array_get(pMap->data, j);
 			if (!json_is_integer(tile)) {
 				printf("Invalid value at %zu\n", j);
 				continue;
 			}
-            if ((int)json_integer_value(tile) >= 15){
+
+
+
+
+       /*      if ((int)json_integer_value(tile) >= 15){
                 // printf("%2d ", (int)json_integer_value(tile));
                 int index = (int)json_integer_value(tile) - 15;
                 int columns = atoi((char *)devTiles.columns);
@@ -100,7 +130,10 @@ int main() {
 
                 printf("indx: %d -> Xoff: %d, Yoff: %d\n", index, tileX, tileY);
 
-            } 
+            }  */
+
+
+
             // else {
             //     printf("   ");
             // }
@@ -109,5 +142,42 @@ int main() {
 	}
 
     json_decref(root);
-    return 0;
 }
+
+Tileset *getTileset(Map *pMap) {
+    return pMap->layerTiles;
+}
+
+//------------Mind Vomit------------------
+
+xmlChar *getColumns(Tileset *pTileset) {
+    return pTileset->columns;
+}
+
+SDL_Rect getTilePosition(Map *pMap) {
+
+
+    for (size_t j = 0; j < pMap->size; j++) {
+
+        if ((int)json_integer_value(json_array_get(pMap->data, j)) >= 15) {
+            int index = (int)json_integer_value(json_array_get(pMap->data, j)) - 15;
+            int columns = atoi((char *)getColumns(getTileset(pMap)));
+
+            int tileX = (index % columns) * 32;
+            int tileY = (index / columns) * 32;
+        }
+    }
+}
+
+SDL_Rect getMapPosition() {
+
+}
+
+/* 
+int main() {
+    Tileset devTiles;
+    parseTileset("resources/mapData/devTiles.tsx", &devTiles);
+
+    return 0;
+} 
+    ss*/

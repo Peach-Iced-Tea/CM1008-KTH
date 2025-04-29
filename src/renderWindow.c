@@ -1,5 +1,6 @@
 #include "renderWindow.h"
 
+
 typedef enum {
     WINDOWED, BORDERLESS, FULLSCREEN, EXCLUSIVE, ALT_TABBED
 } WindowState;
@@ -231,4 +232,16 @@ void destroyRenderWindow(RenderWindow *pRenderWindow) {
     SDL_DestroyWindow(pRenderWindow->pWindow);
     SDL_DestroyRenderer(pRenderWindow->pRenderer);
     return;
+}
+
+void renderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamera) {
+   
+    SDL_FRect dst;  // getTilePosition; //Frect for camera
+    SDL_Rect src;
+    // src.w = 32;
+    // src.h = 32;
+    // src.x = 0;
+    // src.y = 0;
+    //for(i=0; i< pMap.Size; i++ ) { render ...}
+    //SDL_RenderCopyF(pRenderWindow->pRenderer, &src, &dst);
 }

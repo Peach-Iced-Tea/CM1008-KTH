@@ -15,6 +15,7 @@
 #include "networkData.h"
 #include "client.h"
 #include "menu.h"
+#include "mapParser.h"s
 
 typedef struct {
     RenderWindow *pWindow;
@@ -25,4 +26,7 @@ typedef struct {
     Input *pInput;
     Menu *pMenu;
     Client *pClient;
+
+    Map *pMap;
+
 } Game;

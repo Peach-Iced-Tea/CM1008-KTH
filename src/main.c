@@ -67,6 +67,12 @@ int initGame(Game *pGame) {
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
 
+    //-------------------------------------Map Handling---------------
+    
+    pGame->pMap = createMap();
+    loadMap("resources/mapData/map.tmj", pGame->pMap);
+    loadTileset("resources/mapData/devTiles.tsx", getTileset(pGame->pMap));
+
     return 0;
 }
 
