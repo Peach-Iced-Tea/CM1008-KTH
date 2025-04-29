@@ -149,8 +149,9 @@ void handleTick(Game *pGame) {
                 playerSetPosition(pGame->players[i], payload.players[i].position);
                 tongueSetPosition(playerGetTongue(pGame->players[i]), payload.players[i].tonguePosition);
                 tongueCalculateShaft(playerGetTongue(pGame->players[i]), entityGetMidPoint(playerGetBody(pGame->players[i])), payload.players[i].tonguePosition);
-                playerOverrideState(pGame->players[i], payload.players[i].state);
-                playerUpdateAnimation(pPlayer);
+                playerSetSheetPosition(pGame->players[i], payload.players[i].sheetPosition);
+                //playerOverrideState(pGame->players[i], payload.players[i].state);
+                //playerUpdateAnimation(pPlayer);
             }
         }
     }

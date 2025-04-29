@@ -133,16 +133,6 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         pPlayer->rotateVelocity += ROTATION_SPEED;
     }
 
-    //pPlayer->mouseClicked = getMouseState(pInputs, MOUSE_LEFT);
-/*     
-    if (!pPlayer->mouseClicked) {
-        switch (pPlayer->state) {
-            case ROTATING:
-                pPlayer->state = FALLING;
-                break;
-        }
-    }
- */
     if (getMouseState(pInputs, MOUSE_LEFT)) {
         switch (pPlayer->state) {
             case IDLE:
@@ -280,7 +270,13 @@ void playerUpdateState(Player *pPlayer) {
 
 Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
     Vec2 newPosition;
-    pPlayer->referenceAngle += (M_PI/180) * deltaTime * pPlayer->rotateVelocity;   
+    pPlayer->referenceAngle += (M_PI/180) * deltaTime * pPlayer->rotateVelocity;
+    if (pPlayer->referenceAngle >= 2*M_PI) {
+        pPlayer->referenceAngle -= 2*M_PI;
+    }
+    else if (pPlayer->referenceAngle <= 0.0f) {
+        pPlayer->referenceAngle += 2*M_PI;
+    }
 
     newPosition.x =(entityGetMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
     newPosition.y =(entityGetMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
@@ -438,6 +434,11 @@ float playerGetReferenceAngle(Player const *pPlayer) {
 
 void playerOverrideState(Player *pPlayer, PlayerState newState) {
     pPlayer->state = newState;
+    return;
+}
+
+void playerOverrideVelocity(Player *pPlayer, Vec2 newVelocity) {
+    pPlayer->velocity = newVelocity;
     return;
 }
 

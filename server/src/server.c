@@ -58,6 +58,7 @@ int initServer(Server *pServer) {
         pServer->payload.players[i].position = playerGetPosition(pServer->players[i]);
         pServer->payload.players[i].tonguePosition = tongueGetPosition(playerGetTongue(pServer->players[i]));
         pServer->payload.players[i].state = playerGetState(pServer->players[i]);
+        pServer->payload.players[i].sheetPosition = createVector(0.0f, 0.0f);
         pServer->payload.players[i].tick = 0;
     }
 
@@ -93,14 +94,14 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     if (payload.player.tick < pServer->payload.players[payload.playerID].tick) { return; }
 
     Player *pPlayer = pServer->players[payload.playerID];
-    Vec2 velocity = payload.player.input;
     playerOverrideState(pPlayer, payload.player.state);
-    vectorScale(&velocity, timestep);
-    entityMove(playerGetBody(pPlayer), velocity);
+    playerOverrideVelocity(pPlayer, payload.player.input);
+    playerUpdateAnimation(pPlayer);
+    playerUpdatePosition(pPlayer, timestep);
     switch (payload.player.state) {
         case SHOOTING:
         case RELEASE:
-            velocity = payload.player.tongueInput;
+            Vec2 velocity = payload.player.tongueInput;
             vectorScale(&velocity, timestep);
             entityMove(tongueGetTip(playerGetTongue(pPlayer)), velocity);
             break;
@@ -122,6 +123,8 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     pServer->payload.players[payload.playerID].position = playerGetPosition(pPlayer);
     pServer->payload.players[payload.playerID].tonguePosition = tongueGetPosition(playerGetTongue(pPlayer));
     pServer->payload.players[payload.playerID].state = playerGetState(pPlayer);
+    pServer->payload.players[payload.playerID].sheetPosition.x = playerGetSheetPosition(pPlayer).x;
+    pServer->payload.players[payload.playerID].sheetPosition.y = playerGetSheetPosition(pPlayer).y;
     pServer->payload.players[payload.playerID].tick = payload.player.tick;
     return;
 }

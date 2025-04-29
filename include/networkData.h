@@ -25,6 +25,7 @@ typedef enum {
 typedef struct {
     Vec2 position;
     Vec2 tonguePosition;
+    Vec2 sheetPosition;
     int state;
     int tick;
 } StateData;
