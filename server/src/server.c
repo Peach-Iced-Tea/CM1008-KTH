@@ -99,7 +99,7 @@ void sendDataToClients(Server *pServer) {
 }
 
 void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
-    if (payload.player.tick < pServer->payload.players[payload.playerID].tick) { return; }
+    if (payload.player.tick <= pServer->payload.players[payload.playerID].tick) { return; }
 
     int movedEntity = -1;
     Player *pPlayer = pServer->players[payload.playerID];
@@ -107,6 +107,22 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
     playerUpdateAnimation(pPlayer);
     switch (payload.player.state) {
+        case SHOOTING:
+        case RELEASE:
+            Vec2 velocity = payload.player.tongueInput;
+            vectorScale(&velocity, timestep);
+            entityMove(tongueGetTip(playerGetTongue(pPlayer)), velocity);
+            if (payload.player.state == SHOOTING) {
+                if (tongueCheckCollision(playerGetTongue(pPlayer), pServer->pGurka)) {
+                    playerSetState(pPlayer, ROTATING);
+                    float alpha = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pServer->pGurka));
+                    playerSetReferenceAngle(pPlayer, alpha);
+                    float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pServer->pGurka));
+                    playerSetRadius(pPlayer, radius);
+                    movedEntity = 0;
+                }
+            }
+            break;
         case ROTATING:
             Vec2 rotateVelocity;
             Vec2 newRotPos = playerUpdatePosition(pPlayer, timestep);
@@ -117,27 +133,8 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             break;
         default:
             playerUpdatePosition(pPlayer, timestep);
-            break;
-    }
-
-    switch (payload.player.state) {
-        case SHOOTING:
-        case RELEASE:
-            Vec2 velocity = payload.player.tongueInput;
-            vectorScale(&velocity, timestep);
-            entityMove(tongueGetTip(playerGetTongue(pPlayer)), velocity);
-            if (tongueCheckCollision(playerGetTongue(pPlayer), pServer->pGurka)) {
-                playerSetState(pPlayer, ROTATING);
-                float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pServer->pGurka));
-                playerSetRadius(pPlayer, radius);
-            }
-            movedEntity = 0;
-            break;
-        case ROTATING:
-            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pServer->pGurka));
-            break;
-        default:
             tongueSetPosition(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)));
+            break;
     }
 
     bool standingOnPlatform = false;
@@ -156,9 +153,9 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     pServer->payload.players[payload.playerID].sheetPosition.y = playerGetSheetPosition(pPlayer).y;
     pServer->payload.players[payload.playerID].tick = payload.player.tick;
 
-    pServer->payload.entities[0].position = entityGetPosition(pServer->pGurka);
-    pServer->payload.entities[0].entityID = movedEntity;
-    pServer->payload.entities[0].tick = 0;
+    pServer->payload.entities[payload.playerID].position = entityGetPosition(pServer->pGurka);
+    pServer->payload.entities[payload.playerID].entityID = movedEntity;
+    pServer->payload.entities[payload.playerID].tick = 0;
     return;
 }
 
