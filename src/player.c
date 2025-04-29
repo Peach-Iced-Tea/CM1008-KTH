@@ -254,6 +254,7 @@ void playerUpdateState(Player *pPlayer) {
         case ROTATING:
         case SHOOTING:
         case RELEASE:
+        case LOCKED:
             pPlayer->gravityModifier = 0.0f;
             break;
     }
@@ -287,6 +288,8 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
 Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
     Vec2 returnVector;
     switch(pPlayer->state) {
+        case LOCKED:
+            break;
         case SHOOTING:
         case RELEASE:
             tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);

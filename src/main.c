@@ -79,18 +79,18 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
     switch (playerGetState(pPlayer)) {
         case SHOOTING:
             playerUpdatePosition(pPlayer, deltaTime);
-            if (tongueCheckCollision(playerGetTongue(pPlayer), pGame->pGurka)) {
+            if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                 playerSetState(pPlayer, ROTATING);
-                float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka));
+                float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pTeammate)));
                 playerSetRadius(pPlayer, radius);
             }
             break;
         case ROTATING:
             Vec2 rotateVelocity;
             Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
-            vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(pGame->pGurka));
-            entityMove(pGame->pGurka, rotateVelocity);
-            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka));
+            vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(playerGetBody(pTeammate)));
+            entityMove(playerGetBody(pTeammate), rotateVelocity);
+            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pTeammate)));
             break;
         default:
             playerUpdatePosition(pPlayer, deltaTime);
@@ -133,7 +133,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     return;
 }
 
-void handleTick(Game *pGame) {
+void handleTick(Game *pGame, Player *pPlayer2) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     playerUpdateAnimation(pPlayer);
     playerUpdateState(pPlayer);
@@ -158,14 +158,20 @@ void handleTick(Game *pGame) {
 
         for (int i = 0; i < MAX_PLAYERS; i++) {
             if (i == clientGetPlayerID(pGame->pClient)) {
-                if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
-                    clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
+                if (payload.players[i].state != LOCKED) {
+                    if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
+                        clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
+                    }
+                    switch (payload.players[i].state) {
+                        case ROTATING:
+                            float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
+                            playerSetRadius(pPlayer, radius);
+                            break;
+                    }
                 }
-                switch (payload.players[i].state) {
-                    case ROTATING:
-                        float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pGame->pGurka));
-                        playerSetRadius(pPlayer, radius);
-                        break;
+                else {
+                    playerOverrideState(pGame->players[i], payload.players[i].state);
+                    playerSetPosition(pGame->players[i], payload.players[i].position);
                 }
             }
             else {
@@ -281,7 +287,7 @@ int main(int argv, char** args) {
                 while (accumulator >= timestep) {    
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
-                    handleTick(&game);
+                    handleTick(&game, pTeammate);
                     
                     updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep, &game);
                     cameraUpdate(game.pCamera);

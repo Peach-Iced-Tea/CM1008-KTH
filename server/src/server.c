@@ -103,6 +103,10 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
 
     int movedEntity = -1;
     Player *pPlayer = pServer->players[payload.playerID];
+    Player *pPlayer2 = pServer->players[0];
+    if(payload.playerID == 0) {
+        pPlayer2 = pServer->players[1];
+    }
     playerOverrideState(pPlayer, payload.player.state);
     playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
     playerUpdateAnimation(pPlayer);
@@ -113,23 +117,22 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             vectorScale(&velocity, timestep);
             entityMove(tongueGetTip(playerGetTongue(pPlayer)), velocity);
             if (payload.player.state == SHOOTING) {
-                if (tongueCheckCollision(playerGetTongue(pPlayer), pServer->pGurka)) {
+                if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pPlayer2))) {
                     playerSetState(pPlayer, ROTATING);
-                    float alpha = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pServer->pGurka));
+                    playerOverrideState(pPlayer2, LOCKED);
+                    float alpha = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
                     playerSetReferenceAngle(pPlayer, alpha);
-                    float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pServer->pGurka));
+                    float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
                     playerSetRadius(pPlayer, radius);
-                    movedEntity = 0;
                 }
             }
             break;
         case ROTATING:
             Vec2 rotateVelocity;
             Vec2 newRotPos = playerUpdatePosition(pPlayer, timestep);
-            vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(pServer->pGurka));
-            entityMove(pServer->pGurka, rotateVelocity);
-            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(pServer->pGurka));
-            movedEntity = 0;
+            vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(playerGetBody(pPlayer2)));
+            entityMove(playerGetBody(pPlayer2), rotateVelocity);
+            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
             break;
         default:
             playerUpdatePosition(pPlayer, timestep);
