@@ -136,12 +136,17 @@ float playerGetReferenceAngle(Player const *pPlayer);
 /*
 
 */
+float playerGetRotateVelocity(Player const *pPlayer);
+
+/*
+
+*/
 void playerOverrideState(Player *pPlayer, PlayerState newState);
 
 /*
 
 */
-void playerOverrideVelocity(Player *pPlayer, Vec2 newVelocity);
+void playerOverrideVelocity(Player *pPlayer, Vec2 newVelocity, float newRotation);
 
 /*
 Use this function to destroy the given Player pointer and free up memory.

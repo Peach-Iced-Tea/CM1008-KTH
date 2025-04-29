@@ -15,4 +15,5 @@ typedef struct {
     UDPpacket *pPacket;
     IPaddress clients[MAX_PLAYERS];
     int currentTick;
+    Entity *pGurka;
 } Server;

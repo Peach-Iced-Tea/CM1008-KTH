@@ -33,12 +33,20 @@ typedef struct {
 typedef struct {
     Vec2 input;
     Vec2 tongueInput;
+    float rotateVelocity;
     int state;
     int tick;
 } InputData;
 
 typedef struct {
+    Vec2 position;
+    int entityID;
+    int tick;
+} EntityData;
+
+typedef struct {
     StateData players[MAX_PLAYERS];
+    EntityData entities[MAX_PLAYERS];
     int playerID;
     ServerState serverState;
 } ServerPayload;

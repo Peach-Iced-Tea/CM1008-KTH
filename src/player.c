@@ -432,13 +432,18 @@ float playerGetReferenceAngle(Player const *pPlayer) {
     return pPlayer->referenceAngle;
 }
 
+float playerGetRotateVelocity(Player const *pPlayer) {
+    return pPlayer->rotateVelocity;
+}
+
 void playerOverrideState(Player *pPlayer, PlayerState newState) {
     pPlayer->state = newState;
     return;
 }
 
-void playerOverrideVelocity(Player *pPlayer, Vec2 newVelocity) {
+void playerOverrideVelocity(Player *pPlayer, Vec2 newVelocity, float newRotation) {
     pPlayer->velocity = newVelocity;
+    pPlayer->rotateVelocity = newRotation;
     return;
 }
 

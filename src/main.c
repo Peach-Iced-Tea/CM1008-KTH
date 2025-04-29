@@ -133,6 +133,7 @@ void handleTick(Game *pGame) {
     InputData input;
     input.input = playerGetVelocity(pPlayer);
     input.tongueInput = tongueGetVelocity(playerGetTongue(pPlayer));
+    input.rotateVelocity = playerGetRotateVelocity(pPlayer);
     input.state = playerGetState(pPlayer);
     clientAddInputToBuffer(pGame->pClient, input);
     clientSendPacket(pGame->pClient);
@@ -140,8 +141,16 @@ void handleTick(Game *pGame) {
     ServerPayload payload;
     while (clientReceivePacket(pGame->pClient, &payload)) {
         for (int i = 0; i < MAX_PLAYERS; i++) {
+            if (payload.entities[i].entityID == -1) { continue; }
+
+            if (payload.entities[i].entityID == 0) {
+                entitySetPosition(pGame->pGurka, payload.entities[i].position);
+            }
+        }
+
+        for (int i = 0; i < MAX_PLAYERS; i++) {
             if (i == clientGetPlayerID(pGame->pClient)) {
-                if(clientCheckServerPayload(pGame->pClient, payload.players[i])) {
+                if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
                     clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
                 }
             }
@@ -150,8 +159,6 @@ void handleTick(Game *pGame) {
                 tongueSetPosition(playerGetTongue(pGame->players[i]), payload.players[i].tonguePosition);
                 tongueCalculateShaft(playerGetTongue(pGame->players[i]), entityGetMidPoint(playerGetBody(pGame->players[i])), payload.players[i].tonguePosition);
                 playerSetSheetPosition(pGame->players[i], payload.players[i].sheetPosition);
-                //playerOverrideState(pGame->players[i], payload.players[i].state);
-                //playerUpdateAnimation(pPlayer);
             }
         }
     }
