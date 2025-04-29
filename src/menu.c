@@ -116,7 +116,7 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
 
         if (currentPosition >= 0) {
             if (currentPosition < IP_MAX_LENGTH-1) {
-                for (int i = KEY_0; i < KEY_9; i++) {
+                for (int i = KEY_0; i <= KEY_9; i++) {
                     if (getKeyState(pInput, i) == KEY_STATE_DOWN) {
                         ipAddress[currentPosition++] = i+48;
                         ipAddress[currentPosition] = '\0';
