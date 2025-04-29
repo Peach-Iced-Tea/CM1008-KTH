@@ -17,8 +17,8 @@ CFLAGS = -g $(INCLUDE) -c
 TARGET = server.exe
 
 
-$(TARGET): server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o
-	$(CC) -o $(TARGET) server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o $(LDFLAGS)
+$(TARGET): server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o
+	$(CC) -o $(TARGET) server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o $(LDFLAGS)
 
 server.o: $(SRCDIR)/server.c $(INCDIR)/server.h
 	$(CC) $(CFLAGS) $(SRCDIR)/server.c
@@ -43,6 +43,9 @@ input.o: $(SHAREDSRC)/input.c $(SHAREDINC)/input.h
 
 tongue.o: $(SHAREDSRC)/tongue.c $(SHAREDINC)/tongue.h
 	$(CC) $(CFLAGS) $(SHAREDSRC)/tongue.c
+
+networkData.o: $(SHAREDSRC)/networkData.c $(SHAREDINC)/networkData.h
+	$(CC) $(CFLAGS) $(SHAREDSRC)/networkData.c
 
 
 clean:

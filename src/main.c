@@ -75,25 +75,14 @@ int initGame(Game *pGame) {
     return 0;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float deltaTime, Game *pGame) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float const timestep) {
+    playerUpdatePosition(pPlayer, timestep);
     switch (playerGetState(pPlayer)) {
         case SHOOTING:
-            playerUpdatePosition(pPlayer, deltaTime);
             if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                 playerSetState(pPlayer, ROTATING);
-                float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pTeammate)));
-                playerSetRadius(pPlayer, radius);
+                playerSetGrabbedEntity(pPlayer, playerGetBody(pTeammate));
             }
-            break;
-        case ROTATING:
-            Vec2 rotateVelocity;
-            Vec2 newRotPos = playerUpdatePosition(pPlayer, deltaTime);
-            vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(playerGetBody(pTeammate)));
-            entityMove(playerGetBody(pTeammate), rotateVelocity);
-            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pTeammate)));
-            break;
-        default:
-            playerUpdatePosition(pPlayer, deltaTime);
             break;
     }
 
@@ -139,10 +128,7 @@ void handleTick(Game *pGame, Player *pPlayer2) {
     playerUpdateState(pPlayer);
 
     InputData input;
-    input.input = playerGetVelocity(pPlayer);
-    input.tongueInput = tongueGetVelocity(playerGetTongue(pPlayer));
-    input.rotateVelocity = playerGetRotateVelocity(pPlayer);
-    input.state = playerGetState(pPlayer);
+    prepareInputData(&input, pPlayer, 0);
     clientAddInputToBuffer(pGame->pClient, input);
     clientSendPacket(pGame->pClient);
 
@@ -159,6 +145,8 @@ void handleTick(Game *pGame, Player *pPlayer2) {
         for (int i = 0; i < MAX_PLAYERS; i++) {
             if (i == clientGetPlayerID(pGame->pClient)) {
                 if (payload.players[i].state != LOCKED) {
+                    if (playerGetState(pPlayer) == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
+
                     if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
                         clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
                     }
@@ -170,6 +158,7 @@ void handleTick(Game *pGame, Player *pPlayer2) {
                     }
                 }
                 else {
+                    printf("LOCKED\n");
                     playerOverrideState(pGame->players[i], payload.players[i].state);
                     playerSetPosition(pGame->players[i], payload.players[i].position);
                 }
@@ -289,17 +278,15 @@ int main(int argv, char** args) {
                     inputHoldTimer(game.pInput);
                     handleTick(&game, pTeammate);
                     
-                    updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep, &game);
-                    cameraUpdate(game.pCamera);
+                    updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
                     StateData state;
-                    state.position = playerGetPosition(pPlayer);
-                    state.tonguePosition = tongueGetPosition(playerGetTongue(pPlayer));
-                    state.state = playerGetState(pPlayer);
+                    prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);
         
                     accumulator -= timestep;
                 }
         
+                cameraUpdate(game.pCamera);
                 updateDisplay(&game, mousePosition);
                 
                 break;

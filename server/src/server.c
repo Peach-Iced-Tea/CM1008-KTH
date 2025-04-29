@@ -57,17 +57,11 @@ int initServer(Server *pServer) {
 
     pServer->payload.serverState = SERVER_WAITING;
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pServer->payload.players[i].position = playerGetPosition(pServer->players[i]);
-        pServer->payload.players[i].tonguePosition = tongueGetPosition(playerGetTongue(pServer->players[i]));
-        pServer->payload.players[i].state = playerGetState(pServer->players[i]);
-        pServer->payload.players[i].sheetPosition = createVector(0.0f, 0.0f);
-        pServer->payload.players[i].tick = 0;
+        prepareStateData(&(pServer->payload.players[i]), pServer->players[i], 0);
     }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pServer->payload.entities[i].position = createVector(0.0f, 0.0f);
-        pServer->payload.entities[i].entityID = -1;
-        pServer->payload.entities[i].tick = 0;
+        prepareEntityData(&(pServer->payload.entities[i]), NULL, -1, 0);
     }
 
     pServer->currentTick = 0;
@@ -98,67 +92,63 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
-    if (payload.player.tick <= pServer->payload.players[payload.playerID].tick) { return; }
-
-    int movedEntity = -1;
-    Player *pPlayer = pServer->players[payload.playerID];
-    Player *pPlayer2 = pServer->players[0];
-    if(payload.playerID == 0) {
-        pPlayer2 = pServer->players[1];
-    }
-    playerOverrideState(pPlayer, payload.player.state);
-    playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
-    playerUpdateAnimation(pPlayer);
-    switch (payload.player.state) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pObjects, float const timestep) {
+    switch (playerGetState(pPlayer)) {
         case SHOOTING:
-        case RELEASE:
-            Vec2 velocity = payload.player.tongueInput;
-            vectorScale(&velocity, timestep);
-            entityMove(tongueGetTip(playerGetTongue(pPlayer)), velocity);
-            if (payload.player.state == SHOOTING) {
-                if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pPlayer2))) {
+            vectorScale(&tongueVelocity, timestep);
+            entityMove(tongueGetTip(playerGetTongue(pPlayer)), tongueVelocity);
+            if (playerGetState(pPlayer) == SHOOTING) {
+                if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                     playerSetState(pPlayer, ROTATING);
-                    playerOverrideState(pPlayer2, LOCKED);
-                    float alpha = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
-                    playerSetReferenceAngle(pPlayer, alpha);
-                    float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
-                    playerSetRadius(pPlayer, radius);
+                    playerOverrideState(pTeammate, LOCKED);
+                    playerSetGrabbedEntity(pPlayer, playerGetBody(pTeammate));
                 }
             }
             break;
-        case ROTATING:
-            Vec2 rotateVelocity;
-            Vec2 newRotPos = playerUpdatePosition(pPlayer, timestep);
-            vectorSub(&rotateVelocity, newRotPos, entityGetMidPoint(playerGetBody(pPlayer2)));
-            entityMove(playerGetBody(pPlayer2), rotateVelocity);
-            tongueCalculateShaft(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
+        case RELEASE:
+            vectorScale(&tongueVelocity, timestep);
+            entityMove(tongueGetTip(playerGetTongue(pPlayer)), tongueVelocity);
+            playerOverrideState(pTeammate, IDLE);
             break;
         default:
             playerUpdatePosition(pPlayer, timestep);
-            tongueSetPosition(playerGetTongue(pPlayer), entityGetMidPoint(playerGetBody(pPlayer)));
             break;
     }
 
     bool standingOnPlatform = false;
-    for (int i = 0; i < arrayGetSize(pServer->pObjects); i++) {
-        if (playerCheckCollision(pPlayer, arrayGetObject(pServer->pObjects, i)) == OBJECT_IS_NORTH) {
+    for (int i = 0; i < arrayGetSize(pObjects); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }
 
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
+    return;
+}
 
-    pServer->payload.players[payload.playerID].position = playerGetPosition(pPlayer);
-    pServer->payload.players[payload.playerID].tonguePosition = tongueGetPosition(playerGetTongue(pPlayer));
-    pServer->payload.players[payload.playerID].state = playerGetState(pPlayer);
-    pServer->payload.players[payload.playerID].sheetPosition.x = playerGetSheetPosition(pPlayer).x;
-    pServer->payload.players[payload.playerID].sheetPosition.y = playerGetSheetPosition(pPlayer).y;
-    pServer->payload.players[payload.playerID].tick = payload.player.tick;
+void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
+    if (payload.player.tick <= pServer->payload.players[payload.playerID].tick) { return; }
 
-    pServer->payload.entities[payload.playerID].position = entityGetPosition(pServer->pGurka);
-    pServer->payload.entities[payload.playerID].entityID = movedEntity;
-    pServer->payload.entities[payload.playerID].tick = 0;
+    int movedEntity = -1;
+    Player *pPlayer = pServer->players[payload.playerID];
+    Player *pTeammate = pServer->players[0];
+    if(payload.playerID == 0) {
+        pTeammate = pServer->players[1];
+    }
+
+    switch (playerGetState(pPlayer)) {
+        case LOCKED:
+            break;
+        default:
+            playerOverrideState(pPlayer, payload.player.state);
+            playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
+            playerUpdateAnimation(pPlayer);
+    }
+
+    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pObjects, timestep);
+
+    prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);
+    prepareEntityData(&(pServer->payload.entities[payload.playerID]), NULL, movedEntity, 0);
     return;
 }
 
@@ -242,6 +232,10 @@ int main(int argv, char** args) {
                                 handlePlayerDisconnect(&server, clientPayload);
                                 break;
                         }
+                    }
+
+                    for (int i = 0; i < MAX_PLAYERS; i++) {
+                        server.payload.players[i].state = playerGetState(server.players[i]);
                     }
 
                     server.currentTick++;

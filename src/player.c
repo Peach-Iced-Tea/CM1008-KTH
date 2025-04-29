@@ -26,6 +26,7 @@ struct player {
     float radius;
     float referenceAngle;
     SDL_Rect sheetPosition;
+    Entity *pGrabbedEntity;
 };
 
 Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
@@ -285,20 +286,22 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
     return newPosition;
 }
 
-Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
-    Vec2 returnVector;
+void playerUpdatePosition(Player *pPlayer, float deltaTime) {
     switch(pPlayer->state) {
         case LOCKED:
             break;
         case SHOOTING:
         case RELEASE:
+            if (pPlayer->pGrabbedEntity != NULL) { pPlayer->pGrabbedEntity = NULL; }
             tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);
             if (tongueGetState(pPlayer->pTongue) == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
             if (tongueGetLength(pPlayer->pTongue) == 0.0f) { pPlayer->state = IDLE; }
             break;
         case ROTATING:
-            returnVector = rotationCalculations(pPlayer, deltaTime);
+            Vec2 newPosition = rotationCalculations(pPlayer, deltaTime);
             playerUpdateAnimation(pPlayer);
+            entitySetPosition(pPlayer->pGrabbedEntity, newPosition);
+            tongueCalculateShaft(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), entityGetMidPoint(pPlayer->pGrabbedEntity));
             break;
         default:
             Vec2 scaledVelocity = pPlayer->velocity;
@@ -307,7 +310,7 @@ Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime) {
             tongueSetPosition(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
     }
 
-    return returnVector;
+    return;
 }
 
 int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
@@ -356,6 +359,7 @@ bool playerSetState(Player *pPlayer, int newState) {
                 case JUMPING:
                 case FLYING:
                 case ROTATING:
+                case LOCKED:
                     break;
                 default:
                     stateWasChanged = true;
@@ -363,10 +367,12 @@ bool playerSetState(Player *pPlayer, int newState) {
             }
             break;
         case ROTATING:
-            stateWasChanged = true;
-            break;
-        case RETRACTING:
-            stateWasChanged = true;
+            switch (pPlayer->state) {
+                case LOCKED:
+                    break;
+                default:
+                    stateWasChanged = true;
+            }
             break;
         default:
             break;   
@@ -397,6 +403,15 @@ bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition) {
     pPlayer->sheetPosition.x = newPosition.x;
     pPlayer->sheetPosition.y = newPosition.y;
     return true;
+}
+
+void playerSetGrabbedEntity(Player *pPlayer, Entity *pEntity) {
+    if (pEntity == NULL) { return; }
+
+    pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->pBody), entityGetMidPoint(pEntity));
+    pPlayer->radius = vectorLength(entityGetMidPoint(pPlayer->pBody), entityGetMidPoint(pEntity));
+    pPlayer->pGrabbedEntity = pEntity;
+    return;
 }
 
 int playerGetState(Player const *pPlayer) {

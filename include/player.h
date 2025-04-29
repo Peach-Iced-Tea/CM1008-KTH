@@ -46,7 +46,7 @@ Updates the given Player's positional values based on which PlayerState it is cu
 
 Unless it is in PlayerState 'ROTATING', in which case it will return a Vec2 containing the position of the object being rotated.
 */
-Vec2 playerUpdatePosition(Player *pPlayer, float deltaTime);
+void playerUpdatePosition(Player *pPlayer, float deltaTime);
 
 /*
 Check whether the given Player has collided with the given Entity.
@@ -87,6 +87,11 @@ Set the current sheet position of the given Player.
 This should most likely only be called when the server wants to override info.
 */
 bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition);
+
+/*
+
+*/
+void playerSetGrabbedEntity(Player *pPlayer, Entity *pEntity);
 
 /*
 Get the current PlayerState of the given Player.
