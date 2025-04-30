@@ -153,12 +153,12 @@ void handleTick(Game *pGame, Player *pPlayer2) {
                     switch (payload.players[i].state) {
                         case ROTATING:
                             float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
-                            playerSetRadius(pPlayer, radius);
+                            //playerSetRadius(pPlayer, radius);
                             break;
                     }
                 }
                 else {
-                    printf("LOCKED\n");
+                    //printf("LOCKED\n");
                     playerOverrideState(pGame->players[i], payload.players[i].state);
                     playerSetPosition(pGame->players[i], payload.players[i].position);
                 }
@@ -277,7 +277,6 @@ int main(int argv, char** args) {
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
                     handleTick(&game, pTeammate);
-                    
                     updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);

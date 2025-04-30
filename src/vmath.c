@@ -48,17 +48,16 @@ float vectorGetAngle(Vec2 const vector1, Vec2 const vector2) {
     float dx = (vector2.x - vector1.x);
     float dy = (vector2.y - vector1.y);
 
-
     //2nd quadrant
-    if(dx < 0 && dy > 0) {
+    if(dx < 0 && dy >= 0) {
         return M_PI + atanf(dy/dx);
     }
     //3rd quadrant
-    if(dx < 0 && dy < 0) {
+    if(dx <= 0 && dy < 0) {
         return atanf(dy/dx) + M_PI;
     }
     //4th quadrant
-    if(dx > 0 && dy < 0) {
+    if(dx > 0 && dy <= 0) {
         return 2 * M_PI + atanf(dy/dx);
     }
     //1st quadrant

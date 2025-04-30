@@ -282,6 +282,9 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
 
     newPosition.x =(entityGetMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
     newPosition.y =(entityGetMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
+
+    newPosition.x -= entityGetCurrentFrame(pPlayer->pGrabbedEntity).w*0.5f;
+    newPosition.y -= entityGetCurrentFrame(pPlayer->pGrabbedEntity).h*0.5f;
     
     return newPosition;
 }
