@@ -272,6 +272,7 @@ void playerUpdateState(Player *pPlayer) {
 
 Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
     Vec2 newPosition;
+    pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->pBody), entityGetMidPoint(pPlayer->pGrabbedEntity));
     pPlayer->referenceAngle += (M_PI/180) * deltaTime * pPlayer->rotateVelocity;
     if (pPlayer->referenceAngle >= 2*M_PI) {
         pPlayer->referenceAngle -= 2*M_PI;
@@ -343,6 +344,14 @@ int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
                 break;
             case OBJECT_IS_EAST:
                 break;
+        }
+    }
+
+    if (pPlayer->pGrabbedEntity != NULL) {
+        Hitbox *pGrabbedHitbox = entityGetHitbox(pPlayer->pGrabbedEntity);
+        if (checkCollision(pGrabbedHitbox, pObject)) {
+            Vec2 correction = rectVsRect(pGrabbedHitbox, pObject);
+            entityCollisionResponse(pPlayer->pGrabbedEntity, correction);
         }
     }
 

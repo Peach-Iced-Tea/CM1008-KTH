@@ -108,7 +108,6 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, Dynam
         case RELEASE:
             vectorScale(&tongueVelocity, timestep);
             entityMove(tongueGetTip(playerGetTongue(pPlayer)), tongueVelocity);
-            playerOverrideState(pTeammate, IDLE);
             break;
         default:
             playerUpdatePosition(pPlayer, timestep);
@@ -235,6 +234,20 @@ int main(int argv, char** args) {
                     }
 
                     for (int i = 0; i < MAX_PLAYERS; i++) {
+                        switch (playerGetState(server.players[i])) {
+                            case ROTATING:
+                                break;
+                            default:
+                                int teammateID = 1;
+                                if (i == 1) { teammateID = 0; }
+                                switch (playerGetState(server.players[teammateID])) {
+                                    case LOCKED:
+                                        playerOverrideState(server.players[teammateID], IDLE);
+                                        server.payload.players[teammateID].state = playerGetState(server.players[teammateID]);
+                                        break;
+                                }
+                        }
+
                         server.payload.players[i].state = playerGetState(server.players[i]);
                     }
 
