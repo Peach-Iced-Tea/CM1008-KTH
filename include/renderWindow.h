@@ -82,3 +82,6 @@ int windowGetHeight(RenderWindow const *pRenderWindow);
 Use this function to destroy the given RenderWindow pointer and free up memory.
 */
 void destroyRenderWindow(RenderWindow *pRenderWindow);
+
+
+void renderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamera);

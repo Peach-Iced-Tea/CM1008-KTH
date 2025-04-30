@@ -67,9 +67,8 @@ int initGame(Game *pGame) {
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
 
-    //-------------------------------------Map Handling---------------
-    
-    pGame->pMap = createMap();
+    //-------------------------------------Map Handling----------------------------------------------
+    pGame->pMap = createMap(getRenderer(pGame->pWindow));
     loadMap("resources/mapData/map.tmj", pGame->pMap);
     loadTileset("resources/mapData/devTiles.tsx", getTileset(pGame->pMap));
 
@@ -125,6 +124,9 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     if (playerGetMouseClick(pPlayer)) {
         drawLine(pGame->pWindow, mousePosition, entityGetMidPoint(playerGetBody(pPlayer)), pGame->pCamera);
     }
+
+    //------------------------TILED MAP--------------------------------------------------------------------
+    renderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
     
     displayWindow(pGame->pWindow);
     return;

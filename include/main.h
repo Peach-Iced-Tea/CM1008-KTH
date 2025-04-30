@@ -15,7 +15,7 @@
 #include "networkData.h"
 #include "client.h"
 #include "menu.h"
-#include "mapParser.h"s
+#include "mapParser.h"
 
 typedef struct {
     RenderWindow *pWindow;

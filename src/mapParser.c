@@ -1,22 +1,30 @@
 
 #include "mapParser.h"
 
-typedef struct tileset{
+struct tileset{
     xmlChar *imgRef;
     xmlChar *tilecount;
     xmlChar *columns;
     xmlChar *width;
     xmlChar *height;
+
+    SDL_Texture *tileSheet;
 };
 
-typedef struct map {
+#define MAX_LAYERS 2
+
+struct map {
+
+    int *layerData[MAX_LAYERS]; 
+    size_t layerSize[MAX_LAYERS];
+
+    int width, height;
+
     Tileset *layerTiles;
-    
-    json_t *data;
-    size_t size;
+    SDL_Rect tileSheetPosition;
 };
 
-Tileset *createTileset() {
+Tileset *createTileset(SDL_Renderer *pRenderer) {
     Tileset *pTileset = malloc(sizeof(Tileset));
 
     pTileset->imgRef = NULL;
@@ -25,17 +33,34 @@ Tileset *createTileset() {
     pTileset->width = NULL;
     pTileset->height = NULL;
 
+    pTileset->tileSheet = IMG_LoadTexture(pRenderer, "resources/mapData/devTiles.png");
+    if (pTileset->tileSheet == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return NULL;
+    }
+
     return pTileset;
 }
 
-Map *createMap() {
+Map *createMap(SDL_Renderer *pRenderer) {
     Map *pMap = malloc(sizeof(Map));
 
-    pMap->layerTiles = createTileset();
+    pMap->layerTiles = createTileset(pRenderer);
 
-    pMap->data = NULL;  //array for the positions in map
-    pMap->size = NULL;  //size of the array
-    
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        pMap->layerData[i] = NULL;
+    }
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        pMap->layerSize[i] = 0;
+    }
+
+    pMap->height = 0;
+    pMap->width = 0;
+
+    pMap->tileSheetPosition.w = 32;
+    pMap->tileSheetPosition.h = 32;
+    pMap->tileSheetPosition.x = 0;
+    pMap->tileSheetPosition.y = 0;
     return pMap;
 }
 
@@ -77,107 +102,82 @@ void loadMap(const char *path, Map *pMap) {
 
     if (!root) {
         fprintf(stderr, "Error loading TMJ: %s (line %d)\n", error.text, error.line);
-        return 1;
+        return;
     }
 
-	int width = json_integer_value(json_object_get(root, "width"));
-	int heigth = json_integer_value(json_object_get(root, "height"));
-    // The "layers" array
+	pMap->width = json_integer_value(json_object_get(root, "width"));
+	pMap->height = json_integer_value(json_object_get(root, "height"));
+
+
+    
     json_t *layers = json_object_get(root, "layers");
-    if (!json_is_array(layers)) {
-        fprintf(stderr, "\"layers\" is not an array\n");
-        json_decref(root);
-        return 1;
+
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        json_t *layer = json_array_get(layers, i);
+        json_t *data = json_object_get(layer, "data");
+
+        if (!json_is_array(data)) {
+            fprintf(stderr, "Layer %d data is not an array\n", i);
+            continue;
+        }
+
+        size_t size = json_array_size(data);
+        pMap->layerSize[i] = size;
+        pMap->layerData[i] = malloc(sizeof(int) * size);  // allocate normal C array
+
+        for (size_t j = 0; j < size; j++) {
+            json_t *tile = json_array_get(data, j);
+            if (!json_is_integer(tile)) {
+                fprintf(stderr, "Invalid tile at %zu in layer %d\n", j, i);
+                pMap->layerData[i][j] = 0; // or handle error
+            } else {
+                pMap->layerData[i][j] = json_integer_value(tile);
+            }
+        }
     }
-
-	for (int i = 0; i < 2; i++){
-		// Get first layer (index 0)
-		json_t *layer = json_array_get(layers, i);
-		if (!json_is_object(layer)) {
-			fprintf(stderr, "Layer[0] is not an object\n");
-			json_decref(root);
-			return 1;
-		}
-	
-		// Get the "data" array inside that layer
-		pMap->data = json_object_get(layer, "data");
-		if (!json_is_array(pMap->data)) {
-			fprintf(stderr, "\"data\" is not an array\n");
-			json_decref(root);
-			return 1;
-		}
-	
-		pMap->size = json_array_size(pMap->data);
-		printf("Tile data (%zu tiles):\n", pMap->size);
-	
-		for (size_t j = 0; j < pMap->size; j++) {
-			json_t *tile = json_array_get(pMap->data, j);
-			if (!json_is_integer(tile)) {
-				printf("Invalid value at %zu\n", j);
-				continue;
-			}
-
-
-
-
-       /*      if ((int)json_integer_value(tile) >= 15){
-                // printf("%2d ", (int)json_integer_value(tile));
-                int index = (int)json_integer_value(tile) - 15;
-                int columns = atoi((char *)devTiles.columns);
-
-                int tileX = (index % columns) * 32;
-                int tileY = (index / columns) * 32;
-
-                printf("indx: %d -> Xoff: %d, Yoff: %d\n", index, tileX, tileY);
-
-            }  */
-
-
-
-            // else {
-            //     printf("   ");
-            // }
-			// if ((j + 1) % width == 0) printf("\n");
-		}
-	}
-
     json_decref(root);
+}
+
+void setTileSheetPosition(Map *pMap, int x, int y) {
+    pMap->tileSheetPosition.x = x;
+    pMap->tileSheetPosition.y = y;
+}
+
+SDL_Texture *getTileTextures(Tileset *pTileset) {
+    return pTileset->tileSheet;
+}
+
+xmlChar *getColumns(Tileset *pTileset) {
+    return pTileset->columns;
+}
+
+int getMapWidth(Map *pMap) {
+    return pMap->width;
 }
 
 Tileset *getTileset(Map *pMap) {
     return pMap->layerTiles;
 }
 
-//------------Mind Vomit------------------
-
-xmlChar *getColumns(Tileset *pTileset) {
-    return pTileset->columns;
+size_t getLayerSize(Map *pMap, int layer) {
+    return pMap->layerSize[layer];
 }
 
-SDL_Rect getTilePosition(Map *pMap) {
-
-
-    for (size_t j = 0; j < pMap->size; j++) {
-
-        if ((int)json_integer_value(json_array_get(pMap->data, j)) >= 15) {
-            int index = (int)json_integer_value(json_array_get(pMap->data, j)) - 15;
-            int columns = atoi((char *)getColumns(getTileset(pMap)));
-
-            int tileX = (index % columns) * 32;
-            int tileY = (index / columns) * 32;
-        }
-    }
+int getLayerData(Map *pMap, int layer, int index) {
+    return pMap->layerData[layer][index];
 }
 
-SDL_Rect getMapPosition() {
-
+SDL_Rect getTileSheetPosition(Map *pMap) {
+    return pMap->tileSheetPosition;
 }
 
-/* 
-int main() {
-    Tileset devTiles;
-    parseTileset("resources/mapData/devTiles.tsx", &devTiles);
+void destroyMap(Map *pMap) {
+    if (pMap == NULL) { return; }
 
-    return 0;
-} 
-    ss*/
+    SDL_DestroyTexture(pMap->layerTiles->tileSheet);
+    free(pMap->layerTiles);
+    free(pMap->layerData);
+    free(pMap);
+
+    return;
+}

@@ -235,13 +235,33 @@ void destroyRenderWindow(RenderWindow *pRenderWindow) {
 }
 
 void renderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamera) {
-   
-    SDL_FRect dst;  // getTilePosition; //Frect for camera
-    SDL_Rect src;
-    // src.w = 32;
-    // src.h = 32;
-    // src.x = 0;
-    // src.y = 0;
-    //for(i=0; i< pMap.Size; i++ ) { render ...}
-    //SDL_RenderCopyF(pRenderWindow->pRenderer, &src, &dst);
+
+    int mapWidth = getMapWidth(pMap);
+    int tileSize = 32;
+
+    for (size_t i = 0; i < getLayerSize(pMap, 1); i++) {
+
+        int gid = getLayerData(pMap, 1, i) - 15;
+
+        if (gid >= 0) {
+            int columns = atoi((char *)getColumns(getTileset(pMap)));
+            
+            int tileX = (gid % columns) * 32;
+            int tileY = (gid / columns) * 32;
+
+            setTileSheetPosition(pMap, tileX, tileY);
+
+            int screenX = (i % mapWidth) * tileSize;
+            int screenY = (i / mapWidth) * tileSize;
+
+            SDL_Rect src = getTileSheetPosition(pMap);
+
+            SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
+
+            adjustToCamera(pCamera, &dst, NULL);
+
+
+            SDL_RenderCopyF(pRenderWindow->pRenderer, getTileTextures(getTileset(pMap)), &src, &dst);
+        }
+    }
 }
