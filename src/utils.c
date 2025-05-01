@@ -18,7 +18,7 @@ DynamicArray *createDynamicArray(int arrayType) {
             break;
     }
 
-    if(!pArray->objects) {
+    if (!pArray->objects) {
         printf("Error failed allocation of memory for array\n");
         return NULL;
     }
@@ -33,10 +33,10 @@ int addEntity(DynamicArray *pArray, float x, float y, SDL_Texture *pTexture, int
     if (pArray == NULL) { return -2; }
     if (pArray->arrayType != ARRAY_ENTITIES) { return -3; }
 
-    if(pArray->size == pArray->capacity) {
+    if (pArray->size == pArray->capacity) {
         pArray->capacity *=2;
         pArray->objects = realloc(pArray->objects, pArray->capacity * sizeof(Entity*));
-        if(!pArray->objects) {
+        if (!pArray->objects) {
             printf("Error failed to reallocate memory for array\n");
             return -1;
         }

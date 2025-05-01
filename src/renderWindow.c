@@ -188,9 +188,10 @@ void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera con
 }
 
 void renderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Camera const *pCamera) {
-    SDL_FRect dst = tongueGetShaftRect(pTongue);
+    TongueInfo info = tongueGetInfo(pTongue);
+    SDL_FRect dst = info.tongueShaft;
     adjustToCamera(pCamera, &dst, NULL);
-    float angle = tongueGetAngle(pTongue) * (180.0f/M_PI);
+    float angle = info.angle * (180.0f/M_PI);
     dst.x -= dst.w*0.5f;
     dst.y -= dst.h*0.5f;
 
@@ -203,7 +204,7 @@ void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera con
     SDL_FRect dst = entityGetCurrentFrame(playerGetBody(pPlayer));
     adjustToCamera(pCamera, &dst, NULL);
 
-    switch (playerGetState(pPlayer)) {
+    switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
         case RELEASE:
         case ROTATING:
@@ -211,7 +212,7 @@ void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera con
             break;
     }
 
-    SDL_Rect src = playerGetSheetPosition(pPlayer);
+    SDL_Rect src = playerGetInfo(pPlayer).sheetPosition;
     SDL_RenderCopyF(pRenderWindow->pRenderer, playerGetBodyTexture(pPlayer), &src, &dst);
     if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
     return;

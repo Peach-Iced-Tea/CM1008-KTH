@@ -14,6 +14,15 @@ typedef enum {
     IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING, RELEASE, LOCKED
 } PlayerState;
 
+typedef struct {
+    Vec2 position;
+    Vec2 velocity;
+    SDL_Rect sheetPosition;
+    float rotateVelocity;
+    float tongueAngle;
+    PlayerState state;
+} PlayerInfo;
+
 typedef struct player Player;
 
 /*
@@ -69,20 +78,6 @@ otherwise the function will return 'true'.
 bool playerSetState(Player *pPlayer, int newState);
 
 /*
-Set the radius from the center of the given Player to a point in space.
-
-The point in space could be the midpoint of another Player, an Entity or a the position of the mouse.
-*/
-bool playerSetRadius(Player *pPlayer, float radius);
-
-/*
-Set the angle between the center of the given Player and a point in space.
-
-The point in space could be the midpoint of another Player, an Entity or a the position of the mouse.
-*/
-bool playerSetReferenceAngle(Player *pPlayer, float newAngle);
-
-/*
 Set the current sheet position of the given Player.
 This should most likely only be called when the server wants to override info.
 */
@@ -94,9 +89,9 @@ bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition);
 void playerSetGrabbedEntity(Player *pPlayer, Entity *pEntity);
 
 /*
-Get the current PlayerState of the given Player.
+Returns data for the given Player, such as position values and velocity.
 */
-int playerGetState(Player const *pPlayer);
+PlayerInfo playerGetInfo(Player const *pPlayer);
 
 /*
 Get the current Entity representing the given Player's body.
@@ -117,31 +112,6 @@ Hitbox *playerGetBodyHitbox(Player const *pPlayer);
 
 */
 SDL_Texture *playerGetBodyTexture(Player const *pPlayer);
-
-/*
-
-*/
-Vec2 playerGetPosition(Player const *pPlayer);
-
-/*
-
-*/
-Vec2 playerGetVelocity(Player const *pPlayer);
-
-/*
-Get the current sprite sheet position of the given Player.
-*/
-SDL_Rect playerGetSheetPosition(Player const *pPlayer);
-
-/*
-
-*/
-float playerGetReferenceAngle(Player const *pPlayer);
-
-/*
-
-*/
-float playerGetRotateVelocity(Player const *pPlayer);
 
 /*
 

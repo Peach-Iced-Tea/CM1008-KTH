@@ -9,6 +9,16 @@ typedef enum {
     NEUTRAL, EXTENDING, RETRACTING, MAX_EXTENSION
 } TongueState;
 
+typedef struct {
+    Vec2 position;
+    Vec2 velocity;
+    Vec2 mousePosition;
+    float length;
+    float angle;
+    TongueState state;
+    SDL_FRect tongueShaft;
+} TongueInfo;
+
 typedef struct tongue Tongue;
 
 Tongue *createTongue(Vec2 position, SDL_Renderer *pRenderer);
@@ -27,24 +37,12 @@ void tongueCalculateShaft(Tongue *pTongue, Vec2 centerPoint, Vec2 referencePoint
 
 bool tongueCheckCollision(Tongue *pTongue, Entity *pEntity);
 
+TongueInfo tongueGetInfo(Tongue const *pTongue);
+
 Entity *tongueGetTip(Tongue const *pTongue);
 
 Hitbox *tongueGetHitbox(Tongue const *pTongue);
 
 SDL_Texture *tongueGetShaftTexture(Tongue const *pTongue);
-
-Vec2 tongueGetPosition(Tongue const *pTongue);
-
-Vec2 tongueGetVelocity(Tongue const *pTongue);
-
-Vec2 tongueGetMousePosition(Tongue const *pTongue);
-
-int tongueGetState(Tongue const *pTongue);
-
-float tongueGetAngle(Tongue const *pTongue);
-
-float tongueGetLength(Tongue const *pTongue);
-
-SDL_FRect tongueGetShaftRect(Tongue const *pTongue);
 
 void destroyTongue(Tongue *pTongue);

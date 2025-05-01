@@ -1,19 +1,21 @@
 #include "networkData.h"
 
 void prepareInputData(InputData *pData, Player *pPlayer, int tick) {
-    pData->input = playerGetVelocity(pPlayer);
-    pData->tongueInput = tongueGetVelocity(playerGetTongue(pPlayer));
-    pData->rotateVelocity = playerGetRotateVelocity(pPlayer);
-    pData->state = playerGetState(pPlayer);
+    PlayerInfo info = playerGetInfo(pPlayer);
+    pData->input = info.velocity;
+    pData->tongueInput = tongueGetInfo(playerGetTongue(pPlayer)).velocity;
+    pData->rotateVelocity = info.rotateVelocity;
+    pData->state = info.state;
     return;
 }
 
 void prepareStateData(StateData *pData, Player *pPlayer, int tick) {
-    pData->position = playerGetPosition(pPlayer);
-    pData->tonguePosition = tongueGetPosition(playerGetTongue(pPlayer));
-    pData->state = playerGetState(pPlayer);
-    pData->sheetPosition.x = playerGetSheetPosition(pPlayer).x;
-    pData->sheetPosition.y = playerGetSheetPosition(pPlayer).y;
+    PlayerInfo info = playerGetInfo(pPlayer);
+    pData->position = info.position;
+    pData->tonguePosition = tongueGetInfo(playerGetTongue(pPlayer)).position;
+    pData->state = info.state;
+    pData->sheetPosition.x = info.sheetPosition.x;
+    pData->sheetPosition.y = info.sheetPosition.y;
     pData->tick = tick;
     return;
 }

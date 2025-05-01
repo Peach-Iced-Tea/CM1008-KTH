@@ -1,8 +1,9 @@
 #include "player.h"
 
 #define JUMP_TIMER 15
-#define PLAYER_VELOCITY 300.0f   // Initial velocity to be applied on a player upon moving.
-#define PLAYER_ACCELERATION 50.0f  // A constant for the acceleration of a player, this value gets modified by deltaTime before updating velocity.
+#define PLAYER_VELOCITY 10.0f   // Initial velocity to be applied on a player upon moving.
+#define PLAYER_ACCELERATION 25.0f  // A constant for the acceleration of a player.
+#define MAX_PLAYER_VELOCITY 360.0f  // The absolute max value of the velocity a player can reach.
 #define JUMP_VELOCITY 780.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
 #define ROTATION_SPEED 100
 
@@ -21,7 +22,6 @@ struct player {
     PlayerState state;
     Vec2 velocity;
     float rotateVelocity;
-    float gravityModifier;
     int jumpTimer;
     float radius;
     float referenceAngle;
@@ -57,7 +57,6 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     pPlayer->velocity = createVector(0.0f, 0.0f);
     pPlayer->rotateVelocity = 0.0f;
 
-    pPlayer->gravityModifier = 0.0f;
     pPlayer->jumpTimer = 0;
     pPlayer->radius = 0.0f;
     pPlayer->referenceAngle = 0.0f;
@@ -115,7 +114,9 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         }
     }
 
-    pPlayer->velocity.x = movement.x;
+    if ((movement.x > 0.0f && pPlayer->velocity.x <= 0.0f) || (movement.x < 0.0f && pPlayer->velocity.x >= 0.0f) || (movement.x == 0.0f)) {
+        pPlayer->velocity.x = movement.x;
+    }
     switch (pPlayer->state) {
         case FALLING:
         case JUMPING:
@@ -138,7 +139,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         switch (pPlayer->state) {
             case IDLE:
                 pPlayer->state = SHOOTING;
-                pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->pBody), tongueGetMousePosition(pPlayer->pTongue));
+                pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->pBody), tongueGetInfo(pPlayer->pTongue).mousePosition);
                 tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
                 break;
         }
@@ -233,38 +234,46 @@ void playerUpdateAnimation(Player *pPlayer) {
 }
 
 void playerUpdateState(Player *pPlayer) {
+    float gravityModifier = 0.0f;
     switch (pPlayer->state) {
-        case IDLE:
-        case RUNNING:
-            pPlayer->gravityModifier = 0.0f;
-            break;
         case FALLING:
+            gravityModifier = 1.0f;
             if (pPlayer->jumpTimer > 0) {
                 pPlayer->jumpTimer = 0;
+                pPlayer->velocity.y = -GRAVITY_ACCELERATION;
             }
-            pPlayer->gravityModifier = 1.0f;
             break;
         case JUMPING:
-            pPlayer->gravityModifier = 0.75f;
+            gravityModifier = 0.75f;
             if (pPlayer->jumpTimer > 0) {
                 pPlayer->jumpTimer--;
                 if (pPlayer->jumpTimer == 0) {pPlayer->state = FALLING;}
             }
             break;
-        case FLYING:
-        case ROTATING:
-        case SHOOTING:
-        case RELEASE:
-        case LOCKED:
-            pPlayer->gravityModifier = 0.0f;
-            break;
+    }
+
+    if (pPlayer->velocity.x > 0.0f) {
+        if (pPlayer->velocity.x >= MAX_PLAYER_VELOCITY) {
+            pPlayer->velocity.x = MAX_PLAYER_VELOCITY;
+        }
+        else {
+            pPlayer->velocity.x += PLAYER_ACCELERATION;
+        }
+    }
+    else if (pPlayer->velocity.x < 0.0f) {
+        if (pPlayer->velocity.x <= -MAX_PLAYER_VELOCITY) {
+            pPlayer->velocity.x = -MAX_PLAYER_VELOCITY;
+        }
+        else {
+            pPlayer->velocity.x -= PLAYER_ACCELERATION;
+        }
     }
 
     if (pPlayer->velocity.y >= MAX_GRAVITY_VELOCITY) {
         pPlayer->velocity.y = MAX_GRAVITY_VELOCITY;
     }
     else {
-        pPlayer->velocity.y += GRAVITY_ACCELERATION*pPlayer->gravityModifier;
+        pPlayer->velocity.y += GRAVITY_ACCELERATION*gravityModifier;
     }
 
     return;
@@ -291,15 +300,15 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
 }
 
 void playerUpdatePosition(Player *pPlayer, float deltaTime) {
-    switch(pPlayer->state) {
+    switch (pPlayer->state) {
         case LOCKED:
             break;
         case SHOOTING:
         case RELEASE:
             if (pPlayer->pGrabbedEntity != NULL) { pPlayer->pGrabbedEntity = NULL; }
             tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);
-            if (tongueGetState(pPlayer->pTongue) == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
-            if (tongueGetLength(pPlayer->pTongue) == 0.0f) { pPlayer->state = IDLE; }
+            if (tongueGetInfo(pPlayer->pTongue).state == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
+            if (tongueGetInfo(pPlayer->pTongue).length == 0.0f) { pPlayer->state = IDLE; }
             break;
         case ROTATING:
             Vec2 newPosition = rotationCalculations(pPlayer, deltaTime);
@@ -395,20 +404,6 @@ bool playerSetState(Player *pPlayer, int newState) {
     return stateWasChanged;
 }
 
-bool playerSetRadius(Player *pPlayer, float radius) {
-    if (radius <= 0.0f) {
-        return false;
-    }
-
-    pPlayer->radius = radius;
-    return true;
-}
-
-bool playerSetReferenceAngle(Player *pPlayer, float newAngle) {
-    pPlayer->referenceAngle = newAngle;
-    return true;
-}
-
 bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition) {
     if (newPosition.x < 0.0f || newPosition.y < 0.0f) { return false; }
 
@@ -426,8 +421,15 @@ void playerSetGrabbedEntity(Player *pPlayer, Entity *pEntity) {
     return;
 }
 
-int playerGetState(Player const *pPlayer) {
-    return pPlayer->state;
+PlayerInfo playerGetInfo(Player const *pPlayer) {
+    PlayerInfo info;
+    info.position = entityGetPosition(pPlayer->pBody);
+    info.velocity = pPlayer->velocity;
+    info.sheetPosition = pPlayer->sheetPosition;
+    info.rotateVelocity = pPlayer->rotateVelocity;
+    info.tongueAngle = pPlayer->referenceAngle;
+    info.state = pPlayer->state;
+    return info;
 }
 
 Entity *playerGetBody(Player const *pPlayer) {
@@ -444,26 +446,6 @@ Hitbox *playerGetBodyHitbox(Player const *pPlayer) {
 
 SDL_Texture *playerGetBodyTexture(Player const *pPlayer) {
     return entityGetTexture(pPlayer->pBody);
-}
-
-Vec2 playerGetPosition(Player const *pPlayer) {
-    return entityGetPosition(pPlayer->pBody);
-}
-
-Vec2 playerGetVelocity(Player const *pPlayer) {
-    return pPlayer->velocity;
-}
-
-SDL_Rect playerGetSheetPosition(Player const *pPlayer) {
-    return pPlayer->sheetPosition;
-}
-
-float playerGetReferenceAngle(Player const *pPlayer) {
-    return pPlayer->referenceAngle;
-}
-
-float playerGetRotateVelocity(Player const *pPlayer) {
-    return pPlayer->rotateVelocity;
 }
 
 void playerOverrideState(Player *pPlayer, PlayerState newState) {

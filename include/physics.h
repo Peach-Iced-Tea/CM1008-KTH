@@ -14,10 +14,8 @@
 #define OBJECT_IS_WEST 3    // The object is to the left of the reference.
 #define OBJECT_IS_EAST 4    // The object is to the right of the reference.
 
-#define MAX_PLAYER_VELOCITY 380.0f  // The absolute max value of the velocity a player can reach.
-#define MAX_GRAVITY_VELOCITY 660.0f // The absolute max value that the velocity of gravity can reach.
-
 #define GRAVITY_ACCELERATION 60.0f    // The simulation of gravity uses this constant.
+#define MAX_GRAVITY_VELOCITY 660.0f // The absolute max value that the velocity of gravity can reach.
 
 typedef struct hitbox Hitbox;
 

@@ -136,7 +136,7 @@ int mouseInputs(Input *pInputs, SDL_Event event) {
 bool checkUserInput(Input *pInputs) {
     SDL_Event event;
     bool gameRunning = true;
-    while(SDL_PollEvent(&event)) {
+    while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
             gameRunning = false;
         }

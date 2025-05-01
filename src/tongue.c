@@ -136,6 +136,18 @@ bool tongueCheckCollision(Tongue *pTongue, Entity *pEntity) {
     return false;
 }
 
+TongueInfo tongueGetInfo(Tongue const *pTongue) {
+    TongueInfo info;
+    info.position = entityGetMidPoint(pTongue->pTip);
+    info.velocity = pTongue->velocity;
+    info.mousePosition = pTongue->mousePosition;
+    info.length = pTongue->shaftRect.w;
+    info.angle = pTongue->angle;
+    info.state = pTongue->state;
+    info.tongueShaft = pTongue->shaftRect;
+    return info;
+}
+
 Entity *tongueGetTip(Tongue const *pTongue) {
     return pTongue->pTip;
 }
@@ -146,34 +158,6 @@ Hitbox *tongueGetHitbox(Tongue const *pTongue) {
 
 SDL_Texture *tongueGetShaftTexture(Tongue const *pTongue) {
     return pTongue->pTongueTexture;
-}
-
-Vec2 tongueGetPosition(Tongue const *pTongue) {
-    return entityGetMidPoint(pTongue->pTip);
-}
-
-Vec2 tongueGetVelocity(Tongue const *pTongue) {
-    return pTongue->velocity;
-}
-
-Vec2 tongueGetMousePosition(Tongue const *pTongue) {
-    return pTongue->mousePosition;
-}
-
-float tongueGetLength(Tongue const *pTongue) {
-    return pTongue->shaftRect.w;
-}
-
-SDL_FRect tongueGetShaftRect(Tongue const *pTongue) {
-    return pTongue->shaftRect;
-}
-
-int tongueGetState(Tongue const *pTongue) {
-    return pTongue->state;
-}
-
-float tongueGetAngle(Tongue const *pTongue) {
-    return pTongue->angle;
 }
 
 void destroyTongue(Tongue *pTongue) {

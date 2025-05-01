@@ -25,7 +25,7 @@ int initServer(Server *pServer) {
     pServer->pObjects = createDynamicArray(ARRAY_HITBOXES);
     if (pServer->pObjects == NULL) { return 1; }
     // Add blocks along the bottom of the screen.
-    for(int i = 0; i < 1920; i+=32) {
+    for (int i = 0; i < 1920; i+=32) {
         addHitbox(pServer->pObjects, i, 1080-32, 32, 32, HITBOX_FULL_BLOCK);
     }
 
@@ -94,11 +94,11 @@ void sendDataToClients(Server *pServer) {
 }
 
 void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pObjects, float const timestep) {
-    switch (playerGetState(pPlayer)) {
+    switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             vectorScale(&tongueVelocity, timestep);
             entityMove(tongueGetTip(playerGetTongue(pPlayer)), tongueVelocity);
-            if (playerGetState(pPlayer) == SHOOTING) {
+            if (playerGetInfo(pPlayer).state == SHOOTING) {
                 if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                     playerSetState(pPlayer, ROTATING);
                     playerOverrideState(pTeammate, LOCKED);
@@ -132,11 +132,11 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     int movedEntity = -1;
     Player *pPlayer = pServer->players[payload.playerID];
     Player *pTeammate = pServer->players[0];
-    if(payload.playerID == 0) {
+    if (payload.playerID == 0) {
         pTeammate = pServer->players[1];
     }
 
-    switch (playerGetState(pPlayer)) {
+    switch (playerGetInfo(pPlayer).state) {
         case LOCKED:
             break;
         default:
@@ -235,21 +235,21 @@ int main(int argv, char** args) {
                     }
 
                     for (int i = 0; i < MAX_PLAYERS; i++) {
-                        switch (playerGetState(server.players[i])) {
+                        switch (playerGetInfo(server.players[i]).state) {
                             case ROTATING:
                                 break;
                             default:
                                 int teammateID = 1;
                                 if (i == 1) { teammateID = 0; }
-                                switch (playerGetState(server.players[teammateID])) {
+                                switch (playerGetInfo(server.players[teammateID]).state) {
                                     case LOCKED:
                                         playerOverrideState(server.players[teammateID], IDLE);
-                                        server.payload.players[teammateID].state = playerGetState(server.players[teammateID]);
+                                        server.payload.players[teammateID].state = playerGetInfo(server.players[teammateID]).state;
                                         break;
                                 }
                         }
 
-                        server.payload.players[i].state = playerGetState(server.players[i]);
+                        server.payload.players[i].state = playerGetInfo(server.players[i]).state;
                     }
 
                     server.currentTick++;

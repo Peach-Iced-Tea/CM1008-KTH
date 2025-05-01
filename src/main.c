@@ -42,7 +42,7 @@ int initGame(Game *pGame) {
     pGame->pPlatforms = createDynamicArray(ARRAY_ENTITIES);
     if (pGame->pPlatforms == NULL) { return 1; }
     // Add blocks along the bottom of the screen.
-    for(int i = 0; i < REFERENCE_WIDTH; i+=32) {
+    for (int i = 0; i < REFERENCE_WIDTH; i+=32) {
         addEntity(pGame->pPlatforms, i, REFERENCE_HEIGHT-32, pGame->pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
@@ -77,7 +77,7 @@ int initGame(Game *pGame) {
 
 void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float const timestep) {
     playerUpdatePosition(pPlayer, timestep);
-    switch (playerGetState(pPlayer)) {
+    switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                 playerSetState(pPlayer, ROTATING);
@@ -145,7 +145,7 @@ void handleTick(Game *pGame, Player *pPlayer2) {
         for (int i = 0; i < MAX_PLAYERS; i++) {
             if (i == clientGetPlayerID(pGame->pClient)) {
                 if (payload.players[i].state != LOCKED) {
-                    if (playerGetState(pPlayer) == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
+                    if (playerGetInfo(pPlayer).state == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
 
                     if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
                         clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
