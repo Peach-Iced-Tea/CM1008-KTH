@@ -9,6 +9,7 @@ void closeServer(Server *pServer) {
 
     if (pServer->pObjects) { destroyDynamicArray(pServer->pObjects); }
 
+    destroyEntity(pServer->pGurka);
     SDLNet_Quit();
     SDL_Quit();
     return;

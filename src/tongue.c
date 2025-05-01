@@ -149,7 +149,7 @@ SDL_Texture *tongueGetShaftTexture(Tongue const *pTongue) {
 }
 
 Vec2 tongueGetPosition(Tongue const *pTongue) {
-    return entityGetPosition(pTongue->pTip);
+    return entityGetMidPoint(pTongue->pTip);
 }
 
 Vec2 tongueGetVelocity(Tongue const *pTongue) {

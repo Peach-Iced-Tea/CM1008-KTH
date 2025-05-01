@@ -150,15 +150,8 @@ void handleTick(Game *pGame, Player *pPlayer2) {
                     if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
                         clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
                     }
-                    switch (payload.players[i].state) {
-                        case ROTATING:
-                            float radius = vectorLength(entityGetMidPoint(playerGetBody(pPlayer)), entityGetMidPoint(playerGetBody(pPlayer2)));
-                            //playerSetRadius(pPlayer, radius);
-                            break;
-                    }
                 }
                 else {
-                    //printf("LOCKED\n");
                     playerOverrideState(pGame->players[i], payload.players[i].state);
                     playerSetPosition(pGame->players[i], payload.players[i].position);
                 }
@@ -167,6 +160,7 @@ void handleTick(Game *pGame, Player *pPlayer2) {
                 playerSetPosition(pGame->players[i], payload.players[i].position);
                 tongueSetPosition(playerGetTongue(pGame->players[i]), payload.players[i].tonguePosition);
                 tongueCalculateShaft(playerGetTongue(pGame->players[i]), entityGetMidPoint(playerGetBody(pGame->players[i])), payload.players[i].tonguePosition);
+                playerOverrideState(pGame->players[i], payload.players[i].state);
                 playerSetSheetPosition(pGame->players[i], payload.players[i].sheetPosition);
             }
         }

@@ -51,8 +51,6 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     }
 
     pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
-
-    pTexture = IMG_LoadTexture(pRenderer, "resources/tongueTip.png");
     pPlayer->pTongue = createTongue(entityGetMidPoint(pPlayer->pBody), pRenderer);
 
     pPlayer->state = IDLE;
@@ -68,6 +66,8 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     pPlayer->sheetPosition.y = 0;
     pPlayer->sheetPosition.w = 32;
     pPlayer->sheetPosition.h = 32;
+
+    pPlayer->pGrabbedEntity = NULL;
 
     return pPlayer;
 }
