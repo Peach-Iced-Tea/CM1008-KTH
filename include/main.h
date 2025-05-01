@@ -27,6 +27,7 @@ typedef struct {
     Menu *pMenu;
     Client *pClient;
 
-    Map *pMap;
+    ClientMap *pMap;
+    DynamicArray *pHitforms;
 
 } Game;

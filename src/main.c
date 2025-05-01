@@ -37,7 +37,8 @@ int initGame(Game *pGame) {
     pGame->pPlatforms = createDynamicArray(ARRAY_ENTITIES);
     if (pGame->pPlatforms == NULL) { return 1; }
     // Add blocks along the bottom of the screen.
-    for(int i = 0; i < REFERENCE_WIDTH; i+=32) {
+
+ /*    for(int i = 0; i < REFERENCE_WIDTH; i+=32) {
         addEntity(pGame->pPlatforms, i, REFERENCE_HEIGHT-32, pGame->pGrassTexture, HITBOX_FULL_BLOCK);
     }
 
@@ -54,7 +55,7 @@ int initGame(Game *pGame) {
 
     addEntity(pGame->pPlatforms, 0, 32, pGame->pGrassTexture, HITBOX_HALF_BLOCK);
     addEntity(pGame->pPlatforms, REFERENCE_WIDTH-32, 32, pGame->pGrassTexture, HITBOX_FULL_BLOCK);
-
+ */
     pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
     if (pGame->pCamera == NULL) { return 1; }
 
@@ -68,10 +69,26 @@ int initGame(Game *pGame) {
     if (pGame->pClient == NULL) { return 1; }
 
     //-------------------------------------Map Handling----------------------------------------------
-    pGame->pMap = createMap(getRenderer(pGame->pWindow));
-    loadMap("resources/mapData/map.tmj", pGame->pMap);
+    pGame->pMap = createClientMap(getRenderer(pGame->pWindow));
+    loadClientMap("resources/mapData/map.tmj", pGame->pMap);
     loadTileset("resources/mapData/devTiles.tsx", getTileset(pGame->pMap));
 
+    //--------------------Hitboxes---------------------------
+    int mapWidth = getMapWidth(pGame->pMap);
+    int tileSize = 32;
+
+    pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
+    if (pGame->pPlatforms == NULL) {return 1;}
+
+    for (size_t i = 0; i < getLayerSize(pGame->pMap, 0); i++) {
+        int check = getLayerData(pGame->pMap, 0, i);
+        if (check > 0) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+
+            addHitbox(pGame->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK);
+        }
+    }
     return 0;
 }
 
@@ -90,11 +107,19 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
     }
 
     bool standingOnPlatform = false;
-    for (int i = 0; i < arrayGetSize(pObjects); i++) {
+/*     for (int i = 0; i < arrayGetSize(pObjects); i++) {
         if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pObjects, i))) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }
+ */
+    for (int i = 0; i < arrayGetSize(pObjects); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
+            standingOnPlatform = true;
+        }
+    }
+
+
 
     /*if (playerCheckCollision(pPlayer, playerGetBodyHitbox(pTeammate)) == OBJECT_IS_NORTH) {
         standingOnPlatform = true;
@@ -128,6 +153,11 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     //------------------------TILED MAP--------------------------------------------------------------------
     renderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
     
+    for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
+        renderDynamicHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
+    }
+
+
     displayWindow(pGame->pWindow);
     return;
 }
@@ -274,7 +304,7 @@ int main(int argv, char** args) {
                     inputHoldTimer(game.pInput);
                     handleTick(&game);
                     
-                    updatePlayer(pPlayer, pTeammate, game.pPlatforms, timestep);
+                    updatePlayer(pPlayer, pTeammate, game.pHitforms, timestep);
                     StateData state;
                     state.position = playerGetPosition(pPlayer);
                     state.sheetPosition.x = playerGetSheetPosition(pPlayer).x;

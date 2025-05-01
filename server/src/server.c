@@ -24,7 +24,8 @@ int initServer(Server *pServer) {
     pServer->pObjects = createDynamicArray(ARRAY_HITBOXES);
     if (pServer->pObjects == NULL) { return 1; }
     // Add blocks along the bottom of the screen.
-    for(int i = 0; i < 1920; i+=32) {
+
+   /*  for(int i = 0; i < 1920; i+=32) {
         addHitbox(pServer->pObjects, i, 1080-32, 32, 32, HITBOX_FULL_BLOCK);
     }
 
@@ -40,7 +41,29 @@ int initServer(Server *pServer) {
     }
 
     addHitbox(pServer->pObjects, 0, 32, 32, 32, HITBOX_HALF_BLOCK);
-    addHitbox(pServer->pObjects, 1920-32, 32, 32, 32, HITBOX_FULL_BLOCK);
+    addHitbox(pServer->pObjects, 1920-32, 32, 32, 32, HITBOX_FULL_BLOCK); */
+
+    //--------------------Map Handling-----------------------
+    pServer->pMap = createServerMap();
+    loadServerMap("../resources/mapData/map.tmj", pServer->pMap);
+
+    //--------------------Hitboxes---------------------------
+    int mapWidth = getMapWidth_Server(pServer->pMap);
+    int tileSize = 32;
+
+    pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
+    if(pServer->pHitforms == NULL) {return 1;}
+
+    for (size_t i = 0; i < getLayerSize_Server(pServer->pMap, 0); i++) {
+        int check = getLayerData_Server(pServer->pMap, 0, i);
+        if (check > 0) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+
+            addHitbox(pServer->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK);
+        }
+    }
+
 
     pServer->state = SERVER_WAITING;
     if (!(pServer->socket = SDLNet_UDP_Open(SERVER_PORT))) {
@@ -99,11 +122,18 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     entityMove(playerGetBody(pPlayer), velocity);
 
     bool standingOnPlatform = false;
-    for (int i = 0; i < arrayGetSize(pServer->pObjects); i++) {
+/*     for (int i = 0; i < arrayGetSize(pServer->pObjects); i++) {
         if (playerCheckCollision(pPlayer, arrayGetObject(pServer->pObjects, i)) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }
+ */
+    for (int i = 0; i < arrayGetSize(pServer->pHitforms); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pServer->pHitforms, i)) == OBJECT_IS_NORTH) {
+            standingOnPlatform = true;
+        }
+    }
+
 
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 

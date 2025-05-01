@@ -84,4 +84,7 @@ Use this function to destroy the given RenderWindow pointer and free up memory.
 void destroyRenderWindow(RenderWindow *pRenderWindow);
 
 
-void renderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamera);
+void renderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera);
+
+
+void renderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera);

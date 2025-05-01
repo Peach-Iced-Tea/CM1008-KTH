@@ -11,17 +11,13 @@ struct tileset{
     SDL_Texture *tileSheet;
 };
 
-#define MAX_LAYERS 2
+struct clientMap {
+    int *layerData[MAX_LAYERS];         //Array of data, loaded from .tmj file
+    size_t layerSize[MAX_LAYERS];       //Size of the array
+    int width, height;                  //Width and Height of the entire "Map"
 
-struct map {
-
-    int *layerData[MAX_LAYERS]; 
-    size_t layerSize[MAX_LAYERS];
-
-    int width, height;
-
-    Tileset *layerTiles;
-    SDL_Rect tileSheetPosition;
+    Tileset *layerTiles;                //The corresponding Tileset For now a struct thatcontains the .png
+    SDL_Rect tileSheetPosition;         //The position in the tileset (currently not sure if this is actially needed)
 };
 
 Tileset *createTileset(SDL_Renderer *pRenderer) {
@@ -42,8 +38,8 @@ Tileset *createTileset(SDL_Renderer *pRenderer) {
     return pTileset;
 }
 
-Map *createMap(SDL_Renderer *pRenderer) {
-    Map *pMap = malloc(sizeof(Map));
+ClientMap *createClientMap(SDL_Renderer *pRenderer) {
+    ClientMap *pMap = malloc(sizeof(ClientMap));
 
     pMap->layerTiles = createTileset(pRenderer);
 
@@ -96,7 +92,7 @@ void loadTileset(const char *filename, Tileset *devTiles) {
     xmlFreeDoc(doc);
 }
 
-void loadMap(const char *path, Map *pMap) {
+void loadClientMap(const char *path, ClientMap *pMap) {
     json_error_t error;
     json_t *root = json_load_file(path, 0, &error);
 
@@ -138,7 +134,7 @@ void loadMap(const char *path, Map *pMap) {
     json_decref(root);
 }
 
-void setTileSheetPosition(Map *pMap, int x, int y) {
+void setTileSheetPosition(ClientMap *pMap, int x, int y) {
     pMap->tileSheetPosition.x = x;
     pMap->tileSheetPosition.y = y;
 }
@@ -151,27 +147,27 @@ xmlChar *getColumns(Tileset *pTileset) {
     return pTileset->columns;
 }
 
-int getMapWidth(Map *pMap) {
+int getMapWidth(ClientMap *pMap) {
     return pMap->width;
 }
 
-Tileset *getTileset(Map *pMap) {
+Tileset *getTileset(ClientMap *pMap) {
     return pMap->layerTiles;
 }
 
-size_t getLayerSize(Map *pMap, int layer) {
+size_t getLayerSize(ClientMap *pMap, int layer) {
     return pMap->layerSize[layer];
 }
 
-int getLayerData(Map *pMap, int layer, int index) {
+int getLayerData(ClientMap *pMap, int layer, int index) {
     return pMap->layerData[layer][index];
 }
 
-SDL_Rect getTileSheetPosition(Map *pMap) {
+SDL_Rect getTileSheetPosition(ClientMap *pMap) {
     return pMap->tileSheetPosition;
 }
 
-void destroyMap(Map *pMap) {
+void destroyMap(ClientMap *pMap) {
     if (pMap == NULL) { return; }
 
     SDL_DestroyTexture(pMap->layerTiles->tileSheet);
@@ -179,5 +175,89 @@ void destroyMap(Map *pMap) {
     free(pMap->layerData);
     free(pMap);
 
+    return;
+}
+
+//-----------------Server:--------------------------
+
+struct serverMap {
+    int *layerData[MAX_LAYERS];         //Array of data, loaded from .tmj file
+    size_t layerSize[MAX_LAYERS];       //Size of the array
+    int width, height;                  //Width and Height of the entire "Map"   
+};
+
+ServerMap *createServerMap() {
+    ServerMap *pMap = malloc(sizeof(ServerMap));
+
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        pMap->layerData[i] = NULL;
+    }
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        pMap->layerSize[i] = 0;
+    }
+    pMap->height = 0;
+    pMap->width = 0;
+}
+
+void loadServerMap(const char *path, ServerMap *pMap) {
+    json_error_t error;
+    json_t *root = json_load_file(path, 0, &error);
+
+    if (!root) {
+        fprintf(stderr, "Error loading TMJ: %s (line %d)\n", error.text, error.line);
+        return;
+    }
+
+	pMap->width = json_integer_value(json_object_get(root, "width"));
+	pMap->height = json_integer_value(json_object_get(root, "height"));
+
+
+    
+    json_t *layers = json_object_get(root, "layers");
+
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        json_t *layer = json_array_get(layers, i);
+        json_t *data = json_object_get(layer, "data");
+
+        if (!json_is_array(data)) {
+            fprintf(stderr, "Layer %d data is not an array\n", i);
+            continue;
+        }
+
+        size_t size = json_array_size(data);
+        pMap->layerSize[i] = size;
+        pMap->layerData[i] = malloc(sizeof(int) * size);  // allocate normal C array
+
+        for (size_t j = 0; j < size; j++) {
+            json_t *tile = json_array_get(data, j);
+            if (!json_is_integer(tile)) {
+                fprintf(stderr, "Invalid tile at %zu in layer %d\n", j, i);
+                pMap->layerData[i][j] = 0; // or handle error
+            } else {
+                pMap->layerData[i][j] = json_integer_value(tile);
+            }
+        }
+    }
+    json_decref(root);
+}
+
+int getMapWidth_Server(ServerMap *pMap) {
+    return pMap->width;
+}
+
+size_t getLayerSize_Server(ServerMap *pMap, int layer) {
+    return pMap->layerSize[layer];
+}
+
+int getLayerData_Server(ServerMap *pMap, int layer, int index) {
+    return pMap->layerData[layer][index];
+}
+
+void destroyMap_Server(ServerMap *pMap) {
+    if (pMap == NULL) { return; }
+
+    free(pMap->layerData);
+    free(pMap);
+    
     return;
 }

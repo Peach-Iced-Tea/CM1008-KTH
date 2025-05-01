@@ -234,7 +234,7 @@ void destroyRenderWindow(RenderWindow *pRenderWindow) {
     return;
 }
 
-void renderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamera) {
+void renderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera) {
 
     int mapWidth = getMapWidth(pMap);
     int tileSize = 32;
@@ -264,4 +264,22 @@ void renderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamer
             SDL_RenderCopyF(pRenderWindow->pRenderer, getTileTextures(getTileset(pMap)), &src, &dst);
         }
     }
+}
+
+
+void renderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
+    Vec2 halfSize = getHitboxHalfSize(pHitbox);
+    Vec2 topLeftCorner;
+    vectorSub(&topLeftCorner, getHitboxPosition(pHitbox), halfSize);
+    SDL_FRect dst;
+    dst.x = topLeftCorner.x;
+    dst.y = topLeftCorner.y;
+    dst.w = halfSize.x*2.0f;
+    dst.h = halfSize.y*2.0f;
+    adjustToCamera(pCamera, &dst, NULL);
+
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
+    SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
+    return;
 }
