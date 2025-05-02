@@ -4,8 +4,8 @@ SHAREDINC = ../include
 SHAREDSRC = ../src
 CC = gcc
 ifeq ($(OS),Windows_NT)
-	INCLUDE = -IC:/msys64/mingw64/include/SDL2 -I$(INCDIR) -I$(SHAREDINC)
-	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole
+	INCLUDE = -IC:/msys64/mingw64/include/SDL2 -IC:/msys64/mingw64/include/libxml2 -I$(INCDIR) -I$(SHAREDINC)
+	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole -lxml2 -ljansson
 	DELCMD = del
 else
 	INCLUDE = -I$(INCDIR) -I$(SHAREDINC)
@@ -17,8 +17,8 @@ CFLAGS = -g $(INCLUDE) -c
 TARGET = server.exe
 
 
-$(TARGET): server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o
-	$(CC) -o $(TARGET) server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o $(LDFLAGS)
+$(TARGET): server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o mapParser.o
+	$(CC) -o $(TARGET) server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o mapParser.o $(LDFLAGS)
 
 server.o: $(SRCDIR)/server.c $(INCDIR)/server.h
 	$(CC) $(CFLAGS) $(SRCDIR)/server.c
@@ -46,6 +46,9 @@ tongue.o: $(SHAREDSRC)/tongue.c $(SHAREDINC)/tongue.h
 
 networkData.o: $(SHAREDSRC)/networkData.c $(SHAREDINC)/networkData.h
 	$(CC) $(CFLAGS) $(SHAREDSRC)/networkData.c
+
+mapParser.o: $(SHAREDSRC)/mapParser.c $(SHAREDINC)/mapParser.h
+	$(CC) $(CFLAGS) $(SHAREDSRC)/mapParser.c
 
 
 clean:

@@ -1,5 +1,6 @@
 #include "renderWindow.h"
 
+
 typedef enum {
     WINDOWED, BORDERLESS, FULLSCREEN, EXCLUSIVE, ALT_TABBED
 } WindowState;
@@ -251,5 +252,55 @@ void destroyRenderWindow(RenderWindow *pRenderWindow) {
     
     SDL_DestroyWindow(pRenderWindow->pWindow);
     SDL_DestroyRenderer(pRenderWindow->pRenderer);
+    return;
+}
+
+void renderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera) {
+
+    int mapWidth = getMapWidth(pMap);
+    int tileSize = 32;
+
+    for (size_t i = 0; i < getLayerSize(pMap, 1); i++) {
+
+        int gid = getLayerData(pMap, 1, i) - 15;
+
+        if (gid >= 0) {
+            int columns = atoi((char *)getColumns(getTileset(pMap)));
+            
+            int tileX = (gid % columns) * 32;
+            int tileY = (gid / columns) * 32;
+
+            setTileSheetPosition(pMap, tileX, tileY);
+
+            int screenX = (i % mapWidth) * tileSize;
+            int screenY = (i / mapWidth) * tileSize;
+
+            SDL_Rect src = getTileSheetPosition(pMap);
+
+            SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
+
+            adjustToCamera(pCamera, &dst, NULL);
+
+
+            SDL_RenderCopyF(pRenderWindow->pRenderer, getTileTextures(getTileset(pMap)), &src, &dst);
+        }
+    }
+}
+
+
+void renderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
+    Vec2 halfSize = getHitboxHalfSize(pHitbox);
+    Vec2 topLeftCorner;
+    vectorSub(&topLeftCorner, getHitboxPosition(pHitbox), halfSize);
+    SDL_FRect dst;
+    dst.x = topLeftCorner.x;
+    dst.y = topLeftCorner.y;
+    dst.w = halfSize.x*2.0f;
+    dst.h = halfSize.y*2.0f;
+    adjustToCamera(pCamera, &dst, NULL);
+
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
+    SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
     return;
 }

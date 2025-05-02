@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "physics.h"
 
+#include "mapParser.h"
+
 typedef struct {
     int nrOfPlayers;
     Player *players[MAX_PLAYERS];
@@ -15,5 +17,6 @@ typedef struct {
     UDPpacket *pPacket;
     IPaddress clients[MAX_PLAYERS];
     int currentTick;
-    Entity *pGurka;
+    ServerMap *pMap;
+    DynamicArray *pHitforms;
 } Server;

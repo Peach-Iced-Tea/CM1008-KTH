@@ -2,8 +2,8 @@ SRCDIR=./src
 INCDIR=./include
 CC=gcc
 ifeq ($(OS),Windows_NT)
-	INCLUDE = -IC:/msys64/mingw64/include/SDL2 -I$(INCDIR) 
-	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole
+	INCLUDE = -IC:/msys64/mingw64/include/SDL2 -IC:/msys64/mingw64/include/libxml2 -I$(INCDIR)
+	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole -lxml2 -ljansson
 	DELCMD = del
 else
 	INCLUDE = -I$(INCDIR)
@@ -15,13 +15,13 @@ CFLAGS = -g $(INCLUDE) -c
 TARGET = ToTheTop.exe
 
 
-$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o menu.o tongue.o networkData.o
-	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o menu.o tongue.o networkData.o $(LDFLAGS)
+$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o menu.o tongue.o networkData.o mapParser.o
+	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o menu.o tongue.o networkData.o mapParser.o $(LDFLAGS)
 
 main.o: $(SRCDIR)/main.c $(INCDIR)/main.h
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c
 
-renderWindow.o: $(SRCDIR)/renderWindow.c $(INCDIR)/renderWindow.h
+renderWindow.o: $(SRCDIR)/renderWindow.c $(INCDIR)/renderWindow.h 
 	$(CC) $(CFLAGS) $(SRCDIR)/renderWindow.c
 
 entity.o: $(SRCDIR)/entity.c $(INCDIR)/entity.h
@@ -57,6 +57,8 @@ tongue.o: $(SRCDIR)/tongue.c $(INCDIR)/tongue.h
 networkData.o: $(SRCDIR)/networkData.c $(INCDIR)/networkData.h
 	$(CC) $(CFLAGS) $(SRCDIR)/networkData.c
 
+mapParser.o: $(SRCDIR)/mapParser.c $(INCDIR)/mapParser.h
+	$(CC) $(CFLAGS) $(SRCDIR)/mapParser.c
 
 clean:
 	$(DELCMD) *.o

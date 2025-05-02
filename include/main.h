@@ -16,6 +16,7 @@
 #include "client.h"
 #include "menu.h"
 #include "tongue.h"
+#include "mapParser.h"
 
 typedef struct {
     RenderWindow *pWindow;
@@ -26,7 +27,6 @@ typedef struct {
     Input *pInput;
     Menu *pMenu;
     Client *pClient;
-
-    Entity *pGurka;
-    SDL_Texture *pGurkaTexture;
+    ClientMap *pMap;
+    DynamicArray *pHitforms;
 } Game;

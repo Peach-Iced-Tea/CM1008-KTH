@@ -9,7 +9,6 @@ void closeServer(Server *pServer) {
 
     if (pServer->pObjects) { destroyDynamicArray(pServer->pObjects); }
 
-    destroyEntity(pServer->pGurka);
     SDLNet_Quit();
     SDL_Quit();
     return;
@@ -24,24 +23,27 @@ int initServer(Server *pServer) {
 
     pServer->pObjects = createDynamicArray(ARRAY_HITBOXES);
     if (pServer->pObjects == NULL) { return 1; }
-    // Add blocks along the bottom of the screen.
-    for (int i = 0; i < 1920; i+=32) {
-        addHitbox(pServer->pObjects, i, 1080-32, 32, 32, HITBOX_FULL_BLOCK);
-    }
 
-    for (int i = 0; i < 6*32; i+=32) {
-        addHitbox(pServer->pObjects, i, 96, 32, 32, HITBOX_FULL_BLOCK);
-        addHitbox(pServer->pObjects, i, 128, 32, 32, HITBOX_FULL_BLOCK);
-        addHitbox(pServer->pObjects, i, 160, 32, 32, HITBOX_FULL_BLOCK);
-        addHitbox(pServer->pObjects, i+6*32, 192, 32, 32, HITBOX_FULL_BLOCK);
-    }
+    //--------------------Map Handling-----------------------
+    pServer->pMap = createServerMap();
+    loadServerMap("../resources/mapData/map.tmj", pServer->pMap);
 
-    for (int i = 0; i < 4*32; i+=32) {
-        addHitbox(pServer->pObjects, i+7*32, 96, 32, 32, HITBOX_FULL_BLOCK);
-    }
+    //--------------------Hitboxes---------------------------
+    int mapWidth = getMapWidth_Server(pServer->pMap);
+    int tileSize = 32;
 
-    addHitbox(pServer->pObjects, 0, 32, 32, 32, HITBOX_HALF_BLOCK);
-    addHitbox(pServer->pObjects, 1920-32, 32, 32, 32, HITBOX_FULL_BLOCK);
+    pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
+    if(pServer->pHitforms == NULL) { return 1; }
+
+    for (size_t i = 0; i < getLayerSize_Server(pServer->pMap, 0); i++) {
+        int check = getLayerData_Server(pServer->pMap, 0, i);
+        if (check > 0) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+
+            addHitbox(pServer->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK);
+        }
+    }
 
     pServer->state = SERVER_WAITING;
     if (!(pServer->socket = SDLNet_UDP_Open(SERVER_PORT))) {
@@ -53,8 +55,6 @@ int initServer(Server *pServer) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 1;
     }
-
-    pServer->pGurka = createEntity(createVector(64.0f, 64.0f), NULL, 0, HITBOX_FULL_BLOCK);
 
     pServer->payload.serverState = SERVER_WAITING;
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -93,7 +93,7 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pObjects, float const timestep) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, float const timestep) {
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             vectorScale(&tongueVelocity, timestep);
@@ -116,8 +116,8 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, Dynam
     }
 
     bool standingOnPlatform = false;
-    for (int i = 0; i < arrayGetSize(pObjects); i++) {
-        if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
+    for (int i = 0; i < arrayGetSize(pHitforms); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pHitforms, i)) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }

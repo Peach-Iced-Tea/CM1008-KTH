@@ -7,6 +7,8 @@
 #include "entity.h"
 #include "camera.h"
 #include "player.h"
+#include "mapParser.h"
+
 
 typedef struct renderWindow RenderWindow;
 
@@ -80,3 +82,9 @@ int windowGetHeight(RenderWindow const *pRenderWindow);
 Use this function to destroy the given RenderWindow pointer and free up memory.
 */
 void destroyRenderWindow(RenderWindow *pRenderWindow);
+
+
+void renderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera);
+
+
+void renderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera);
