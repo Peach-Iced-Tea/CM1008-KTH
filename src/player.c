@@ -308,7 +308,10 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             if (pPlayer->pGrabbedEntity != NULL) { pPlayer->pGrabbedEntity = NULL; }
             tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);
             if (tongueGetInfo(pPlayer->pTongue).state == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
-            if (tongueGetInfo(pPlayer->pTongue).length == 0.0f) { pPlayer->state = IDLE; }
+            if (tongueGetInfo(pPlayer->pTongue).length == 0.0f) {
+                pPlayer->sheetPosition.x = 0;
+                pPlayer->state = IDLE;
+            }
             break;
         case ROTATING:
             Vec2 newPosition = rotationCalculations(pPlayer, deltaTime);

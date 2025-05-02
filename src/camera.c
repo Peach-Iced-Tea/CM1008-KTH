@@ -187,7 +187,7 @@ void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
         return;
     }
 
-    if (fabsf(pCamera->position.x-referencePosition.x) < 1.0f && fabsf(pCamera->position.y-referencePosition.y) < 1.0f) {
+    if (vectorLength(pCamera->position, referencePosition) <= 0.5f) {
         pCamera->position.x = referencePosition.x;
         pCamera->position.y = referencePosition.y;
         pCamera->tracker.followY = false;
