@@ -145,7 +145,7 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             playerUpdateAnimation(pPlayer);
     }
 
-    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pObjects, timestep);
+    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, timestep);
 
     prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);
     prepareEntityData(&(pServer->payload.entities[payload.playerID]), NULL, movedEntity, 0);

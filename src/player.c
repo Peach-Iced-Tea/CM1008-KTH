@@ -309,7 +309,12 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);
             if (tongueGetInfo(pPlayer->pTongue).state == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
             if (tongueGetInfo(pPlayer->pTongue).length == 0.0f) {
-                pPlayer->sheetPosition.x = 0;
+                if (pPlayer->sheetPosition.x == 64) {
+                    pPlayer->sheetPosition.x = 0;
+                }
+                else if (pPlayer->sheetPosition.x == 96) {
+                    pPlayer->sheetPosition.x = 32;
+                }
                 pPlayer->state = IDLE;
             }
             break;

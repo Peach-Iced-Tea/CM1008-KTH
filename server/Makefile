@@ -8,8 +8,8 @@ ifeq ($(OS),Windows_NT)
 	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole -lxml2 -ljansson
 	DELCMD = del
 else
-	INCLUDE = -I$(INCDIR) -I$(SHAREDINC)
-	LDFLAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -lm
+	INCLUDE = -I$(INCDIR) -I$(SHAREDINC) -I/usr/include/libxml2
+	LDFLAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -lm -lxml2 -ljansson
 	DELCMD = rm
 endif
 
