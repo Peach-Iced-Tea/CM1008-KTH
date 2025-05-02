@@ -7,7 +7,9 @@ void closeServer(Server *pServer) {
         if (pServer->players[i]) { destroyPlayer(pServer->players[i]); }
     }
 
-    if (pServer->pObjects) { destroyDynamicArray(pServer->pObjects); }
+    if (pServer->pHitforms) { destroyDynamicArray(pServer->pHitforms); }
+
+    if (pServer->pMap) { destroyMap_Server(pServer->pMap); }
 
     SDLNet_Quit();
     SDL_Quit();
@@ -21,11 +23,9 @@ int initServer(Server *pServer) {
         if (pServer->players[i] == NULL) { return 1; }
     }
 
-    pServer->pObjects = createDynamicArray(ARRAY_HITBOXES);
-    if (pServer->pObjects == NULL) { return 1; }
-
     //--------------------Map Handling-----------------------
     pServer->pMap = createServerMap();
+    if (pServer->pMap == NULL) { return 1; }
     loadServerMap("../resources/mapData/map.tmj", pServer->pMap);
 
     //--------------------Hitboxes---------------------------

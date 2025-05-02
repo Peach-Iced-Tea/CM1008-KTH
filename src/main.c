@@ -1,17 +1,16 @@
 #include "main.h"
 
 void cleanUp(Game *pGame) {
-    destroyInputTracker(pGame->pInput);
+    if (pGame->pInput) { destroyInputTracker(pGame->pInput); }
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        destroyPlayer(pGame->players[i]);
+        if (pGame->players[i]) { destroyPlayer(pGame->players[i]); }
     }
 
-    destroyDynamicArray(pGame->pPlatforms);
-    SDL_DestroyTexture(pGame->pGrassTexture);
-    destroyCamera(pGame->pCamera);
-    destroyRenderWindow(pGame->pWindow);
-    destroyMenu(pGame->pMenu);
-    destroyClient(pGame->pClient);
+    if (pGame->pCamera) { destroyCamera(pGame->pCamera); }
+    if (pGame->pWindow) { destroyRenderWindow(pGame->pWindow); }
+    if (pGame->pMenu) { destroyMenu(pGame->pMenu); }
+    if (pGame->pClient) { destroyClient(pGame->pClient); }
+    if (pGame->pMap) { destroyMap(pGame->pMap); }
     SDLNet_Quit();
     TTF_Quit();
     SDL_Quit();
@@ -26,16 +25,10 @@ int initGame(Game *pGame) {
     pGame->pWindow = createRenderWindow("ToTheTop", mainDisplay.w, mainDisplay.h);
     if (pGame->pWindow == NULL) { return 1; }
 
-    pGame->pGrassTexture = loadTexture(pGame->pWindow, "resources/purpg.png");
-    if (pGame->pGrassTexture == NULL) { return 1; }
-
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), getRenderer(pGame->pWindow), i);
         if (pGame->players[i] == NULL) { return 1; }
     }
-
-    pGame->pPlatforms = createDynamicArray(ARRAY_ENTITIES);
-    if (pGame->pPlatforms == NULL) { return 1; }
 
     pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
     if (pGame->pCamera == NULL) { return 1; }
@@ -115,13 +108,6 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
         renderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
     }
 
-    for (int i = 0; i < arrayGetSize(pGame->pPlatforms); i++) {
-        Entity *pEntity = arrayGetObject(pGame->pPlatforms, i);
-        if (entityIsVisible(pGame->pCamera, entityGetCurrentFrame(pEntity))) {
-            renderEntity(pGame->pWindow, pEntity, pGame->pCamera);
-        }
-    }
-
     //------------------------TILED MAP--------------------------------------------------------------------
     renderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
     
@@ -160,7 +146,7 @@ void handleTick(Game *pGame, Player *pPlayer2) {
                     if (playerGetInfo(pPlayer).state == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
 
                     if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
-                        clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pPlatforms);
+                        clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pHitforms);
                     }
                 }
                 else {

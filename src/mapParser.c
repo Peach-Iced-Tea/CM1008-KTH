@@ -1,4 +1,3 @@
-
 #include "mapParser.h"
 
 struct tileset{
@@ -172,7 +171,9 @@ void destroyMap(ClientMap *pMap) {
 
     SDL_DestroyTexture(pMap->layerTiles->tileSheet);
     free(pMap->layerTiles);
-    free(pMap->layerData);
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        if (pMap->layerData[i]) { free(pMap->layerData[i]); }
+    }
     free(pMap);
 
     return;
@@ -256,7 +257,9 @@ int getLayerData_Server(ServerMap *pMap, int layer, int index) {
 void destroyMap_Server(ServerMap *pMap) {
     if (pMap == NULL) { return; }
 
-    free(pMap->layerData);
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        if (pMap->layerData[i]) { free(pMap->layerData[i]); }
+    }
     free(pMap);
     
     return;

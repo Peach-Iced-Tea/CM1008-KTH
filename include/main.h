@@ -22,8 +22,6 @@ typedef struct {
     RenderWindow *pWindow;
     Camera *pCamera;
     Player *players[MAX_PLAYERS];
-    SDL_Texture *pGrassTexture;
-    DynamicArray *pPlatforms;
     Input *pInput;
     Menu *pMenu;
     Client *pClient;

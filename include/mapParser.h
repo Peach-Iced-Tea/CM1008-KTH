@@ -47,6 +47,8 @@ int getLayerData(ClientMap *pMap, int layer, int index);
 
 SDL_Rect getTileSheetPosition(ClientMap *pMap);
 
+void destroyMap(ClientMap *pMap);
+
 //---------------Server-------------------------
 
 int getMapWidth_Server(ServerMap *pMap);

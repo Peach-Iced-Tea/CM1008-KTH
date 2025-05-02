@@ -9,7 +9,7 @@
 
 typedef struct dynamicArray DynamicArray;
 
-DynamicArray *createDynamicArray();
+DynamicArray *createDynamicArray(int arrayType);
 
 int addEntity(DynamicArray *pArray, float x, float y, SDL_Texture *pTexture, int hitboxType);
 

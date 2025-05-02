@@ -10,7 +10,6 @@
 typedef struct {
     int nrOfPlayers;
     Player *players[MAX_PLAYERS];
-    DynamicArray *pObjects;
     ServerPayload payload;
     ServerState state;
     UDPsocket socket;
