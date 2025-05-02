@@ -78,7 +78,7 @@ int initGame(Game *pGame) {
     int tileSize = 32;
 
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
-    if (pGame->pPlatforms == NULL) {return 1;}
+    if (pGame->pHitforms == NULL) {return 1;}
 
     for (size_t i = 0; i < getLayerSize(pGame->pMap, 0); i++) {
         int check = getLayerData(pGame->pMap, 0, i);
