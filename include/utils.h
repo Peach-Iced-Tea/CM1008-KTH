@@ -11,9 +11,7 @@ typedef struct dynamicArray DynamicArray;
 
 DynamicArray *createDynamicArray(int arrayType);
 
-int arrayAddEntity(DynamicArray *pArray, float x, float y, SDL_Texture *pTexture, int hitboxType);
-
-int arrayAddHitbox(DynamicArray *pArray, float x, float y, int w, int h, int hitboxType);
+int arrayAddObject(DynamicArray *pArray, void *newObject);
 
 void *arrayGetObject(DynamicArray *pArray, int index);
 

@@ -53,13 +53,15 @@ int initGame(Game *pGame) {
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if (pGame->pHitforms == NULL) {return 1;}
 
+    Vec2 tmp;
     for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {
         int check = mapGetLayerData(pGame->pMap, 0, i);
         if (check > 0) {
             float posX = (i % mapWidth) * tileSize;
             float posY = (i / mapWidth) * tileSize;
+            tmp = createVector(posX, posY);
 
-            if (arrayAddHitbox(pGame->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK)) { return 1; }
+            if (arrayAddObject(pGame->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
         }
     }
     return 0;

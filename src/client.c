@@ -1,6 +1,6 @@
 #include "client.h"
 
-#define MAX_WAIT_TIME 20    // This constant represents time elapsed in seconds.
+#define MAX_WAIT_TIME 30    // This constant represents time elapsed in seconds.
 #define DELAY_TICK 120
 
 struct client {
@@ -100,7 +100,7 @@ bool clientWaitForServer(Client *pClient) {
         gameRunning = checkUserInput(pInput);
         if (!gameRunning) { break; }
 
-        if (timer == DELAY_TICK*MAX_WAIT_TIME*2) {
+        if (timer == DELAY_TICK*MAX_WAIT_TIME*3) {
             gameRunning = false;
             break;
         }

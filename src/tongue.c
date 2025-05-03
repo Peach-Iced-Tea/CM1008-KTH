@@ -1,7 +1,7 @@
 #include "tongue.h"
 
 #define TONGUE_VELOCITY 600
-#define MAX_TONGUE_LENGTH 250.0f
+#define MAX_TONGUE_LENGTH 256.0f
 
 struct tongue {
     Entity *pTip;
