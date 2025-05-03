@@ -252,7 +252,7 @@ int cameraUpdate(Camera *pCamera) {
     return 0;
 }
 
-bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity) {
+bool cameraEntityIsVisible(Camera const *pCamera, SDL_FRect const entity) {
     bool isVisible = true;
     float offsetY = pCamera->tracker.offsetY;
     float deltaDistanceX = fabsf(pCamera->position.x-entity.x);
@@ -268,7 +268,7 @@ bool entityIsVisible(Camera const *pCamera, SDL_FRect const entity) {
     return isVisible;
 }
 
-void adjustToCamera(Camera const *pCamera, SDL_FRect *pDst, Vec2 *pVector) {
+void cameraAdjustToViewport(Camera const *pCamera, SDL_FRect *pDst, Vec2 *pVector) {
     float globalScale = pCamera->display.globalScale;
     float offsetWidth = pCamera->logicalWidth*0.5f;
     float offsetHeight = pCamera->logicalHeight*0.5f;

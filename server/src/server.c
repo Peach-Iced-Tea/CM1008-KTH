@@ -23,25 +23,23 @@ int initServer(Server *pServer) {
         if (pServer->players[i] == NULL) { return 1; }
     }
 
-    //--------------------Map Handling-----------------------
     pServer->pMap = createServerMap();
     if (pServer->pMap == NULL) { return 1; }
-    loadServerMap("../resources/mapData/map.tmj", pServer->pMap);
+    mapLoadServer("../resources/mapData/map.tmj", pServer->pMap);
 
-    //--------------------Hitboxes---------------------------
-    int mapWidth = getMapWidth_Server(pServer->pMap);
+    int mapWidth = mapGetWidth_Server(pServer->pMap);
     int tileSize = 32;
 
     pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if(pServer->pHitforms == NULL) { return 1; }
 
-    for (size_t i = 0; i < getLayerSize_Server(pServer->pMap, 0); i++) {
-        int check = getLayerData_Server(pServer->pMap, 0, i);
+    for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 0); i++) {
+        int check = mapGetLayerData_Server(pServer->pMap, 0, i);
         if (check > 0) {
             float posX = (i % mapWidth) * tileSize;
             float posY = (i / mapWidth) * tileSize;
 
-            addHitbox(pServer->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK);
+            if (arrayAddHitbox(pServer->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK)) { return 1; }
         }
     }
 

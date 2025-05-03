@@ -79,14 +79,14 @@ Check if the given Entity is visible inside the dimensions of the given Camera.
 
 Returns 'true' if it is inside the camera view, 'false' if it is outside the camera view.
 */
-bool entityIsVisible(Camera const *camera, SDL_FRect const entity);
+bool cameraEntityIsVisible(Camera const *camera, SDL_FRect const entity);
 
 /*
 Use this function to adjust the position of a SDL_FRect and/or a Vec2 to the given Camera.
 
 Either *dst or *position can be set as NULL.
 */
-void adjustToCamera(Camera const *camera, SDL_FRect *dst, Vec2 *position);
+void cameraAdjustToViewport(Camera const *camera, SDL_FRect *dst, Vec2 *position);
 
 /*
 Returns the absolute position of the mouse cursor in the game world.

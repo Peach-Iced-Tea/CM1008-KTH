@@ -26,7 +26,7 @@ int initGame(Game *pGame) {
     if (pGame->pWindow == NULL) { return 1; }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), getRenderer(pGame->pWindow), i);
+        pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), windowGetRenderer(pGame->pWindow), i);
         if (pGame->players[i] == NULL) { return 1; }
     }
 
@@ -42,25 +42,24 @@ int initGame(Game *pGame) {
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
 
-    //-------------------------------------Map Handling----------------------------------------------
-    pGame->pMap = createClientMap(getRenderer(pGame->pWindow));
-    loadClientMap("resources/mapData/map.tmj", pGame->pMap);
-    loadTileset("resources/mapData/devTiles.tsx", getTileset(pGame->pMap));
+    pGame->pMap = createClientMap(windowGetRenderer(pGame->pWindow));
+    if (pGame->pMap == NULL) { return 1; }
 
-    //--------------------Hitboxes---------------------------
-    int mapWidth = getMapWidth(pGame->pMap);
+    mapLoadClient("resources/mapData/map.tmj", pGame->pMap);
+    mapLoadTileset("resources/mapData/devTiles.tsx", mapGetTileset(pGame->pMap));
+    int mapWidth = mapGetWidth(pGame->pMap);
     int tileSize = 32;
 
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if (pGame->pHitforms == NULL) {return 1;}
 
-    for (size_t i = 0; i < getLayerSize(pGame->pMap, 0); i++) {
-        int check = getLayerData(pGame->pMap, 0, i);
+    for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {
+        int check = mapGetLayerData(pGame->pMap, 0, i);
         if (check > 0) {
             float posX = (i % mapWidth) * tileSize;
             float posY = (i / mapWidth) * tileSize;
 
-            addHitbox(pGame->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK);
+            if (arrayAddHitbox(pGame->pHitforms, posX, posY, tileSize, tileSize, HITBOX_FULL_BLOCK)) { return 1; }
         }
     }
     return 0;
@@ -78,19 +77,11 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
     }
 
     bool standingOnPlatform = false;
-/*     for (int i = 0; i < arrayGetSize(pObjects); i++) {
-        if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pObjects, i))) == OBJECT_IS_NORTH) {
-            standingOnPlatform = true;
-        }
-    }
- */
     for (int i = 0; i < arrayGetSize(pObjects); i++) {
         if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }
-
-
 
     /*if (playerCheckCollision(pPlayer, playerGetBodyHitbox(pTeammate)) == OBJECT_IS_NORTH) {
         standingOnPlatform = true;
@@ -102,21 +93,19 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
 
 void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
-    clearWindow(pGame->pWindow);
+    windowClearFrame(pGame->pWindow);
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        renderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
+        windowRenderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
     }
 
-    //------------------------TILED MAP--------------------------------------------------------------------
-    renderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
+    windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
     
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
-        renderDynamicHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
+        windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
     }
 
-
-    displayWindow(pGame->pWindow);
+    windowDisplayFrame(pGame->pWindow);
     return;
 }
 
@@ -173,15 +162,15 @@ bool initiateConnection(Game *pGame) {
     gameRunning = mainMenu(pGame->pMenu, pGame->pWindow, &serverAddress);
     if (!gameRunning) { return gameRunning; }
 
-    clearWindow(pGame->pWindow);
-    renderText(pGame->pWindow, "Connecting to server...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
-    displayWindow(pGame->pWindow);
+    windowClearFrame(pGame->pWindow);
+    windowRenderText(pGame->pWindow, "Connecting to server...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
+    windowDisplayFrame(pGame->pWindow);
     gameRunning = clientConnectToServer(pGame->pClient, serverAddress);
     if (!gameRunning) { return gameRunning; }
 
-    clearWindow(pGame->pWindow);
-    renderText(pGame->pWindow, "Waiting for other players...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
-    displayWindow(pGame->pWindow);
+    windowClearFrame(pGame->pWindow);
+    windowRenderText(pGame->pWindow, "Waiting for other players...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
+    windowDisplayFrame(pGame->pWindow);
     gameRunning = clientWaitForServer(pGame->pClient);
     if (!gameRunning) { return gameRunning; }
 
@@ -223,7 +212,7 @@ int main(int argv, char** args) {
 
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
-    cameraSetRenderer(game.pCamera, getRenderer(game.pWindow));
+    cameraSetRenderer(game.pCamera, windowGetRenderer(game.pWindow));
     cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
 
     int gameState = GAME_CONNECTING;

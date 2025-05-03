@@ -13,7 +13,7 @@ struct menu {
 
 Menu *createMenu(RenderWindow *pWindow) {
     Menu *pMenu = malloc(sizeof(Menu));
-    pMenu->pMenuTexture = loadTexture(pWindow, "resources/menyButtonsHJ.png");
+    pMenu->pMenuTexture = windowLoadTexture(pWindow, "resources/menyButtonsHJ.png");
     if (pMenu->pMenuTexture == NULL) { return NULL; }
 
     for (int i = 0; i < MAX_MENU_BUTTONS; i++) {
@@ -85,11 +85,11 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
     pMenu->nrOfButtons = 2;
     createMenuButtons(pMenu, offsetInfo, displayMiddle, pWindow);
 
-    clearWindow(pWindow);
+    windowClearFrame(pWindow);
     for (int i = 0; i < pMenu->nrOfButtons; i++) {
-        renderMenu(pWindow, pMenu->pMenuTexture, pMenu->menuButtons, pMenu->menuPositions, pMenu->nrOfButtons);
+        windowRenderMenu(pWindow, pMenu->pMenuTexture, pMenu->menuButtons, pMenu->menuPositions, pMenu->nrOfButtons);
     }
-    displayWindow(pWindow);
+    windowDisplayFrame(pWindow);
 
     int connectionState = 0;
     int currentPosition = -1;
@@ -145,11 +145,11 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
             }
 
             inputHoldTimer(pInput);
-            clearWindow(pWindow);
+            windowClearFrame(pWindow);
             if (currentPosition > 0) {
-                renderText(pWindow, ipAddress, displayMiddle.x, displayMiddle.y);
+                windowRenderText(pWindow, ipAddress, displayMiddle.x, displayMiddle.y);
             }
-            displayWindow(pWindow);
+            windowDisplayFrame(pWindow);
         }
     }
 

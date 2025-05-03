@@ -188,10 +188,7 @@ void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicA
         if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
 
         StateData state;
-        PlayerInfo info = playerGetInfo(pPlayer);
-        state.position = info.position;
-        state.state = info.state;
-        state.tick = tickToProcess;
+        prepareStateData(&state, pPlayer, tickToProcess);
         pClient->stateBuffer[bufferIndex] = state;
         tickToProcess++;
     }

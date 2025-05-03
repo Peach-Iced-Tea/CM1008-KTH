@@ -105,7 +105,7 @@ void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
     return;
 }
 
-SDL_Texture *loadTexture(RenderWindow *pRenderWindow, char const *pFilePath) {
+SDL_Texture *windowLoadTexture(RenderWindow *pRenderWindow, char const *pFilePath) {
     SDL_Texture *pTexture = NULL;
     pTexture = IMG_LoadTexture(pRenderWindow->pRenderer, pFilePath);
     if (pTexture == NULL) {
@@ -116,13 +116,7 @@ SDL_Texture *loadTexture(RenderWindow *pRenderWindow, char const *pFilePath) {
     return pTexture;
 }
 
-void clearWindow(RenderWindow *pRenderWindow) {
-    SDL_RenderClear(pRenderWindow->pRenderer);
-    pRenderWindow->nrOfRenderedEntites = 0;
-    return;
-}
-
-void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
+void windowRenderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
     Vec2 halfSize = getHitboxHalfSize(pHitbox);
     Vec2 topLeftCorner;
     vectorSub(&topLeftCorner, getHitboxPosition(pHitbox), halfSize);
@@ -131,7 +125,7 @@ void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera con
     dst.y = topLeftCorner.y;
     dst.w = halfSize.x*2.0f;
     dst.h = halfSize.y*2.0f;
-    adjustToCamera(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pCamera, &dst, NULL);
 
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
     SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
@@ -139,7 +133,7 @@ void renderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera con
     return;
 }
 
-void renderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
+void windowRenderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
     for (int i = 0; i < nrOfButtons; i++) {
         SDL_Rect src = menuButtons[i];
         SDL_Rect dst = menuPosition[i];
@@ -150,7 +144,7 @@ void renderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect men
     return;
 }
 
-void renderText(RenderWindow *pRenderWindow, char const textToRender[], int x, int y) {
+void windowRenderText(RenderWindow *pRenderWindow, char const textToRender[], int x, int y) {
     SDL_Color color = { 255, 255, 255 };
     SDL_Surface *pSurface = TTF_RenderText_Solid(pRenderWindow->pFont, textToRender, color);
     if (pSurface == NULL) {
@@ -172,9 +166,9 @@ void renderText(RenderWindow *pRenderWindow, char const textToRender[], int x, i
     return;
 }
 
-void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera) {
+void windowRenderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera) {
     SDL_FRect dst = entityGetCurrentFrame(pEntity);
-    adjustToCamera(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pCamera, &dst, NULL);
 
     SDL_Rect src;
     src.w = 32;
@@ -183,51 +177,87 @@ void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera con
     src.y = 0;
 
     SDL_RenderCopyF(pRenderWindow->pRenderer, entityGetTexture(pEntity), &src, &dst);
-    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, entityGetHitbox(pEntity), pCamera); }
+    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, entityGetHitbox(pEntity), pCamera); }
     pRenderWindow->nrOfRenderedEntites++;
     return;
 }
 
-void renderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Camera const *pCamera) {
+void windowRenderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Camera const *pCamera) {
     TongueInfo info = tongueGetInfo(pTongue);
     SDL_FRect dst = info.tongueShaft;
-    adjustToCamera(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pCamera, &dst, NULL);
     float angle = info.angle * (180.0f/M_PI);
     dst.x -= dst.w*0.5f;
     dst.y -= dst.h*0.5f;
 
     SDL_RenderCopyExF(pRenderWindow->pRenderer, tongueGetShaftTexture(pTongue), NULL, &dst, angle, NULL, 0);
-    renderEntity(pRenderWindow, tongueGetTip(pTongue), pCamera);
+    windowRenderEntity(pRenderWindow, tongueGetTip(pTongue), pCamera);
     return;
 }
 
-void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera) {
+void windowRenderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera) {
     SDL_FRect dst = entityGetCurrentFrame(playerGetBody(pPlayer));
-    adjustToCamera(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pCamera, &dst, NULL);
 
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
         case RELEASE:
         case ROTATING:
-            renderTongue(pRenderWindow, playerGetTongue(pPlayer), pCamera);
+            windowRenderTongue(pRenderWindow, playerGetTongue(pPlayer), pCamera);
             break;
     }
 
     SDL_Rect src = playerGetInfo(pPlayer).sheetPosition;
     SDL_RenderCopyF(pRenderWindow->pRenderer, playerGetBodyTexture(pPlayer), &src, &dst);
-    if (pRenderWindow->renderHitboxes) { renderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
+    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
     return;
 
-} 
+}
 
-void displayWindow(RenderWindow *pRenderWindow) {
+void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera) {
+    int mapWidth = mapGetWidth(pMap);
+    int tileSize = 32;
+
+    for (size_t i = 0; i < mapGetLayerSize(pMap, 1); i++) {
+
+        int gid = mapGetLayerData(pMap, 1, i) - 15;
+
+        if (gid >= 0) {
+            int columns = atoi((char *)mapGetColumns(mapGetTileset(pMap)));
+            
+            int tileX = (gid % columns) * 32;
+            int tileY = (gid / columns) * 32;
+
+            mapSetTileSheetPosition(pMap, tileX, tileY);
+
+            int screenX = (i % mapWidth) * tileSize;
+            int screenY = (i / mapWidth) * tileSize;
+
+            SDL_Rect src = mapGetTileSheetPosition(pMap);
+
+            SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
+
+            cameraAdjustToViewport(pCamera, &dst, NULL);
+
+            SDL_RenderCopyF(pRenderWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
+        }
+    }
+}
+
+void windowClearFrame(RenderWindow *pRenderWindow) {
+    SDL_RenderClear(pRenderWindow->pRenderer);
+    pRenderWindow->nrOfRenderedEntites = 0;
+    return;
+}
+
+void windowDisplayFrame(RenderWindow *pRenderWindow) {
     SDL_RenderPresent(pRenderWindow->pRenderer);
     return;
 }
 
-void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera) {
-    adjustToCamera(pCamera, NULL, &pos1);
-    adjustToCamera(pCamera, NULL, &pos2);
+void windowDrawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera) {
+    cameraAdjustToViewport(pCamera, NULL, &pos1);
+    cameraAdjustToViewport(pCamera, NULL, &pos2);
     
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 0, 0, 255);
     SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x, pos1.y, pos2.x, pos2.y);
@@ -235,7 +265,7 @@ void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *p
     return;
 }
 
-SDL_Renderer *getRenderer(RenderWindow const *pRenderWindow) {
+SDL_Renderer *windowGetRenderer(RenderWindow const *pRenderWindow) {
     return pRenderWindow->pRenderer;
 }
 
@@ -252,55 +282,5 @@ void destroyRenderWindow(RenderWindow *pRenderWindow) {
     
     SDL_DestroyWindow(pRenderWindow->pWindow);
     SDL_DestroyRenderer(pRenderWindow->pRenderer);
-    return;
-}
-
-void renderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera) {
-
-    int mapWidth = getMapWidth(pMap);
-    int tileSize = 32;
-
-    for (size_t i = 0; i < getLayerSize(pMap, 1); i++) {
-
-        int gid = getLayerData(pMap, 1, i) - 15;
-
-        if (gid >= 0) {
-            int columns = atoi((char *)getColumns(getTileset(pMap)));
-            
-            int tileX = (gid % columns) * 32;
-            int tileY = (gid / columns) * 32;
-
-            setTileSheetPosition(pMap, tileX, tileY);
-
-            int screenX = (i % mapWidth) * tileSize;
-            int screenY = (i / mapWidth) * tileSize;
-
-            SDL_Rect src = getTileSheetPosition(pMap);
-
-            SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
-
-            adjustToCamera(pCamera, &dst, NULL);
-
-
-            SDL_RenderCopyF(pRenderWindow->pRenderer, getTileTextures(getTileset(pMap)), &src, &dst);
-        }
-    }
-}
-
-
-void renderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
-    Vec2 halfSize = getHitboxHalfSize(pHitbox);
-    Vec2 topLeftCorner;
-    vectorSub(&topLeftCorner, getHitboxPosition(pHitbox), halfSize);
-    SDL_FRect dst;
-    dst.x = topLeftCorner.x;
-    dst.y = topLeftCorner.y;
-    dst.w = halfSize.x*2.0f;
-    dst.h = halfSize.y*2.0f;
-    adjustToCamera(pCamera, &dst, NULL);
-
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
-    SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
     return;
 }

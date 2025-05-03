@@ -60,7 +60,7 @@ ClientMap *createClientMap(SDL_Renderer *pRenderer) {
 }
 
 
-void loadTileset(const char *filename, Tileset *devTiles) {
+void mapLoadTileset(const char *filename, Tileset *devTiles) {
     xmlDoc *doc = xmlReadFile(filename, NULL, 0);
     if (!doc) {
         fprintf(stderr, "Failed to parse %s\n", filename);
@@ -91,7 +91,7 @@ void loadTileset(const char *filename, Tileset *devTiles) {
     xmlFreeDoc(doc);
 }
 
-void loadClientMap(const char *path, ClientMap *pMap) {
+void mapLoadClient(const char *path, ClientMap *pMap) {
     json_error_t error;
     json_t *root = json_load_file(path, 0, &error);
 
@@ -103,8 +103,6 @@ void loadClientMap(const char *path, ClientMap *pMap) {
 	pMap->width = json_integer_value(json_object_get(root, "width"));
 	pMap->height = json_integer_value(json_object_get(root, "height"));
 
-
-    
     json_t *layers = json_object_get(root, "layers");
 
     for (int i = 0; i < MAX_LAYERS; i++) {
@@ -133,36 +131,36 @@ void loadClientMap(const char *path, ClientMap *pMap) {
     json_decref(root);
 }
 
-void setTileSheetPosition(ClientMap *pMap, int x, int y) {
+void mapSetTileSheetPosition(ClientMap *pMap, int x, int y) {
     pMap->tileSheetPosition.x = x;
     pMap->tileSheetPosition.y = y;
 }
 
-SDL_Texture *getTileTextures(Tileset *pTileset) {
+SDL_Texture *mapGetTileTextures(Tileset *pTileset) {
     return pTileset->tileSheet;
 }
 
-xmlChar *getColumns(Tileset *pTileset) {
+xmlChar *mapGetColumns(Tileset *pTileset) {
     return pTileset->columns;
 }
 
-int getMapWidth(ClientMap *pMap) {
+int mapGetWidth(ClientMap *pMap) {
     return pMap->width;
 }
 
-Tileset *getTileset(ClientMap *pMap) {
+Tileset *mapGetTileset(ClientMap *pMap) {
     return pMap->layerTiles;
 }
 
-size_t getLayerSize(ClientMap *pMap, int layer) {
+size_t mapGetLayerSize(ClientMap *pMap, int layer) {
     return pMap->layerSize[layer];
 }
 
-int getLayerData(ClientMap *pMap, int layer, int index) {
+int mapGetLayerData(ClientMap *pMap, int layer, int index) {
     return pMap->layerData[layer][index];
 }
 
-SDL_Rect getTileSheetPosition(ClientMap *pMap) {
+SDL_Rect mapGetTileSheetPosition(ClientMap *pMap) {
     return pMap->tileSheetPosition;
 }
 
@@ -200,7 +198,7 @@ ServerMap *createServerMap() {
     pMap->width = 0;
 }
 
-void loadServerMap(const char *path, ServerMap *pMap) {
+void mapLoadServer(const char *path, ServerMap *pMap) {
     json_error_t error;
     json_t *root = json_load_file(path, 0, &error);
 
@@ -242,15 +240,15 @@ void loadServerMap(const char *path, ServerMap *pMap) {
     json_decref(root);
 }
 
-int getMapWidth_Server(ServerMap *pMap) {
+int mapGetWidth_Server(ServerMap *pMap) {
     return pMap->width;
 }
 
-size_t getLayerSize_Server(ServerMap *pMap, int layer) {
+size_t mapGetLayerSize_Server(ServerMap *pMap, int layer) {
     return pMap->layerSize[layer];
 }
 
-int getLayerData_Server(ServerMap *pMap, int layer, int index) {
+int mapGetLayerData_Server(ServerMap *pMap, int layer, int index) {
     return pMap->layerData[layer][index];
 }
 

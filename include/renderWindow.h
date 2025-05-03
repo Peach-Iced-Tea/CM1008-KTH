@@ -26,47 +26,62 @@ Load a new SDL_Texture* using the pRenderer of the given RenderWindow.
 
 Accepts a relative file path or an absolute file path.
 */
-SDL_Texture *loadTexture(RenderWindow *pRenderWindow, char const *pFilePath);
+SDL_Texture *windowLoadTexture(RenderWindow *pRenderWindow, char const *pFilePath);
+
+/*
+
+*/
+void windowRenderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera);
+
+/*
+
+*/
+void windowRenderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons);
+
+/*
+
+*/
+void windowRenderText(RenderWindow *pRenderWindow, char const textToRender[], int x, int y);
+
+/*
+Renders the given Entity on the screen if it is visible inside the camera dimensions.
+*/
+void windowRenderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera);
+
+/*
+Renders the given Player on the screen if it is visible inside the camera dimensions.
+*/
+void windowRenderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera);
+
+/*
+
+*/
+void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera);
+
+/*
+
+*/
+void windowRenderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera);
 
 /*
 Clear the previous frame off of the given RenderWindow.
 
 Use this in preparation for the next displayWindow().
 */
-void clearWindow(RenderWindow *pRenderWindow);
-
-/*
-
-*/
-void renderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons);
-
-/*
-
-*/
-void renderText(RenderWindow *pRenderWindow, char const textToRender[], int x, int y);
-
-/*
-Renders the given Entity on the screen if it is visible inside the camera dimensions.
-*/
-void renderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera);
-
-/*
-Renders the given Player on the screen if it is visible inside the camera dimensions.
-*/
-void renderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera);
+void windowClearFrame(RenderWindow *pRenderWindow);
 
 /*
 Display the current latest frame inside the buffer of the given RenderWindow.
 */
-void displayWindow(RenderWindow *pRenderWindow);
+void windowDisplayFrame(RenderWindow *pRenderWindow);
 
 
-void drawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera);
+void windowDrawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera);
 
 /*
 Get the SDL_Renderer* from the given RenderWindow.
 */
-SDL_Renderer *getRenderer(RenderWindow const *pRenderWindow);
+SDL_Renderer *windowGetRenderer(RenderWindow const *pRenderWindow);
 
 /*
 
@@ -82,9 +97,3 @@ int windowGetHeight(RenderWindow const *pRenderWindow);
 Use this function to destroy the given RenderWindow pointer and free up memory.
 */
 void destroyRenderWindow(RenderWindow *pRenderWindow);
-
-
-void renderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera);
-
-
-void renderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera);

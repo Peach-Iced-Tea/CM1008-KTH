@@ -24,37 +24,37 @@ ClientMap *createClientMap(SDL_Renderer *pRenderer);
 ServerMap *createServerMap();
 
 
-void loadTileset(const char *filename, Tileset *devTiles);
+void mapLoadTileset(const char *filename, Tileset *devTiles);
 
-void loadClientMap(const char *path, ClientMap *pMap);
+void mapLoadClient(const char *path, ClientMap *pMap);
 
-void loadServerMap(const char *path, ServerMap *pMap);
+void mapLoadServer(const char *path, ServerMap *pMap);
 
 
-void setTileSheetPosition(ClientMap *pMap, int x, int y);
+void mapSetTileSheetPosition(ClientMap *pMap, int x, int y);
 
-SDL_Texture *getTileTextures(Tileset *pTileset);
+SDL_Texture *mapGetTileTextures(Tileset *pTileset);
 
-xmlChar *getColumns(Tileset *pTileset);
+xmlChar *mapGetColumns(Tileset *pTileset);
 
-int getMapWidth(ClientMap *pMap);
+int mapGetWidth(ClientMap *pMap);
 
-Tileset *getTileset(ClientMap *pMap);
+Tileset *mapGetTileset(ClientMap *pMap);
 
-size_t getLayerSize(ClientMap *pMap, int index);
+size_t mapGetLayerSize(ClientMap *pMap, int index);
 
-int getLayerData(ClientMap *pMap, int layer, int index);
+int mapGetLayerData(ClientMap *pMap, int layer, int index);
 
-SDL_Rect getTileSheetPosition(ClientMap *pMap);
+SDL_Rect mapGetTileSheetPosition(ClientMap *pMap);
 
 void destroyMap(ClientMap *pMap);
 
 //---------------Server-------------------------
 
-int getMapWidth_Server(ServerMap *pMap);
+int mapGetWidth_Server(ServerMap *pMap);
 
-size_t getLayerSize_Server(ServerMap *pMap, int layer);
+size_t mapGetLayerSize_Server(ServerMap *pMap, int layer);
 
-int getLayerData_Server(ServerMap *pMap, int layer, int index);
+int mapGetLayerData_Server(ServerMap *pMap, int layer, int index);
 
 void destroyMap_Server(ServerMap *pMap);
