@@ -37,54 +37,54 @@ $(TARGETCLIENT): $(CLIENTOBJECTS) $(LIBOBJECTS)
 	$(CC) -o $(TARGETCLIENT).exe $(CLIENTOBJECTS) $(LIBOBJECTS) $(LDFLAGS)
 
 $(OBJDIR)/main.o: $(CLIENTSRC)/main.c $(CLIENTINC)/main.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/main.o $(CLIENTSRC)/main.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/renderWindow.o: $(CLIENTSRC)/renderWindow.c $(CLIENTINC)/renderWindow.h 
-	$(CC) $(CFLAGS) -o $(OBJDIR)/renderWindow.o $(CLIENTSRC)/renderWindow.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/camera.o: $(CLIENTSRC)/camera.c $(CLIENTINC)/camera.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/camera.o $(CLIENTSRC)/camera.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/client.o: $(CLIENTSRC)/client.c $(CLIENTINC)/client.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/client.o $(CLIENTSRC)/client.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/menu.o: $(CLIENTSRC)/menu.c $(CLIENTINC)/menu.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/menu.o $(CLIENTSRC)/menu.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 
 $(TARGETSERVER): $(SERVEROBJECTS) $(LIBOBJECTS)
 	$(CC) -o $(TARGETSERVER).exe $(SERVEROBJECTS) $(LIBOBJECTS) $(LDFLAGS)
 
 $(OBJDIR)/server.o: $(SERVERSRC)/server.c $(SERVERINC)/server.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/server.o $(SERVERSRC)/server.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 
 $(OBJDIR)/entity.o: $(LIBSRC)/entity.c $(LIBINC)/entity.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/entity.o $(LIBSRC)/entity.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/vmath.o: $(LIBSRC)/vmath.c $(LIBINC)/vmath.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/vmath.o $(LIBSRC)/vmath.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/physics.o: $(LIBSRC)/physics.c $(LIBINC)/physics.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/physics.o $(LIBSRC)/physics.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/utils.o: $(LIBSRC)/utils.c $(LIBINC)/utils.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/utils.o $(LIBSRC)/utils.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/player.o: $(LIBSRC)/player.c $(LIBINC)/player.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/player.o $(LIBSRC)/player.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/input.o: $(LIBSRC)/input.c $(LIBINC)/input.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/input.o $(LIBSRC)/input.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/tongue.o: $(LIBSRC)/tongue.c $(LIBINC)/tongue.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/tongue.o $(LIBSRC)/tongue.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/networkData.o: $(LIBSRC)/networkData.c $(LIBINC)/networkData.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/networkData.o $(LIBSRC)/networkData.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/mapParser.o: $(LIBSRC)/mapParser.c $(LIBINC)/mapParser.h
-	$(CC) $(CFLAGS) -o $(OBJDIR)/mapParser.o $(LIBSRC)/mapParser.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 
 clean:
