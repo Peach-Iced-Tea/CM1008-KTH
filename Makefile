@@ -13,10 +13,12 @@ ifeq ($(OS),Windows_NT)
 	INCLUDE = -IC:/msys64/mingw64/include/SDL2 -IC:/msys64/mingw64/include/libxml2 -I$(CLIENTINC) -I$(SERVERINC) -I$(LIBINC)
 	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -mwindows -lm -mconsole -lxml2 -ljansson
 	DELCMD = del
+	DELOBJ = ".\obj\"
 else
 	INCLUDE = -I/usr/include/libxml2 -I$(CLIENTINC) -I$(SERVERINC) -I$(LIBINC)
 	LDFLAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_net -lm -lxml2 -ljansson
 	DELCMD = rm
+	DELOBJ = ./obj/
 endif
 
 CFLAGS = -g $(INCLUDE) -c
@@ -26,6 +28,10 @@ TARGETSERVER = server
 CLIENTOBJECTS = $(OBJDIR)/main.o $(OBJDIR)/renderWindow.o $(OBJDIR)/camera.o $(OBJDIR)/client.o $(OBJDIR)/menu.o
 SERVEROBJECTS = $(OBJDIR)/server.o
 LIBOBJECTS = $(OBJDIR)/entity.o $(OBJDIR)/vmath.o $(OBJDIR)/physics.o $(OBJDIR)/utils.o $(OBJDIR)/input.o $(OBJDIR)/player.o $(OBJDIR)/tongue.o $(OBJDIR)/networkData.o $(OBJDIR)/mapParser.o
+
+
+all: $(TARGETCLIENT) $(TARGETSERVER)
+
 
 $(TARGETCLIENT): $(CLIENTOBJECTS) $(LIBOBJECTS)
 	$(CC) -o $(TARGETCLIENT).exe $(CLIENTOBJECTS) $(LIBOBJECTS) $(LDFLAGS)
@@ -82,5 +88,5 @@ $(OBJDIR)/mapParser.o: $(LIBSRC)/mapParser.c $(LIBINC)/mapParser.h
 
 
 clean:
-	$(DELCMD) *.o
+	$(DELCMD) $(DELOBJ)*.o
 	$(DELCMD) *.exe
