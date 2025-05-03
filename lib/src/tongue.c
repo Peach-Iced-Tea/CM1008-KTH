@@ -15,11 +15,11 @@ struct tongue {
 
 Tongue *createTongue(Vec2 position, SDL_Renderer *pRenderer) {
     Tongue *pTongue = malloc(sizeof(Tongue));
-    SDL_Texture *pTexture = IMG_LoadTexture(pRenderer, "resources/tongueTip.png");
+    SDL_Texture *pTexture = IMG_LoadTexture(pRenderer, "lib/resources/tongueTip.png");
     pTongue->pTip = createEntity(position, pTexture, ENTITY_TONGUE, HITBOX_FULL_BLOCK);
     if (pTongue->pTip == NULL) { return NULL; }
 
-    pTongue->pTongueTexture = IMG_LoadTexture(pRenderer, "resources/tongueShaft.png");
+    pTongue->pTongueTexture = IMG_LoadTexture(pRenderer, "lib/resources/tongueShaft.png");
     pTongue->velocity = createVector(0.0f, 0.0f);
     pTongue->state = NEUTRAL;
     pTongue->shaftRect.x = 0.0f;

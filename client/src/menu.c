@@ -13,7 +13,7 @@ struct menu {
 
 Menu *createMenu(RenderWindow *pWindow) {
     Menu *pMenu = malloc(sizeof(Menu));
-    pMenu->pMenuTexture = windowLoadTexture(pWindow, "resources/menyButtonsHJ.png");
+    pMenu->pMenuTexture = windowLoadTexture(pWindow, "lib/resources/menyButtonsHJ.png");
     if (pMenu->pMenuTexture == NULL) { return NULL; }
 
     for (int i = 0; i < MAX_MENU_BUTTONS; i++) {

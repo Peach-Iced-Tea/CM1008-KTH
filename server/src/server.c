@@ -25,7 +25,7 @@ int initServer(Server *pServer) {
 
     pServer->pMap = createServerMap();
     if (pServer->pMap == NULL) { return 1; }
-    mapLoadServer("../resources/mapData/map.tmj", pServer->pMap);
+    mapLoadServer("lib/resources/mapData/map.tmj", pServer->pMap);
 
     int mapWidth = mapGetWidth_Server(pServer->pMap);
     int tileSize = 32;

@@ -14,14 +14,26 @@ else
 endif
 
 CFLAGS = -g $(INCLUDE) -c
-TARGET = server.exe
+TARGET = Hopless.exe
 
 
-$(TARGET): server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o mapParser.o
-	$(CC) -o $(TARGET) server.o entity.o vmath.o physics.o utils.o player.o input.o tongue.o networkData.o mapParser.o $(LDFLAGS)
+$(TARGET): main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o menu.o tongue.o networkData.o mapParser.o
+	$(CC) -o $(TARGET) main.o renderWindow.o entity.o vmath.o physics.o camera.o utils.o player.o input.o client.o menu.o tongue.o networkData.o mapParser.o $(LDFLAGS)
 
-server.o: $(SRCDIR)/server.c $(INCDIR)/server.h
-	$(CC) $(CFLAGS) $(SRCDIR)/server.c
+main.o: $(SRCDIR)/main.c $(INCDIR)/main.h
+	$(CC) $(CFLAGS) $(SRCDIR)/main.c
+
+renderWindow.o: $(SRCDIR)/renderWindow.c $(INCDIR)/renderWindow.h 
+	$(CC) $(CFLAGS) $(SRCDIR)/renderWindow.c
+
+camera.o: $(SRCDIR)/camera.c $(INCDIR)/camera.h
+	$(CC) $(CFLAGS) $(SRCDIR)/camera.c
+
+client.o: $(SRCDIR)/client.c $(INCDIR)/client.h
+	$(CC) $(CFLAGS) $(SRCDIR)/client.c
+
+menu.o: $(SRCDIR)/menu.c $(INCDIR)/menu.h
+	$(CC) $(CFLAGS) $(SRCDIR)/menu.c
 
 
 entity.o: $(LIBSRC)/entity.c $(LIBINC)/entity.h

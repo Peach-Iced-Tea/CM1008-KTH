@@ -37,10 +37,10 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     if (pRenderer != NULL) {
         switch (id) {
             case PLAYER_1:
-                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer.png");
+                pTexture = IMG_LoadTexture(pRenderer, "lib/resources/spriteSheetPlayer.png");
                 break;
             case PLAYER_2:
-                pTexture = IMG_LoadTexture(pRenderer, "resources/spriteSheetPlayer.png");
+                pTexture = IMG_LoadTexture(pRenderer, "lib/resources/spriteSheetPlayer.png");
                 break;
         }
 
