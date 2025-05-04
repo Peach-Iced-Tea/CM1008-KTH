@@ -25,14 +25,12 @@ CFLAGS = -g $(INCLUDE) -c
 TARGETCLIENT = hopless
 TARGETSERVER = server
 
-CLIENTOBJECTS = $(OBJDIR)/main.o $(OBJDIR)/renderWindow.o $(OBJDIR)/camera.o $(OBJDIR)/client.o $(OBJDIR)/menu.o
-SERVEROBJECTS = $(OBJDIR)/server.o
-LIBOBJECTS = $(OBJDIR)/entity.o $(OBJDIR)/vmath.o $(OBJDIR)/physics.o $(OBJDIR)/utils.o $(OBJDIR)/input.o $(OBJDIR)/player.o $(OBJDIR)/tongue.o $(OBJDIR)/networkData.o $(OBJDIR)/mapParser.o
+CLIENTOBJECTS = $(patsubst $(CLIENTSRC)/%.c, $(OBJDIR)/%.o, $(wildcard $(CLIENTSRC)/*.c))
+SERVEROBJECTS = $(patsubst $(SERVERSRC)/%.c, $(OBJDIR)/%.o, $(wildcard $(SERVERSRC)/*.c))
+LIBOBJECTS = $(patsubst $(LIBSRC)/%.c, $(OBJDIR)/%.o, $(wildcard $(LIBSRC)/*.c))
 
 
-all: $(TARGETCLIENT) $(TARGETSERVER)
-
-
+# Client source files
 $(TARGETCLIENT): $(CLIENTOBJECTS) $(LIBOBJECTS)
 	$(CC) -o $(TARGETCLIENT).exe $(CLIENTOBJECTS) $(LIBOBJECTS) $(LDFLAGS)
 
@@ -52,6 +50,7 @@ $(OBJDIR)/menu.o: $(CLIENTSRC)/menu.c $(CLIENTINC)/menu.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 
+# Server source files
 $(TARGETSERVER): $(SERVEROBJECTS) $(LIBOBJECTS)
 	$(CC) -o $(TARGETSERVER).exe $(SERVEROBJECTS) $(LIBOBJECTS) $(LDFLAGS)
 
@@ -59,6 +58,7 @@ $(OBJDIR)/server.o: $(SERVERSRC)/server.c $(SERVERINC)/server.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 
+# Library source files
 $(OBJDIR)/entity.o: $(LIBSRC)/entity.c $(LIBINC)/entity.h
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -85,6 +85,9 @@ $(OBJDIR)/networkData.o: $(LIBSRC)/networkData.c $(LIBINC)/networkData.h
 
 $(OBJDIR)/mapParser.o: $(LIBSRC)/mapParser.c $(LIBINC)/mapParser.h
 	$(CC) $(CFLAGS) -o $@ $<
+
+
+all: $(TARGETCLIENT) $(TARGETSERVER)
 
 
 clean:
