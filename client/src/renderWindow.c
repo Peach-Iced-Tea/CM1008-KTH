@@ -117,6 +117,8 @@ SDL_Texture *windowLoadTexture(RenderWindow *pRenderWindow, char const *pFilePat
 }
 
 void windowRenderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
+    if (!pRenderWindow->renderHitboxes) { return; }
+
     Vec2 halfSize = getHitboxHalfSize(pHitbox);
     Vec2 topLeftCorner;
     vectorSub(&topLeftCorner, getHitboxPosition(pHitbox), halfSize);

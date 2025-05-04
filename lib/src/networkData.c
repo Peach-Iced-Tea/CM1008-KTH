@@ -16,7 +16,9 @@ void prepareStateData(StateData *pData, Player *pPlayer, int tick) {
     pData->state = info.state;
     pData->sheetPosition.x = info.sheetPosition.x;
     pData->sheetPosition.y = info.sheetPosition.y;
-    pData->tick = tick;
+    if (tick >= 0) {
+        pData->tick = tick;
+    }
     return;
 }
 
@@ -28,6 +30,8 @@ void prepareEntityData(EntityData *pData, Entity *pEntity, int entityID, int tic
         pData->position = createVector(0.0f, 0.0f);
     }
     pData->entityID = entityID;
-    pData->tick = tick;
+    if (tick >= 0) {
+        pData->tick = tick;
+    }
     return;
 }

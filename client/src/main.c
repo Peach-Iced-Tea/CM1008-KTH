@@ -203,9 +203,6 @@ int main(int argv, char** args) {
         cleanUp(&game);
         return 1;
     }
- 
-    Vec2 ref;
-    float alpha;
 
     const float timestep = 1.0f/TICK_RATE;
     Uint64 lastTime = SDL_GetTicks64();

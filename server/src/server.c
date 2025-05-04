@@ -221,6 +221,10 @@ int main(int argv, char** args) {
                 if (SDL_PollEvent(&event)) { if (event.type == SDL_QUIT) { server.state = SERVER_CLOSING; } }
 
                 while (accumulator >= timestep) {
+                    for (int i = 0; i < MAX_PLAYERS; i++) {
+                        prepareStateData(&(server.payload.players[i]), server.players[i], -1);
+                    }
+                    
                     sendDataToClients(&server);
                     while (SDLNet_UDP_Recv(server.socket, server.pPacket) == 1) {
                         memcpy(&clientPayload, server.pPacket->data, server.pPacket->len);
