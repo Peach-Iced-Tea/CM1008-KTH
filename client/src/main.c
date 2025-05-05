@@ -245,18 +245,18 @@ int main(int argv, char** args) {
                 break;
             case GAME_RUNNING:
                 accumulator += deltaTime;
-        
-                Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
-        
                 if (checkUserInput(game.pInput) == 0) {
                     gameState = GAME_CLOSING;
                     continue;
                 }
 
                 playerHandleInput(pPlayer, game.pInput);
-                crosshairHandleInput(game.pCrosshair, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
+                crosshairHandleInput(game.pCrosshair, game.pInput);
+
+                Vec2 mousePosition = cameraGetMousePosition(game.pCamera);
+                crosshairUpdate(game.pCrosshair, mousePosition);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
                 
                 while (accumulator >= timestep) {    
@@ -267,7 +267,6 @@ int main(int argv, char** args) {
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);
-                    crosshairUpdate(game.pCrosshair, entityGetMidPoint(playerGetBody(pPlayer)));
         
                     accumulator -= timestep;
                 }
