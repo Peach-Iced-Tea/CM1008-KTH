@@ -16,7 +16,7 @@ typedef enum {
 } Keys;
 
 typedef enum {
-    MOUSE_LEFT, MOUSE_RIGHT,
+    MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MOTION_X, MOUSE_MOTION_Y,
     MAX_MOUSE_INPUTS
 } Mouse;
 

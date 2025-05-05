@@ -49,6 +49,9 @@ $(OBJDIR)/client.o: $(CLIENTSRC)/client.c $(CLIENTINC)/client.h
 $(OBJDIR)/menu.o: $(CLIENTSRC)/menu.c $(CLIENTINC)/menu.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+$(OBJDIR)/mouse.o: $(CLIENTSRC)/mouse.c $(CLIENTINC)/mouse.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 
 # Server source files
 $(TARGETSERVER): $(SERVEROBJECTS) $(LIBOBJECTS)

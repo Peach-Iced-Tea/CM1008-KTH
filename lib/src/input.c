@@ -130,6 +130,13 @@ int mouseInputs(Input *pInputs, SDL_Event event) {
             break;
     }
 
+    switch (event.type) {
+        case SDL_MOUSEMOTION:
+            pInputs->mouse[MOUSE_MOTION_X] += event.motion.xrel;
+            pInputs->mouse[MOUSE_MOTION_Y] += event.motion.yrel;
+            break;
+    }
+
     return pressedKey;
 }
 
@@ -156,7 +163,7 @@ bool checkUserInput(Input *pInputs) {
                     break;
             }
         }
-        else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+        else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEMOTION) {
             int pressedKey = mouseInputs(pInputs, event);
 
             if (pressedKey == -1) { continue; }
@@ -185,7 +192,14 @@ void inputHoldTimer(Input *pInputs) {
     for (int i = 0; i < MAX_MOUSE_INPUTS; i++) {
         if (!pInputs->mouse[i]) { continue; }
 
-        if (pInputs->mouse[i] < KEY_STATE_HOLD) { pInputs->mouse[i]++; }
+        switch (i) {
+            case MOUSE_MOTION_X:
+            case MOUSE_MOTION_Y:
+                if (pInputs->mouse[i] != 0) { pInputs->mouse[i] = 0; }
+                break;
+            default:
+                if (pInputs->mouse[i] < KEY_STATE_HOLD) { pInputs->mouse[i]++; }
+        }
     }
 
     return;

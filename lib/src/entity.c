@@ -21,6 +21,10 @@ Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int entityType, int h
             pEntity->currentFrame.w = 12.0f;
             pEntity->currentFrame.h = 12.0f;
             break;
+        case ENTITY_CROSSHAIR:
+            pEntity->currentFrame.w = 12.0f;
+            pEntity->currentFrame.h = 12.0f;
+            break;
         default:
             pEntity->currentFrame.w = 32.0f;
             pEntity->currentFrame.h = 32.0f;

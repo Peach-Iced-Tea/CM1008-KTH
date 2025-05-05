@@ -6,6 +6,7 @@ void cleanUp(Game *pGame) {
         if (pGame->players[i]) { destroyPlayer(pGame->players[i]); }
     }
 
+    if (pGame->pCrosshair) { destroyCrosshair(pGame->pCrosshair); }
     if (pGame->pCamera) { destroyCamera(pGame->pCamera); }
     if (pGame->pWindow) { destroyRenderWindow(pGame->pWindow); }
     if (pGame->pMenu) { destroyMenu(pGame->pMenu); }
@@ -64,6 +65,9 @@ int initGame(Game *pGame) {
             if (arrayAddObject(pGame->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
         }
     }
+
+    pGame->pCrosshair = createCrosshair(windowGetRenderer(pGame->pWindow), entityGetMidPoint(playerGetBody(pGame->players[0])));
+
     return 0;
 }
 
@@ -107,6 +111,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
     }
 
+    windowRenderCrosshair(pGame->pWindow, pGame->pCrosshair, pGame->pCamera);
     windowDisplayFrame(pGame->pWindow);
     return;
 }
@@ -241,7 +246,7 @@ int main(int argv, char** args) {
             case GAME_RUNNING:
                 accumulator += deltaTime;
         
-                Vec2 mousePosition = cameraGetMousePosition(game.pCamera);
+                Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
         
                 if (checkUserInput(game.pInput) == 0) {
                     gameState = GAME_CLOSING;
@@ -249,6 +254,7 @@ int main(int argv, char** args) {
                 }
 
                 playerHandleInput(pPlayer, game.pInput);
+                crosshairHandleInput(game.pCrosshair, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
@@ -261,6 +267,7 @@ int main(int argv, char** args) {
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);
+                    crosshairUpdate(game.pCrosshair, entityGetMidPoint(playerGetBody(pPlayer)));
         
                     accumulator -= timestep;
                 }

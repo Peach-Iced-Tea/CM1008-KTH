@@ -246,6 +246,16 @@ void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera c
     }
 }
 
+void windowRenderCrosshair(RenderWindow *pRenderWindow, Crosshair const *pCrosshair, Camera *pCamera) {
+    Entity *pEntity = crosshairGetBody(pCrosshair);
+    SDL_Rect src = crosshairGetSheetPosition(pCrosshair);
+    SDL_FRect dst = entityGetCurrentFrame(pEntity);
+    cameraAdjustToViewport(pCamera, &dst, NULL);
+
+    SDL_RenderCopyF(pRenderWindow->pRenderer, entityGetTexture(pEntity), &src, &dst);
+    return;
+}
+
 void windowClearFrame(RenderWindow *pRenderWindow) {
     SDL_RenderClear(pRenderWindow->pRenderer);
     pRenderWindow->nrOfRenderedEntites = 0;

@@ -8,6 +8,7 @@
 #include "camera.h"
 #include "player.h"
 #include "mapParser.h"
+#include "mouse.h"
 
 
 typedef struct renderWindow RenderWindow;
@@ -61,7 +62,7 @@ void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera c
 /*
 
 */
-void windowRenderDynamicHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera);
+void windowRenderCrosshair(RenderWindow *pRenderWindow, Crosshair const *pCrosshair, Camera *pCamera);
 
 /*
 Clear the previous frame off of the given RenderWindow.
