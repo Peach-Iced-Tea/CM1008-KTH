@@ -8,7 +8,7 @@ Crosshair *createCrosshair(SDL_Renderer *renderer, Vec2 const position);
 
 void crosshairHandleInput(Crosshair *crosshair, Input *input);
 
-void crosshairUpdate(Crosshair *crosshair, Vec2 mousePosition);
+void crosshairUpdate(Crosshair *crosshair, Vec2 referencePosition);
 
 Entity *crosshairGetBody(Crosshair const *pCrosshair);
 
