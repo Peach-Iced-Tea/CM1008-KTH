@@ -65,8 +65,8 @@ int initGame(Game *pGame) {
         }
     }
     SDL_Texture *pTexture1;
-    pTexture1 = IMG_LoadTexture(windowGetRenderer(pGame->pWindow), "lib/resources/purpg.png");
-    pGame->pSpikes = createEntity(createVector(480,1152),pTexture1,10,HITBOX_OBSTACLE);
+    pTexture1 = IMG_LoadTexture(windowGetRenderer(pGame->pWindow), "lib/resources/powerSpike.png");
+    pGame->pSpikes = createEntity(createVector(416,1088),pTexture1,10,HITBOX_OBSTACLE);
 
     return 0;
 }
@@ -106,6 +106,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     }
 
     windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
+    windowRenderEntity(pGame->pWindow, pGame->pSpikes, pGame->pCamera);
     
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
@@ -256,9 +257,11 @@ int main(int argv, char** args) {
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
-
-                windowRenderEntity(game.pWindow, game.pSpikes, game.pCamera);
                 
+                if (playerCheckCollision(pPlayer, entityGetHitbox(game.pSpikes))){
+                    playerSetPosition(pPlayer, createVector(32, 32));
+                };
+
                 while (accumulator >= timestep) {    
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);

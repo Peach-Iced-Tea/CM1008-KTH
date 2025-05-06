@@ -18,4 +18,5 @@ typedef struct {
     int currentTick;
     ServerMap *pMap;
     DynamicArray *pHitforms;
+    DynamicArray *pObstacles;
 } Server;
