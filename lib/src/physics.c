@@ -37,6 +37,15 @@ Hitbox *createHalfBlockHitbox(Vec2 const position, float w, float h) {
     return pHitbox;
 }
 
+Hitbox *createObstacleHitbox(Vec2 const position, float w, float h) {
+    Hitbox *pHitbox = malloc(sizeof(Hitbox));
+    w *= 0.5f;
+    h *= 0.25f;
+    pHitbox->position = createVector(position.x+w, position.y+(h * 3));
+    pHitbox->halfSize = createVector(w, h);
+    return pHitbox;
+}
+
 Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType) {
     Hitbox *pHitbox = NULL;
     switch (hitboxType) {
@@ -49,6 +58,8 @@ Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType) {
         case HITBOX_HALF_BLOCK:
             pHitbox = createHalfBlockHitbox(position, w, h);
             break;
+        case HITBOX_OBSTACLE:
+            pHitbox = createObstacleHitbox(position, w, h);
         case HITBOX_NONE:
             break;
     }

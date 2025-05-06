@@ -8,6 +8,7 @@
 #define HITBOX_PLAYER 1 // Create a hitbox specifically designated for a player Entity.
 #define HITBOX_FULL_BLOCK 2 // Create a hitbox that is exactly the same size as the sprite/image.
 #define HITBOX_HALF_BLOCK 3 // Create a hitbox that is half the height of the sprite/image height.
+#define HITBOX_OBSTACLE 4
 
 #define OBJECT_IS_NORTH 1   // The object is above the reference.
 #define OBJECT_IS_SOUTH 2   // The object is below the reference.

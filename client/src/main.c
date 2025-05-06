@@ -64,6 +64,10 @@ int initGame(Game *pGame) {
             if (arrayAddObject(pGame->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
         }
     }
+    SDL_Texture *pTexture1;
+    pTexture1 = IMG_LoadTexture(windowGetRenderer(pGame->pWindow), "lib/resources/purpg.png");
+    pGame->pSpikes = createEntity(createVector(480,1152),pTexture1,10,HITBOX_OBSTACLE);
+
     return 0;
 }
 
@@ -252,6 +256,8 @@ int main(int argv, char** args) {
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
+
+                windowRenderEntity(game.pWindow, game.pSpikes, game.pCamera);
                 
                 while (accumulator >= timestep) {    
                     // Add physics related calculations here...
