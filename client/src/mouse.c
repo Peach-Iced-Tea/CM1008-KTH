@@ -2,24 +2,23 @@
 
 #define CROSSHAIR_WIDTH 32
 #define CROSSHAIR_HEIGHT 32
-#define CROSSHAIR_MAX_DISTANCE 256.0f
+#define CROSSHAIR_MAX_DISTANCE 192.0f
 
 struct crosshair {
     Entity *pBody;
     Vec2 relativePosition;
+    Vec2 velocity;
     SDL_Texture *pCrosshairTexture;
     SDL_Rect sheetPosition;
-    Vec2 velocity;
 };
 
 Crosshair *createCrosshair(SDL_Renderer *pRenderer, Vec2 const position) {
     Crosshair *pCrosshair = malloc(sizeof(Crosshair));
     pCrosshair->pCrosshairTexture = IMG_LoadTexture(pRenderer, "lib/resources/crosshair.png");
     pCrosshair->pBody = createEntity(position, pCrosshair->pCrosshairTexture, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK);
-    pCrosshair->relativePosition.x = 0.0f;
-    pCrosshair->relativePosition.y = 0.0f;
-
+    pCrosshair->relativePosition = createVector(0.0f, 0.0f);
     pCrosshair->velocity = createVector(0.0f, 0.0f);
+
     pCrosshair->sheetPosition.x = 0;
     pCrosshair->sheetPosition.y = 0;
     pCrosshair->sheetPosition.w = CROSSHAIR_WIDTH;
@@ -32,6 +31,7 @@ Crosshair *createCrosshair(SDL_Renderer *pRenderer, Vec2 const position) {
 void crosshairHandleInput(Crosshair *pCrosshair, Input *pInput) {
     pCrosshair->velocity = createVector((float)getMouseState(pInput, MOUSE_MOTION_X), (float)getMouseState(pInput, MOUSE_MOTION_Y));
     vectorAdd(&(pCrosshair->relativePosition), pCrosshair->relativePosition, pCrosshair->velocity);
+    Vec2 position = entityGetMidPoint(pCrosshair->pBody);
     if (pCrosshair->relativePosition.x < -CROSSHAIR_MAX_DISTANCE) {
         pCrosshair->relativePosition.x = -CROSSHAIR_MAX_DISTANCE;
     }
@@ -59,7 +59,7 @@ void crosshairHandleInput(Crosshair *pCrosshair, Input *pInput) {
     return;
 }
 
-void crosshairUpdate(Crosshair *pCrosshair, Vec2 referencePosition) {
+void crosshairUpdatePosition(Crosshair *pCrosshair, Vec2 referencePosition) {
     Vec2 position;
     vectorAdd(&position, referencePosition, pCrosshair->relativePosition);
     entitySetPosition(pCrosshair->pBody, position);

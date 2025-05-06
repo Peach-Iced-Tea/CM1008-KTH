@@ -256,7 +256,7 @@ bool cameraEntityIsVisible(Camera const *pCamera, SDL_FRect const entity) {
     bool isVisible = true;
     float offsetY = pCamera->tracker.offsetY;
     float deltaDistanceX = fabsf(pCamera->position.x-entity.x);
-    float deltaDistanceY = fabsf((pCamera->position.y-offsetY)-entity.y);
+    float deltaDistanceY = fabsf((pCamera->position.y)-entity.y);
 
     if (deltaDistanceX > pCamera->logicalWidth*0.5f+entity.w) {
         isVisible = false;
@@ -277,14 +277,14 @@ void cameraAdjustToViewport(Camera const *pCamera, SDL_FRect *pDst, Vec2 *pVecto
 
     if (pDst != NULL) {
         pDst->x = (pDst->x - cameraPosition.x)*globalScale + offsetWidth;
-        pDst->y = (pDst->y - cameraPosition.y+offsetY)*globalScale + offsetHeight;
+        pDst->y = (pDst->y - cameraPosition.y)*globalScale + offsetHeight;
         pDst->w *= globalScale;
         pDst->h *= globalScale;
     }
 
     if (pVector != NULL) {
         pVector->x = (pVector->x - cameraPosition.x)*globalScale + offsetWidth;
-        pVector->y = (pVector->y - cameraPosition.y+offsetY)*globalScale + offsetHeight;
+        pVector->y = (pVector->y - cameraPosition.y)*globalScale + offsetHeight;
     }
 
     return;
@@ -298,7 +298,7 @@ Vec2 cameraGetMousePosition(Camera const *pCamera) {
     float cameraOffsetY = ((float)y - (float)pCamera->display.height*0.5f)/(pCamera->currentZoom * pCamera->display.globalScale);
     float offsetY = pCamera->tracker.offsetY;
     mousePosition.x = pCamera->position.x + cameraOffsetX;
-    mousePosition.y = pCamera->position.y-offsetY + cameraOffsetY;
+    mousePosition.y = pCamera->position.y + cameraOffsetY;
     return mousePosition;
 }
 

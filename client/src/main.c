@@ -245,21 +245,27 @@ int main(int argv, char** args) {
                 break;
             case GAME_RUNNING:
                 accumulator += deltaTime;
-        
-                Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
-        
                 if (checkUserInput(game.pInput) == 0) {
                     gameState = GAME_CLOSING;
                     continue;
                 }
 
                 playerHandleInput(pPlayer, game.pInput);
-                crosshairHandleInput(game.pCrosshair, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
+                crosshairHandleInput(game.pCrosshair, game.pInput);
+                crosshairUpdatePosition(game.pCrosshair, entityGetMidPoint(playerGetBody(pPlayer)));
+
+                Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
+                switch (playerGetInfo(pPlayer).state) {
+                    case ROTATING:
+                        float targetAngle = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), crosshairGetPosition(game.pCrosshair));
+                        playerCalculateRotation(pPlayer, targetAngle);
+                        break;
+                }
                 
-                while (accumulator >= timestep) {    
+                while (accumulator >= timestep) {
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
                     handleTick(&game, pTeammate);
@@ -267,7 +273,6 @@ int main(int argv, char** args) {
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);
-                    crosshairUpdate(game.pCrosshair, entityGetMidPoint(playerGetBody(pPlayer)));
         
                     accumulator -= timestep;
                 }

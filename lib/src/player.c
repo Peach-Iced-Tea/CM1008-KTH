@@ -25,6 +25,7 @@ struct player {
     int jumpTimer;
     float radius;
     float referenceAngle;
+    float targetAngle;
     SDL_Rect sheetPosition;
     Entity *pGrabbedEntity;
 };
@@ -60,6 +61,7 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     pPlayer->jumpTimer = 0;
     pPlayer->radius = 0.0f;
     pPlayer->referenceAngle = 0.0f;
+    pPlayer->targetAngle = 0.0f;
 
     pPlayer->sheetPosition.x = 0;
     pPlayer->sheetPosition.y = 0;
@@ -124,15 +126,6 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         default:
             pPlayer->velocity.y = movement.y;
             break;
-    }
-
-    pPlayer->rotateVelocity = 0.0f;
-    if (getKeyState(pInputs, ROTATE_LEFT_INPUT)) {
-        pPlayer->rotateVelocity = -ROTATION_SPEED;
-    }
-
-    if (getKeyState(pInputs, ROTATE_RIGHT_INPUT)) {
-        pPlayer->rotateVelocity += ROTATION_SPEED;
     }
 
     if (getMouseState(pInputs, MOUSE_LEFT)) {
@@ -290,6 +283,13 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
         pPlayer->referenceAngle += 2*M_PI;
     }
 
+    if (pPlayer->rotateVelocity > 0.0f) {
+        if (pPlayer->referenceAngle > pPlayer->targetAngle) { pPlayer->referenceAngle = pPlayer->targetAngle; }
+    }
+    else if (pPlayer->rotateVelocity < 0.0f) {
+        if (pPlayer->referenceAngle < pPlayer->targetAngle) { pPlayer->referenceAngle = pPlayer->targetAngle; }
+    }
+
     newPosition.x =(entityGetMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
     newPosition.y =(entityGetMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
 
@@ -331,6 +331,42 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             tongueSetPosition(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
     }
 
+    return;
+}
+
+void playerCalculateRotation(Player *pPlayer, float targetAngle) {
+    if (pPlayer->state != ROTATING) { return; }
+
+    if (pPlayer->referenceAngle == targetAngle) {
+        pPlayer->rotateVelocity = 0.0f;
+        pPlayer->targetAngle = 0.0f;
+        return;
+    }
+
+    //if (pPlayer->rotateVelocity != 0.0f) { return; }
+    float rotateLeft = 0.0f, rotateRight = 0.0f;
+    if (targetAngle < pPlayer->referenceAngle) {
+        float rotateLeft = pPlayer->referenceAngle - targetAngle;
+        float rotateRight = (targetAngle+2*M_PI) - pPlayer->referenceAngle;
+        if (rotateLeft <= rotateRight) {
+            pPlayer->rotateVelocity = -ROTATION_SPEED - (rotateLeft * (180.0f/M_PI));
+        }
+        else {
+            pPlayer->rotateVelocity = ROTATION_SPEED + (rotateRight * (180.0f/M_PI));
+        }
+    }
+    else {
+        float rotateLeft = (pPlayer->referenceAngle+2*M_PI) - targetAngle;
+        float rotateRight = targetAngle - pPlayer->referenceAngle;
+        if (rotateLeft <= rotateRight) {
+            pPlayer->rotateVelocity = -ROTATION_SPEED - (rotateLeft * (180.0f/M_PI));
+        }
+        else {
+            pPlayer->rotateVelocity = ROTATION_SPEED + (rotateRight * (180.0f/M_PI));
+        }
+    }
+
+    pPlayer->targetAngle = targetAngle;
     return;
 }
 
