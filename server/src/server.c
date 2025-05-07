@@ -33,7 +33,7 @@ int initServer(Server *pServer) {
     pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if(pServer->pHitforms == NULL) { return 1; }
 
-    pServer->pObstacles = createDynamicArray(ARRAY_ENTITIES);
+    pServer->pObstacles = createDynamicArray(ARRAY_HITBOXES);
     if(pServer->pObstacles == NULL) { return 1; }
 
     Vec2 tmp;
@@ -47,7 +47,7 @@ int initServer(Server *pServer) {
             if (arrayAddObject(pServer->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
         }
     }
-    if(arrayAddObject(pServer->pObstacles, createEntity(createVector(416,1088),NULL,10,HITBOX_OBSTACLE))) { return 1; };
+    if(arrayAddObject(pServer->pObstacles, createEntity(createVector(416,1088), NULL, 10, HITBOX_OBSTACLE))) { return 1; };
 
     pServer->state = SERVER_WAITING;
     if (!(pServer->socket = SDLNet_UDP_Open(SERVER_PORT))) {
@@ -126,7 +126,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, Dynam
         }
     }
     for (int i = 0; i < arrayGetSize(pObstacles); i++){
-        if (playerCheckCollision(pPlayer, arrayGetObject(pObstacles, i))) {
+        if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pObstacles, i)))) {
             playerSetPosition(pPlayer, createVector(32, 32));
         }
     }
