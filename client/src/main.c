@@ -1,5 +1,13 @@
 #include "main.h"
 
+#define MAX_MOVE_PLATFORMS 8
+
+struct movablePlatform {
+    Entity *pPlatform;
+    Vec2 velocity;
+    SDL_Rect sheetPosition;
+};typedef struct movablePlatform MovablePlatform;
+
 void cleanUp(Game *pGame) {
     if (pGame->pInput) { destroyInputTracker(pGame->pInput); }
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -93,7 +101,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
     return;
 }
 
-void updateDisplay(Game *pGame, Vec2 mousePosition) {
+void updateDisplay(Game *pGame, Vec2 mousePosition, MovablePlatform platformOne[]) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     windowClearFrame(pGame->pWindow);
 
@@ -103,6 +111,10 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
 
     windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
     
+    for(int i = 0; i < MAX_MOVE_PLATFORMS; i++){
+        windowRenderEntity(pGame->pWindow, platformOne[i].pPlatform, pGame->pCamera);
+    }
+
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
     }
@@ -179,6 +191,40 @@ bool initiateConnection(Game *pGame) {
     return gameRunning;
 }
 
+void initMovablePlatforms(Game *pGame, MovablePlatform pPlatformOne[]){
+    Vec2 platformInitPos;
+    SDL_Texture *pPlatformTexture=windowLoadTexture(pGame->pWindow,"lib/resources/player1.png");
+    platformInitPos.x=192.0f;
+    platformInitPos.y=992.0f;
+    for(int i=0;i<MAX_MOVE_PLATFORMS;i++){
+        if(i==5){
+            platformInitPos.y+=32.0f;
+            platformInitPos.x=224.0f;
+        }
+        pPlatformOne[i].pPlatform = createEntity(platformInitPos,pPlatformTexture,0,HITBOX_FULL_BLOCK);
+        pPlatformOne[i].velocity.x=2.0f;
+        pPlatformOne[i].velocity.y=0.0f;
+        pPlatformOne[i].sheetPosition.x=0.0f;
+        pPlatformOne[i].sheetPosition.y=0.0f;
+        platformInitPos.x+=32.0f;
+    }
+    
+}
+
+void movePlatforms(MovablePlatform pPlatformOne[]){
+    Vec2 pos1, pos2, vel1, vel2;
+    vel1.x=-2.0f, vel1.y=0.0f;
+    vel2.x=2.0f, vel2.y=0.0f;
+
+    pos1=entityGetPosition(pPlatformOne[0].pPlatform);
+    pos2=entityGetPosition(pPlatformOne[4].pPlatform);
+    for(int i = 0; i < MAX_MOVE_PLATFORMS; i++){
+        entityMove(pPlatformOne[i].pPlatform,pPlatformOne[i].velocity);
+        if(pos2.x>=512){pPlatformOne[i].velocity = vel1;}
+        else if(pos1.x<=192){pPlatformOne[i].velocity = vel2;}
+    }
+}
+
 int main(int argv, char** args) {
     if (SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
@@ -213,6 +259,9 @@ int main(int argv, char** args) {
     Player *pTeammate = game.players[1];
     cameraSetRenderer(game.pCamera, windowGetRenderer(game.pWindow));
     cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
+
+    MovablePlatform platformOne[MAX_MOVE_PLATFORMS];
+    initMovablePlatforms(&game,platformOne);
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
@@ -261,12 +310,14 @@ int main(int argv, char** args) {
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);
-        
+                    
+                    movePlatforms(platformOne);
+
                     accumulator -= timestep;
                 }
         
                 cameraUpdate(game.pCamera);
-                updateDisplay(&game, mousePosition);
+                updateDisplay(&game, mousePosition,platformOne);
                 
                 break;
             case GAME_CLOSING:
