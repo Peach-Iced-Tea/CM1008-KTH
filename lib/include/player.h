@@ -6,6 +6,7 @@
 #include "vmath.h"
 #include "input.h"
 #include "tongue.h"
+#include "checkpoints.h"
 
 #define PLAYER_1 0
 #define PLAYER_2 1
@@ -113,6 +114,15 @@ Hitbox *playerGetBodyHitbox(Player const *pPlayer);
 */
 SDL_Texture *playerGetBodyTexture(Player const *pPlayer);
 
+
+/*
+Returns last saved checkpoint from player
+*/
+Checkpoint *playerGetCheckpoint(Player const *pPlayer);
+/*
+Set new checkpoint for player
+*/
+void playerSetCheckpoint(Player *pPlayer, Checkpoint *newCheckpoint);
 /*
 
 */
