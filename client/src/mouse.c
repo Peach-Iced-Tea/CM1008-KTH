@@ -8,14 +8,12 @@ struct crosshair {
     Entity *pBody;
     Vec2 relativePosition;
     Vec2 velocity;
-    SDL_Texture *pCrosshairTexture;
     SDL_Rect sheetPosition;
 };
 
 Crosshair *createCrosshair(SDL_Renderer *pRenderer, Vec2 const position) {
     Crosshair *pCrosshair = malloc(sizeof(Crosshair));
-    pCrosshair->pCrosshairTexture = IMG_LoadTexture(pRenderer, "lib/resources/crosshair.png");
-    pCrosshair->pBody = createEntity(position, pCrosshair->pCrosshairTexture, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK);
+    pCrosshair->pBody = createEntity(position, NULL, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK);
     pCrosshair->relativePosition = createVector(0.0f, 0.0f);
     pCrosshair->velocity = createVector(0.0f, 0.0f);
 
@@ -81,7 +79,6 @@ SDL_Rect crosshairGetSheetPosition(Crosshair const *pCrosshair) {
 void destroyCrosshair(Crosshair *pCrosshair) {
     if (pCrosshair == NULL) { return; }
 
-    SDL_DestroyTexture(pCrosshair->pCrosshairTexture);
     destroyEntity(pCrosshair->pBody);
     free(pCrosshair);
 

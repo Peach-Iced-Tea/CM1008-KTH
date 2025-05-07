@@ -34,24 +34,7 @@ Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
     if (id < 0 || id > 1) { return NULL; }
 
     Player *pPlayer = malloc(sizeof(Player));
-    SDL_Texture *pTexture;
-    if (pRenderer != NULL) {
-        switch (id) {
-            case PLAYER_1:
-                pTexture = IMG_LoadTexture(pRenderer, "lib/resources/spriteSheetPlayer.png");
-                break;
-            case PLAYER_2:
-                pTexture = IMG_LoadTexture(pRenderer, "lib/resources/spriteSheetPlayer.png");
-                break;
-        }
-
-        if (pTexture == NULL) {
-            printf("Error: %s\n", SDL_GetError());
-            return NULL;
-        }
-    }
-
-    pPlayer->pBody = createEntity(position, pTexture, ENTITY_PLAYER, HITBOX_PLAYER);
+    pPlayer->pBody = createEntity(position, NULL, ENTITY_PLAYER, HITBOX_PLAYER);
     pPlayer->pTongue = createTongue(entityGetMidPoint(pPlayer->pBody), pRenderer);
 
     pPlayer->state = IDLE;
@@ -283,15 +266,8 @@ Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
         pPlayer->referenceAngle += 2*M_PI;
     }
 
-    if (pPlayer->rotateVelocity > 0.0f) {
-        if (pPlayer->referenceAngle > pPlayer->targetAngle) { pPlayer->referenceAngle = pPlayer->targetAngle; }
-    }
-    else if (pPlayer->rotateVelocity < 0.0f) {
-        if (pPlayer->referenceAngle < pPlayer->targetAngle) { pPlayer->referenceAngle = pPlayer->targetAngle; }
-    }
-
-    newPosition.x =(entityGetMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
-    newPosition.y =(entityGetMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
+    newPosition.x = (entityGetMidPoint(pPlayer->pBody).x + cosf(pPlayer->referenceAngle) * pPlayer->radius);
+    newPosition.y = (entityGetMidPoint(pPlayer->pBody).y + sinf(pPlayer->referenceAngle) * pPlayer->radius);
 
     newPosition.x -= entityGetCurrentFrame(pPlayer->pGrabbedEntity).w*0.5f;
     newPosition.y -= entityGetCurrentFrame(pPlayer->pGrabbedEntity).h*0.5f;
@@ -339,34 +315,32 @@ void playerCalculateRotation(Player *pPlayer, float targetAngle) {
 
     if (pPlayer->referenceAngle == targetAngle) {
         pPlayer->rotateVelocity = 0.0f;
-        pPlayer->targetAngle = 0.0f;
         return;
     }
 
-    //if (pPlayer->rotateVelocity != 0.0f) { return; }
     float rotateLeft = 0.0f, rotateRight = 0.0f;
     if (targetAngle < pPlayer->referenceAngle) {
         float rotateLeft = pPlayer->referenceAngle - targetAngle;
         float rotateRight = (targetAngle+2*M_PI) - pPlayer->referenceAngle;
         if (rotateLeft <= rotateRight) {
-            pPlayer->rotateVelocity = -ROTATION_SPEED - (rotateLeft * (180.0f/M_PI));
+            pPlayer->rotateVelocity = -rotateLeft * (180.0f/M_PI);
         }
         else {
-            pPlayer->rotateVelocity = ROTATION_SPEED + (rotateRight * (180.0f/M_PI));
+            pPlayer->rotateVelocity = rotateRight * (180.0f/M_PI);
         }
     }
     else {
         float rotateLeft = (pPlayer->referenceAngle+2*M_PI) - targetAngle;
         float rotateRight = targetAngle - pPlayer->referenceAngle;
         if (rotateLeft <= rotateRight) {
-            pPlayer->rotateVelocity = -ROTATION_SPEED - (rotateLeft * (180.0f/M_PI));
+            pPlayer->rotateVelocity = -rotateLeft * (180.0f/M_PI);
         }
         else {
-            pPlayer->rotateVelocity = ROTATION_SPEED + (rotateRight * (180.0f/M_PI));
+            pPlayer->rotateVelocity = rotateRight * (180.0f/M_PI);
         }
     }
 
-    pPlayer->targetAngle = targetAngle;
+    pPlayer->rotateVelocity *= 2.0f;
     return;
 }
 

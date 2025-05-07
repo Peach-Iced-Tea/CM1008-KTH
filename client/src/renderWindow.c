@@ -1,9 +1,16 @@
 #include "renderWindow.h"
 
-
 typedef enum {
     WINDOWED, BORDERLESS, FULLSCREEN, EXCLUSIVE, ALT_TABBED
 } WindowState;
+
+typedef struct textures {
+    SDL_Texture *pPlayer1;
+    SDL_Texture *pPlayer2;
+    SDL_Texture *pTongueTip;
+    SDL_Texture *pTongueShaft;
+    SDL_Texture *pCrosshair;
+} Textures;
 
 struct renderWindow {
     SDL_Window *pWindow;
@@ -11,11 +18,42 @@ struct renderWindow {
     TTF_Font *pFont;
     WindowState state;
     WindowState lastState;
+    Textures textures;
     int width;
     int height;
     bool renderHitboxes;
     int nrOfRenderedEntites;    // Used for debugging purposes.
 };
+
+int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
+    pTextures->pPlayer1 = IMG_LoadTexture(pRenderer, "lib/resources/spriteSheetPlayer.png");
+    if (pTextures->pPlayer1 == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    pTextures->pPlayer2 = IMG_LoadTexture(pRenderer, "lib/resources/spriteSheetPlayer.png");
+    if (pTextures->pPlayer2 == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    pTextures->pTongueTip = IMG_LoadTexture(pRenderer, "lib/resources/tongueTip.png");
+    if (pTextures->pTongueTip == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    pTextures->pTongueShaft = IMG_LoadTexture(pRenderer, "lib/resources/tongueShaft.png");
+    if (pTextures->pTongueShaft == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    pTextures->pCrosshair = IMG_LoadTexture(pRenderer, "lib/resources/crosshair.png");
+    if (pTextures->pCrosshair == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    return 0;
+}
 
 RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
     RenderWindow *pRenderWindow = malloc(sizeof(RenderWindow));
@@ -39,6 +77,8 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
 
     pRenderWindow->state = FULLSCREEN;
     pRenderWindow->lastState = pRenderWindow->state;
+
+    if (loadTextures(&(pRenderWindow->textures), pRenderWindow->pRenderer)) { return NULL; }
 
     pRenderWindow->width = w;
     pRenderWindow->height = h;
@@ -192,8 +232,18 @@ void windowRenderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Came
     dst.x -= dst.w*0.5f;
     dst.y -= dst.h*0.5f;
 
-    SDL_RenderCopyExF(pRenderWindow->pRenderer, tongueGetShaftTexture(pTongue), NULL, &dst, angle, NULL, 0);
-    windowRenderEntity(pRenderWindow, tongueGetTip(pTongue), pCamera);
+    SDL_RenderCopyExF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongueShaft, NULL, &dst, angle, NULL, 0);
+
+    dst = entityGetCurrentFrame(tongueGetTip(pTongue));
+    cameraAdjustToViewport(pCamera, &dst, NULL);
+    SDL_Rect src;
+    src.w = 32;
+    src.h = 32;
+    src.x = 0;
+    src.y = 0;
+
+    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongueTip, &src, &dst);
+    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, entityGetHitbox(tongueGetTip(pTongue)), pCamera); }
     return;
 }
 
@@ -210,10 +260,9 @@ void windowRenderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Came
     }
 
     SDL_Rect src = playerGetInfo(pPlayer).sheetPosition;
-    SDL_RenderCopyF(pRenderWindow->pRenderer, playerGetBodyTexture(pPlayer), &src, &dst);
+    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pPlayer1, &src, &dst);
     if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
     return;
-
 }
 
 void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera) {
@@ -252,7 +301,7 @@ void windowRenderCrosshair(RenderWindow *pRenderWindow, Crosshair const *pCrossh
     SDL_FRect dst = entityGetCurrentFrame(pEntity);
     cameraAdjustToViewport(pCamera, &dst, NULL);
 
-    SDL_RenderCopyF(pRenderWindow->pRenderer, entityGetTexture(pEntity), &src, &dst);
+    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pCrosshair, &src, &dst);
     return;
 }
 
