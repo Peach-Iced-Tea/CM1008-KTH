@@ -1,7 +1,7 @@
 #include "tongue.h"
 
 #define TONGUE_VELOCITY 600
-#define MAX_TONGUE_LENGTH 256.0f
+#define MAX_TONGUE_LENGTH 160.0f
 
 struct tongue {
     Entity *pTip;
@@ -150,6 +150,10 @@ TongueInfo tongueGetInfo(Tongue const *pTongue) {
 
 Entity *tongueGetTip(Tongue const *pTongue) {
     return pTongue->pTip;
+}
+
+SDL_FRect tongueGetTipFrame(Tongue const *pTongue) {
+    return entityGetCurrentFrame(pTongue->pTip);
 }
 
 Hitbox *tongueGetHitbox(Tongue const *pTongue) {

@@ -2,7 +2,7 @@
 
 #define CROSSHAIR_WIDTH 32
 #define CROSSHAIR_HEIGHT 32
-#define CROSSHAIR_MAX_DISTANCE 192.0f
+#define CROSSHAIR_MAX_DISTANCE 160.0f
 
 struct crosshair {
     Entity *pBody;

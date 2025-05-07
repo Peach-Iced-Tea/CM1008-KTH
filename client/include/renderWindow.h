@@ -10,7 +10,6 @@
 #include "mapParser.h"
 #include "mouse.h"
 
-
 typedef struct renderWindow RenderWindow;
 
 RenderWindow *createRenderWindow(char const *pTitle, int w, int h);

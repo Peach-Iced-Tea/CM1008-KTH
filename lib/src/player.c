@@ -4,8 +4,7 @@
 #define PLAYER_VELOCITY 10.0f   // Initial velocity to be applied on a player upon moving.
 #define PLAYER_ACCELERATION 25.0f  // A constant for the acceleration of a player.
 #define MAX_PLAYER_VELOCITY 360.0f  // The absolute max value of the velocity a player can reach.
-#define JUMP_VELOCITY 780.0f    // The velocity to be applied when a player presses jump, add negative sign before this value.
-#define ROTATION_SPEED 100
+#define JUMP_VELOCITY 780.0f    // The velocity to be applied when a player presses jump.
 
 #define MOVE_UP_INPUT KEY_W
 #define MOVE_DOWN_INPUT KEY_S
@@ -63,17 +62,14 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         case RELEASE:
         case ROTATING:
             break;
-        default:
+        case FLYING:
             if (getKeyState(pInputs, MOVE_UP_INPUT)) { movement.y = -PLAYER_VELOCITY; }
-
             if (getKeyState(pInputs, MOVE_DOWN_INPUT)) { movement.y += PLAYER_VELOCITY; }
-        
+        default:        
             if (getKeyState(pInputs, MOVE_LEFT_INPUT)) { movement.x = -PLAYER_VELOCITY; }
-        
             if (getKeyState(pInputs, MOVE_RIGHT_INPUT)) { movement.x += PLAYER_VELOCITY; }
     }
     
-
     if (getKeyState(pInputs, JUMP_INPUT)) {
         switch (pPlayer->state) {
             case IDLE:
@@ -468,6 +464,13 @@ SDL_Texture *playerGetBodyTexture(Player const *pPlayer) {
 
 void playerOverrideState(Player *pPlayer, PlayerState newState) {
     pPlayer->state = newState;
+    switch (newState) {
+        case LOCKED:
+            if (pPlayer->jumpTimer > 0) {
+                pPlayer->jumpTimer = 0;
+            }
+            break;
+    }
     return;
 }
 
