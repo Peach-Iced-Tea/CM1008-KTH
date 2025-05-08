@@ -28,4 +28,6 @@ typedef struct {
     ClientMap *pMap;
     DynamicArray *pHitforms;
     Entity *pSpikes;
+    DynamicArray *pCheckpoints;
+    int lastSaveID;
 } Game;

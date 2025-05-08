@@ -36,6 +36,12 @@ int initServer(Server *pServer) {
     pServer->pObstacles = createDynamicArray(ARRAY_HITBOXES);
     if(pServer->pObstacles == NULL) { return 1; }
 
+    pServer->pCheckpoints = createDynamicArray(ARRAY_ENTITIES);
+    pServer->lastSaveID = 0;
+    if(arrayAddObject(pServer->pCheckpoints, createEntity(createVector(32,32), NULL, 10, HITBOX_FULL_BLOCK))) { return 1; };
+    if(arrayAddObject(pServer->pCheckpoints, createEntity(createVector(352,1088), NULL, 10, HITBOX_FULL_BLOCK))) { return 1; };
+    if(pServer->pCheckpoints == NULL) { return 1; }
+
     Vec2 tmp;
     for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 0); i++) {
         int check = mapGetLayerData_Server(pServer->pMap, 0, i);
@@ -97,7 +103,7 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, DynamicArray *pObstacles, float const timestep) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, DynamicArray *pObstacles, DynamicArray *pCheckpoints, int *lastSaveID, float const timestep) {
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             vectorScale(&tongueVelocity, timestep);
@@ -125,9 +131,21 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, Dynam
             standingOnPlatform = true;
         }
     }
+
+    for (int i = 0; i < arrayGetSize(pCheckpoints); i++){
+        if (playerOnlyCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pCheckpoints, i)))) {
+            if (i > *lastSaveID){
+                *lastSaveID = i;
+            }
+        }
+    }
+
     for (int i = 0; i < arrayGetSize(pObstacles); i++){
-        if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pObstacles, i)))) {
-            playerSetPosition(pPlayer, createVector(32, 32));
+        if (playerOnlyCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pObstacles, i)))) {
+            playerSetState(pPlayer, IDLE);
+            int x = entityGetPosition(arrayGetObject(pCheckpoints, *lastSaveID)).x;
+            int y = entityGetPosition(arrayGetObject(pCheckpoints, *lastSaveID)).y - 32;
+            playerSetPosition(pPlayer, createVector(x, y));
         }
     }
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
@@ -153,7 +171,7 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             playerUpdateAnimation(pPlayer);
     }
 
-    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, pServer->pObstacles, timestep);
+    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, pServer->pObstacles, pServer->pCheckpoints, &(pServer->lastSaveID), timestep);
 
     prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);
     prepareEntityData(&(pServer->payload.entities[payload.playerID]), NULL, movedEntity, 0);

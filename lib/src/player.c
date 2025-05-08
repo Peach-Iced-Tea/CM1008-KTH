@@ -334,6 +334,37 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
     return;
 }
 
+int playerOnlyCheckCollision(Player *pPlayer, Hitbox *pObject) {
+    int collisionDetected = 0;    
+    Hitbox *pPlayerHitbox = entityGetHitbox(pPlayer->pBody);
+    if (checkCollision(pPlayerHitbox, pObject)) {
+        collisionDetected = hitboxOrientation(pPlayerHitbox, pObject);
+        switch (collisionDetected) {
+            case OBJECT_IS_NORTH:
+                switch (pPlayer->state) {
+                    case RUNNING:
+                    case FALLING:
+                        pPlayer->state = IDLE;
+                        break;
+                }
+                break;
+            case OBJECT_IS_SOUTH:
+                switch (pPlayer->state) {
+                    case JUMPING:
+                        pPlayer->state = FALLING;
+                        break;
+                }
+                break;
+            case OBJECT_IS_WEST:
+                break;
+            case OBJECT_IS_EAST:
+                break;
+        }
+    }
+
+    return collisionDetected;
+}
+
 int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
     int collisionDetected = 0;    
     Hitbox *pPlayerHitbox = entityGetHitbox(pPlayer->pBody);

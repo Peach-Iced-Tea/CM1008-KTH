@@ -19,4 +19,6 @@ typedef struct {
     ServerMap *pMap;
     DynamicArray *pHitforms;
     DynamicArray *pObstacles;
+    DynamicArray *pCheckpoints;
+    int lastSaveID;
 } Server;

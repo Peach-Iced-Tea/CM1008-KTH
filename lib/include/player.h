@@ -57,6 +57,7 @@ Unless it is in PlayerState 'ROTATING', in which case it will return a Vec2 cont
 */
 void playerUpdatePosition(Player *pPlayer, float deltaTime);
 
+int playerOnlyCheckCollision(Player *pPlayer, Hitbox *pObject);
 /*
 Check whether the given Player has collided with the given Entity.
 
