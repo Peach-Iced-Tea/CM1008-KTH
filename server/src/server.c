@@ -96,7 +96,7 @@ void sendDataToClients(Server *pServer) {
 void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pHitforms, float const timestep) {
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
-            tongueUpdate(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
+            tongueUpdatePosition(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
             if (playerGetInfo(pPlayer).state == SHOOTING) {
                 if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                     playerSetState(pPlayer, ROTATING);
@@ -106,7 +106,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pHitforms, f
             }
             break;
         case RELEASE:
-            tongueUpdate(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
+            tongueUpdatePosition(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
             break;
         default:
             playerUpdatePosition(pPlayer, timestep);

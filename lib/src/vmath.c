@@ -70,7 +70,3 @@ void vectorNorm(Vec2 *vector) {
     vector->x = vector->x / magnitude;
     vector->y = vector->y / magnitude;
 }
-
-Vec2 vectorComponents(float magnitude, float angle) {
-    
-}

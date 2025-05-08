@@ -108,7 +108,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInput) {
             case IDLE:
                 pPlayer->state = SHOOTING;
                 pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->body), tongueGetInfo(pPlayer->pTongue).mousePosition);
-                tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->body));
+                tongueUpdateVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->body));
                 break;
         }
     }
@@ -116,7 +116,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInput) {
         switch (pPlayer->state) {
             case SHOOTING:
             case ROTATING:
-                tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->body));
+                tongueUpdateVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->body));
                 pPlayer->state = RELEASE;
                 break;
         }
@@ -278,7 +278,7 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
         case SHOOTING:
         case RELEASE:
             if (pPlayer->pGrabbedEntity != NULL) { pPlayer->pGrabbedEntity = NULL; }
-            tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->body), deltaTime);
+            tongueUpdatePosition(pPlayer->pTongue, entityGetMidPoint(pPlayer->body), deltaTime);
             if (tongueGetInfo(pPlayer->pTongue).length == 0.0f) {
                 if (pPlayer->body.source.x == 64) {
                     pPlayer->body.source.x = 0;

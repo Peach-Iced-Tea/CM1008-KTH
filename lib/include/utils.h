@@ -1,6 +1,4 @@
 #pragma once
-#include <SDL2/SDL.h>
-
 #include "entity.h"
 
 #define ARRAY_ENTITIES 1
@@ -10,10 +8,10 @@ typedef struct dynamicArray DynamicArray;
 
 DynamicArray *createDynamicArray(int arrayType);
 
-int arrayAddObject(DynamicArray *pArray, void *newObject);
+int arrayAddObject(DynamicArray *array, void *newObject);
 
-void *arrayGetObject(DynamicArray *pArray, int index);
+void *arrayGetObject(DynamicArray *array, int index);
 
-size_t arrayGetSize(DynamicArray *pArray);
+size_t arrayGetSize(DynamicArray *array);
 
-void destroyDynamicArray(DynamicArray *pArray);
+void destroyDynamicArray(DynamicArray *array);

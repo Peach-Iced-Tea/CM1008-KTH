@@ -26,32 +26,7 @@ Tongue *createTongue(Vec2 position) {
     return pTongue;
 }
 
-bool tongueSetMousePosition(Tongue *pTongue, Vec2 mousePosition) {
-    bool mousePositionSet = false;
-    switch (pTongue->state) {
-        case NEUTRAL:
-            pTongue->mousePosition = mousePosition;
-            mousePositionSet = true;
-            break;
-    }
-
-    return mousePositionSet;
-}
-
-void tongueSetPosition(Tongue *pTongue, Vec2 newPosition) {
-    newPosition.x -= pTongue->tip.frame.w*0.5f;
-    newPosition.y -= pTongue->tip.frame.h*0.5f;
-    entitySetPosition(&(pTongue->tip), newPosition);
-    return;
-}
-
-void tongueSetShaftMidPoint(Tongue *pTongue, Vec2 newPosition) {
-    pTongue->shaftRect.x = newPosition.x;
-    pTongue->shaftRect.y = newPosition.y;
-    return;
-}
-
-void tongueSetVelocity(Tongue *pTongue, Vec2 centerPoint) {
+void tongueUpdateVelocity(Tongue *pTongue, Vec2 centerPoint) {
     Vec2 tongueVec;
     switch (pTongue->state) {
         case NEUTRAL:
@@ -77,7 +52,7 @@ void tongueSetVelocity(Tongue *pTongue, Vec2 centerPoint) {
     return;
 }
 
-void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep) {
+void tongueUpdatePosition(Tongue *pTongue, Vec2 centerPoint, float timestep) {
     Vec2 scaledVelocity = pTongue->velocity;
     vectorScale(&scaledVelocity, timestep);
     entityMove(&(pTongue->tip), scaledVelocity);
@@ -88,7 +63,7 @@ void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep) {
                 pTongue->shaftRect.w = MAX_TONGUE_LENGTH;
                 pTongue->velocity.x = 0.0f;
                 pTongue->velocity.y = 0.0f;
-                tongueSetVelocity(pTongue, centerPoint);
+                tongueUpdateVelocity(pTongue, centerPoint);
             }
             break;
         case RETRACTING:
@@ -128,6 +103,31 @@ bool tongueCheckCollision(Tongue *pTongue, Entity const entity) {
     }
 
     return false;
+}
+
+bool tongueSetMousePosition(Tongue *pTongue, Vec2 mousePosition) {
+    bool mousePositionSet = false;
+    switch (pTongue->state) {
+        case NEUTRAL:
+            pTongue->mousePosition = mousePosition;
+            mousePositionSet = true;
+            break;
+    }
+
+    return mousePositionSet;
+}
+
+void tongueSetPosition(Tongue *pTongue, Vec2 newPosition) {
+    newPosition.x -= pTongue->tip.frame.w*0.5f;
+    newPosition.y -= pTongue->tip.frame.h*0.5f;
+    entitySetPosition(&(pTongue->tip), newPosition);
+    return;
+}
+
+void tongueSetShaftMidPoint(Tongue *pTongue, Vec2 newPosition) {
+    pTongue->shaftRect.x = newPosition.x;
+    pTongue->shaftRect.y = newPosition.y;
+    return;
 }
 
 TongueInfo tongueGetInfo(Tongue const *pTongue) {

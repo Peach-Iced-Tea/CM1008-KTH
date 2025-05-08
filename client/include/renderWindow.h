@@ -25,21 +25,14 @@ Such as toggling fullscreen on and off.
 void windowHandleInput(RenderWindow *renderWindow, Input const *input);
 
 /*
-Load a new SDL_Texture* using the pRenderer of the given RenderWindow.
 
-Accepts a relative file path or an absolute file path.
 */
-SDL_Texture *windowLoadTexture(RenderWindow *renderWindow, char const *filePath);
+void windowRenderHitbox(RenderWindow *renderWindow, Hitbox const *hitbox);
 
 /*
 
 */
-void windowRenderHitbox(RenderWindow *renderWindow, Hitbox const *hitbox, Camera const *camera);
-
-/*
-
-*/
-void windowRenderMenu(RenderWindow *renderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons);
+void windowRenderMenu(RenderWindow *renderWindow, SDL_Texture *texture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons);
 
 /*
 
@@ -49,17 +42,17 @@ void windowRenderText(RenderWindow *renderWindow, char const textToRender[], int
 /*
 Renders the given Entity on the screen if it is visible inside the camera dimensions.
 */
-void windowRenderObject(RenderWindow *renderWindow, Entity const entity, Camera const *camera, RenderType renderType);
+void windowRenderObject(RenderWindow *renderWindow, Entity const entity, RenderType renderType);
 
 /*
 
 */
-void windowRenderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Camera const *pCamera);
+void windowRenderTongue(RenderWindow *renderWindow, Tongue const *tongue);
 
 /*
 
 */
-void windowRenderMapLayer(RenderWindow *renderWindow, ClientMap *map, Camera const *camera);
+void windowRenderMapLayer(RenderWindow *renderWindow, ClientMap *map);
 
 /*
 Clear the previous frame off of the given RenderWindow.
@@ -74,7 +67,12 @@ Display the current latest frame inside the buffer of the given RenderWindow.
 void windowDisplayFrame(RenderWindow *renderWindow);
 
 
-void windowDrawLine(RenderWindow *renderWindow, Vec2 pos1, Vec2 pos2, Camera const *camera);
+void windowDrawLine(RenderWindow *renderWindow, Vec2 pos1, Vec2 pos2);
+
+/*
+
+*/
+void windowSetCamera(RenderWindow *window, Camera *camera);
 
 /*
 Get the SDL_Renderer* from the given RenderWindow.

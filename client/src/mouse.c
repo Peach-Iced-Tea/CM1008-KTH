@@ -11,7 +11,7 @@ struct crosshair {
     SDL_Rect sheetPosition;
 };
 
-Crosshair *createCrosshair(SDL_Renderer *pRenderer, Vec2 const position) {
+Crosshair *createCrosshair(Vec2 const position) {
     Crosshair *pCrosshair = malloc(sizeof(Crosshair));
     if (entityInitData(&(pCrosshair->body), position, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK)) { return NULL; }
     

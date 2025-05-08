@@ -1,10 +1,8 @@
 #pragma once
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_net.h>
 #include <stdbool.h>
 
-#include "player.h"
 #include "vmath.h"
+#include "player.h"
 
 #define MAX_PLAYERS 2
 #define PACKET_SIZE 512
@@ -55,8 +53,8 @@ typedef struct {
     ClientState clientState;
 } ClientPayload;
 
-void prepareInputData(InputData *pData, Player const *pPlayer, int tick);
+void prepareInputData(InputData *data, Player const *player, int tick);
 
-void prepareStateData(StateData *pSData, Player const *pPlayer, int tick);
+void prepareStateData(StateData *data, Player const *player, int tick);
 
-void prepareEntityData(EntityData *pEData, Entity const *pEntity, int entityID, int tick);
+void prepareEntityData(EntityData *data, Entity const *entity, int entityID, int tick);

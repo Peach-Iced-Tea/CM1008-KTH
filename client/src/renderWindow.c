@@ -19,6 +19,7 @@ struct renderWindow {
     WindowState state;
     WindowState lastState;
     Textures textures;
+    Camera *pCamera;
     int width;
     int height;
     bool renderHitboxes;
@@ -56,55 +57,56 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
 }
 
 RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
-    RenderWindow *pRenderWindow = malloc(sizeof(RenderWindow));
-    pRenderWindow->pWindow = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    if (!pRenderWindow->pWindow) {
+    RenderWindow *pWindow = malloc(sizeof(RenderWindow));
+    pWindow->pWindow = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    if (!pWindow->pWindow) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
     }
 
-    pRenderWindow->pRenderer = SDL_CreateRenderer(pRenderWindow->pWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
-    if (!pRenderWindow->pRenderer) {
+    pWindow->pRenderer = SDL_CreateRenderer(pWindow->pWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+    if (!pWindow->pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
     }
 
-    pRenderWindow->pFont = TTF_OpenFont("lib/resources/arial.ttf", 100);
-    if (!pRenderWindow->pFont) {
+    pWindow->pFont = TTF_OpenFont("lib/resources/arial.ttf", 100);
+    if (!pWindow->pFont) {
         printf("Error: %s\n", TTF_GetError());
         return NULL;
     }
 
-    pRenderWindow->state = FULLSCREEN;
-    pRenderWindow->lastState = pRenderWindow->state;
+    pWindow->state = FULLSCREEN;
+    pWindow->lastState = pWindow->state;
 
-    if (loadTextures(&(pRenderWindow->textures), pRenderWindow->pRenderer)) { return NULL; }
+    if (loadTextures(&(pWindow->textures), pWindow->pRenderer)) { return NULL; }
 
-    pRenderWindow->width = w;
-    pRenderWindow->height = h;
-    pRenderWindow->renderHitboxes = false;
-    SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("lib/resources/gameIcon.png"));
+    pWindow->pCamera = NULL;
+    pWindow->width = w;
+    pWindow->height = h;
+    pWindow->renderHitboxes = false;
+    SDL_SetWindowIcon(pWindow->pWindow, IMG_Load("lib/resources/gameIcon.png"));
 
-    return pRenderWindow;
+    return pWindow;
 }
 
-void toggleFullscreen(RenderWindow *pRenderWindow) {
-    switch (pRenderWindow->state) {
+void toggleFullscreen(RenderWindow *pWindow) {
+    switch (pWindow->state) {
         case WINDOWED:
-            SDL_SetWindowFullscreen(pRenderWindow->pWindow, 0);
-            SDL_SetWindowBordered(pRenderWindow->pWindow, SDL_TRUE);
+            SDL_SetWindowFullscreen(pWindow->pWindow, 0);
+            SDL_SetWindowBordered(pWindow->pWindow, SDL_TRUE);
             printf("Window State: Windowed\n");
             break;
         case BORDERLESS:
-            SDL_SetWindowBordered(pRenderWindow->pWindow, SDL_FALSE);
+            SDL_SetWindowBordered(pWindow->pWindow, SDL_FALSE);
             printf("Window State: Borderless\n");
             break;
         case FULLSCREEN:
-            SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+            SDL_SetWindowFullscreen(pWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
             printf("Window State: Fullscreen\n");
             break;
         case EXCLUSIVE:
-            SDL_SetWindowFullscreen(pRenderWindow->pWindow, SDL_WINDOW_FULLSCREEN);
+            SDL_SetWindowFullscreen(pWindow->pWindow, SDL_WINDOW_FULLSCREEN);
             printf("Window State: Exclusive Fullscreen\n");
             break;
     }
@@ -112,48 +114,37 @@ void toggleFullscreen(RenderWindow *pRenderWindow) {
     return;
 }
 
-void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInput) {
-    Uint32 flags = SDL_GetWindowFlags(pRenderWindow->pWindow);
+void windowHandleInput(RenderWindow *pWindow, Input const *pInput) {
+    Uint32 flags = SDL_GetWindowFlags(pWindow->pWindow);
     if ((flags&SDL_WINDOW_INPUT_FOCUS)==0) {
-        switch (pRenderWindow->state) {
+        switch (pWindow->state) {
             case EXCLUSIVE:
-                pRenderWindow->lastState = pRenderWindow->state;
-                pRenderWindow->state = WINDOWED;
-                toggleFullscreen(pRenderWindow);
-                pRenderWindow->state = ALT_TABBED;
+                pWindow->lastState = pWindow->state;
+                pWindow->state = WINDOWED;
+                toggleFullscreen(pWindow);
+                pWindow->state = ALT_TABBED;
             case FULLSCREEN:
-                if ((flags&SDL_WINDOW_MINIMIZED)==0) { SDL_MinimizeWindow(pRenderWindow->pWindow); }
+                if ((flags&SDL_WINDOW_MINIMIZED)==0) { SDL_MinimizeWindow(pWindow->pWindow); }
                 break;
         }
     }
     else {
-        switch (pRenderWindow->state) {
+        switch (pWindow->state) {
             case ALT_TABBED:
-                pRenderWindow->state = pRenderWindow->lastState;
-                toggleFullscreen(pRenderWindow);
+                pWindow->state = pWindow->lastState;
+                toggleFullscreen(pWindow);
                 break;
         }
     }
 
     if (checkKeyCombo(pInput, KEY_ALT, KEY_RETURN)) {
-        pRenderWindow->state++;
-        if (pRenderWindow->state >= ALT_TABBED) { pRenderWindow->state = WINDOWED; }
-        toggleFullscreen(pRenderWindow);
+        pWindow->state++;
+        if (pWindow->state >= ALT_TABBED) { pWindow->state = WINDOWED; }
+        toggleFullscreen(pWindow);
     }
-    if (checkKeyCombo(pInput, KEY_ALT, KEY_T)) { pRenderWindow->renderHitboxes = !pRenderWindow->renderHitboxes; }
+    if (checkKeyCombo(pInput, KEY_ALT, KEY_T)) { pWindow->renderHitboxes = !pWindow->renderHitboxes; }
 
     return;
-}
-
-SDL_Texture *windowLoadTexture(RenderWindow *pRenderWindow, char const *pFilePath) {
-    SDL_Texture *pTexture = NULL;
-    pTexture = IMG_LoadTexture(pRenderWindow->pRenderer, pFilePath);
-    if (pTexture == NULL) {
-        printf("Error: %s\n", SDL_GetError());
-        return NULL;
-    }
-    
-    return pTexture;
 }
 
 SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
@@ -173,8 +164,13 @@ SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
     return NULL;
 }
 
-void windowRenderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
-    if (!pRenderWindow->renderHitboxes) { return; }
+void windowRenderHitbox(RenderWindow *pWindow, Hitbox const *pHitbox) {
+    if (pWindow->pCamera == NULL) {
+        printf("Error: RenderWindow is missing Camera\n");
+        return;
+    }
+
+    if (!pWindow->renderHitboxes) { return; }
 
     Vec2 halfSize = getHitboxHalfSize(pHitbox);
     Vec2 topLeftCorner;
@@ -184,34 +180,34 @@ void windowRenderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Came
     dst.y = topLeftCorner.y;
     dst.w = halfSize.x*2.0f;
     dst.h = halfSize.y*2.0f;
-    cameraAdjustToViewport(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
 
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
-    SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(pWindow->pRenderer, 255, 255, 0, 255);
+    SDL_RenderDrawRectF(pWindow->pRenderer, &dst);
+    SDL_SetRenderDrawColor(pWindow->pRenderer, 0, 0, 0, 255);
     return;
 }
 
-void windowRenderMenu(RenderWindow *pRenderWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
+void windowRenderMenu(RenderWindow *pWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
     for (int i = 0; i < nrOfButtons; i++) {
         SDL_Rect src = menuButtons[i];
         SDL_Rect dst = menuPosition[i];
 
-        SDL_RenderCopy(pRenderWindow->pRenderer, pTexture, &src, &dst);
+        SDL_RenderCopy(pWindow->pRenderer, pTexture, &src, &dst);
     }
     
     return;
 }
 
-void windowRenderText(RenderWindow *pRenderWindow, char const textToRender[], int x, int y) {
+void windowRenderText(RenderWindow *pWindow, char const textToRender[], int x, int y) {
     SDL_Color color = { 255, 255, 255 };
-    SDL_Surface *pSurface = TTF_RenderText_Solid(pRenderWindow->pFont, textToRender, color);
+    SDL_Surface *pSurface = TTF_RenderText_Solid(pWindow->pFont, textToRender, color);
     if (pSurface == NULL) {
         printf("Error: %s\n", TTF_GetError());
         return;
     }
 
-    SDL_Texture *pTexture = SDL_CreateTextureFromSurface(pRenderWindow->pRenderer, pSurface);
+    SDL_Texture *pTexture = SDL_CreateTextureFromSurface(pWindow->pRenderer, pSurface);
     if (pTexture == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return;
@@ -221,28 +217,38 @@ void windowRenderText(RenderWindow *pRenderWindow, char const textToRender[], in
     SDL_QueryTexture(pTexture, NULL, NULL, &dst.w, &dst.h);
     dst.x = x-dst.w*0.5f;
     dst.y = y-dst.h*0.5f;
-    SDL_RenderCopy(pRenderWindow->pRenderer, pTexture, NULL, &dst);
+    SDL_RenderCopy(pWindow->pRenderer, pTexture, NULL, &dst);
     return;
 }
 
-void windowRenderObject(RenderWindow *pRenderWindow, Entity const entity, Camera const *pCamera, RenderType renderType) {
+void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType renderType) {
+    if (pWindow->pCamera == NULL) {
+        printf("Error: RenderWindow is missing Camera\n");
+        return;
+    }
+
     SDL_FRect dst = entity.frame;
     SDL_Rect src = entity.source;
-    cameraAdjustToViewport(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
 
-    SDL_Texture *pTexture = windowGetTexture(pRenderWindow->textures, renderType);
+    SDL_Texture *pTexture = windowGetTexture(pWindow->textures, renderType);
     if (pTexture == NULL) { return; }
 
-    SDL_RenderCopyF(pRenderWindow->pRenderer, pTexture, &src, &dst);
-    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, entity.pHitbox, pCamera); }
-    pRenderWindow->nrOfRenderedEntites++;
+    SDL_RenderCopyF(pWindow->pRenderer, pTexture, &src, &dst);
+    if (pWindow->renderHitboxes) { windowRenderHitbox(pWindow, entity.pHitbox); }
+    pWindow->nrOfRenderedEntites++;
     return;
 }
 
-void windowRenderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Camera const *pCamera) {
+void windowRenderTongue(RenderWindow *pWindow, Tongue const *pTongue) {
+    if (pWindow->pCamera == NULL) {
+        printf("Error: RenderWindow is missing Camera\n");
+        return;
+    }
+
     TongueInfo info = tongueGetInfo(pTongue);
     SDL_FRect dst = info.tongueShaft;
-    cameraAdjustToViewport(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
     float angle = info.angle * (180.0f/M_PI);
     dst.x -= dst.w*0.5f;
     dst.y -= dst.h*0.5f;
@@ -252,18 +258,23 @@ void windowRenderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Came
     src.x = 0;
     src.y = 0;
 
-    SDL_RenderCopyExF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongue, &src, &dst, angle, NULL, 0);
+    SDL_RenderCopyExF(pWindow->pRenderer, pWindow->textures.pTongue, &src, &dst, angle, NULL, 0);
 
     dst = tongueGetTip(pTongue).frame;
-    cameraAdjustToViewport(pCamera, &dst, NULL);
+    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
     
     src.x = 32;
-    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongue, &src, &dst);
-    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, tongueGetTip(pTongue).pHitbox, pCamera); }
+    SDL_RenderCopyF(pWindow->pRenderer, pWindow->textures.pTongue, &src, &dst);
+    if (pWindow->renderHitboxes) { windowRenderHitbox(pWindow, tongueGetTip(pTongue).pHitbox); }
     return;
 }
 
-void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera) {
+void windowRenderMapLayer(RenderWindow *pWindow, ClientMap *pMap) {
+    if (pWindow->pCamera == NULL) {
+        printf("Error: RenderWindow is missing Camera\n");
+        return;
+    }
+
     int mapWidth = mapGetWidth(pMap);
     int tileSize = 32;
 
@@ -286,50 +297,63 @@ void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera c
 
             SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
 
-            cameraAdjustToViewport(pCamera, &dst, NULL);
+            cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
 
-            SDL_RenderCopyF(pRenderWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
+            SDL_RenderCopyF(pWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
         }
     }
 }
 
-void windowClearFrame(RenderWindow *pRenderWindow) {
-    SDL_RenderClear(pRenderWindow->pRenderer);
-    pRenderWindow->nrOfRenderedEntites = 0;
+void windowClearFrame(RenderWindow *pWindow) {
+    SDL_RenderClear(pWindow->pRenderer);
+    pWindow->nrOfRenderedEntites = 0;
     return;
 }
 
-void windowDisplayFrame(RenderWindow *pRenderWindow) {
-    SDL_RenderPresent(pRenderWindow->pRenderer);
+void windowDisplayFrame(RenderWindow *pWindow) {
+    SDL_RenderPresent(pWindow->pRenderer);
     return;
 }
 
-void windowDrawLine(RenderWindow *pRenderWindow, Vec2 pos1, Vec2 pos2, Camera const *pCamera) {
-    cameraAdjustToViewport(pCamera, NULL, &pos1);
-    cameraAdjustToViewport(pCamera, NULL, &pos2);
+void windowDrawLine(RenderWindow *pWindow, Vec2 pos1, Vec2 pos2) {
+    if (pWindow->pCamera == NULL) {
+        printf("Error: RenderWindow is missing Camera\n");
+        return;
+    }
+
+    cameraAdjustToViewport(pWindow->pCamera, NULL, &pos1);
+    cameraAdjustToViewport(pWindow->pCamera, NULL, &pos2);
     
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 0, 0, 255);
-    SDL_RenderDrawLineF(pRenderWindow->pRenderer, pos1.x, pos1.y, pos2.x, pos2.y);
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(pWindow->pRenderer, 255, 0, 0, 255);
+    SDL_RenderDrawLineF(pWindow->pRenderer, pos1.x, pos1.y, pos2.x, pos2.y);
+    SDL_SetRenderDrawColor(pWindow->pRenderer, 0, 0, 0, 255);
     return;
 }
 
-SDL_Renderer *windowGetRenderer(RenderWindow const *pRenderWindow) {
-    return pRenderWindow->pRenderer;
+void windowSetCamera(RenderWindow *pWindow, Camera *pCamera) {
+    if (pCamera == NULL) { return; }
+
+    pWindow->pCamera = pCamera;
+    return;
 }
 
-int windowGetWidth(RenderWindow const *pRenderWindow) {
-    return pRenderWindow->width;
+SDL_Renderer *windowGetRenderer(RenderWindow const *pWindow) {
+    return pWindow->pRenderer;
 }
 
-int windowGetHeight(RenderWindow const *pRenderWindow) {
-    return pRenderWindow->height;
+int windowGetWidth(RenderWindow const *pWindow) {
+    return pWindow->width;
 }
 
-void destroyRenderWindow(RenderWindow *pRenderWindow) {
-    if (pRenderWindow == NULL) { return; }
+int windowGetHeight(RenderWindow const *pWindow) {
+    return pWindow->height;
+}
+
+void destroyRenderWindow(RenderWindow *pWindow) {
+    if (pWindow == NULL) { return; }
     
-    SDL_DestroyWindow(pRenderWindow->pWindow);
-    SDL_DestroyRenderer(pRenderWindow->pRenderer);
+    SDL_DestroyWindow(pWindow->pWindow);
+    SDL_DestroyRenderer(pWindow->pRenderer);
+    free(pWindow);
     return;
 }

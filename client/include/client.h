@@ -1,7 +1,6 @@
 #pragma once
+#include <SDL2/SDL_net.h>
 #include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
 
 #include "networkData.h"
 #include "utils.h"
@@ -14,28 +13,28 @@ typedef struct client Client;
 
 Client *createClient(int port);
 
-bool clientConnectToServer(Client *pClient, IPaddress serverAddress);
+bool clientConnectToServer(Client *client, IPaddress serverAddress);
 
-void clientDisconnectFromServer(Client *pClient);
+void clientDisconnectFromServer(Client *client);
 
-bool clientWaitForServer(Client *pClient);
+bool clientWaitForServer(Client *client);
 
-bool clientReceivePacket(Client *pClient, ServerPayload *pPayload);
+bool clientReceivePacket(Client *client, ServerPayload *payload);
 
-void clientSendPacket(Client *pClient);
+void clientSendPacket(Client *client);
 
-void clientAddInputToBuffer(Client *pClient, InputData input);
+void clientAddInputToBuffer(Client *client, InputData input);
 
-void clientAddStateToBuffer(Client *pClient, StateData state);
+void clientAddStateToBuffer(Client *client, StateData state);
 
-void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicArray *pObjects);
+void clientHandleServerReconciliation(Client *client, Player *player, DynamicArray *objects);
 
-int clientCheckServerPayload(Client *pClient, StateData latestServerState);
+int clientCheckServerPayload(Client *client, StateData latestServerState);
 
-InputData clientGetLatestInput(Client const *pClient);
+InputData clientGetLatestInput(Client const *client);
 
-StateData clientGetLatestState(Client const *pClient);
+StateData clientGetLatestState(Client const *client);
 
-int clientGetPlayerID(Client const *pClient);
+int clientGetPlayerID(Client const *client);
 
-void destroyClient(Client *pClient);
+void destroyClient(Client *client);

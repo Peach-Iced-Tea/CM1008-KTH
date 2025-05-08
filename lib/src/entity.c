@@ -96,6 +96,13 @@ void entityCollisionResponse(Entity *pEntity, Vec2 const correction) {
     return;
 }
 
+void entityMove(Entity *pEntity, Vec2 velocity) {
+    pEntity->frame.x += velocity.x;
+    pEntity->frame.y += velocity.y;
+    hitboxPositionAdd(pEntity->pHitbox, velocity);
+    return;
+}
+
 void entitySetPosition(Entity *pEntity, Vec2 const newPosition) {
     pEntity->frame.x = newPosition.x;
     pEntity->frame.y = newPosition.y;
@@ -106,13 +113,6 @@ void entitySetPosition(Entity *pEntity, Vec2 const newPosition) {
 
 void entitySetSource(Entity *pEntity, SDL_Rect newSource) {
     pEntity->source = newSource;
-    return;
-}
-
-void entityMove(Entity *pEntity, Vec2 velocity) {
-    pEntity->frame.x += velocity.x;
-    pEntity->frame.y += velocity.y;
-    hitboxPositionAdd(pEntity->pHitbox, velocity);
     return;
 }
 

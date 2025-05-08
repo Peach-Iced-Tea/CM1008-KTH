@@ -1,6 +1,5 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <math.h>
 #include <stdbool.h>
 
@@ -39,28 +38,28 @@ Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType);
 /*
 
 */
-int entityInitData(Entity *pEntity, Vec2 position, int entityType, int hitboxType);
+int entityInitData(Entity *entity, Vec2 position, int entityType, int hitboxType);
 
 /*
 Correct the position of the given Entity in case of a collision with another object.
 Expects a Vec2 containing the correctional values for the x-axis and y-axis.
 */
-void entityCollisionResponse(Entity *pEntity, Vec2 const correction);
+void entityCollisionResponse(Entity *entity, Vec2 const correction);
 
 /*
 
 */
-void entitySetPosition(Entity *pEntity, Vec2 const vector);
+void entityMove(Entity *entity, Vec2 velocity);
 
 /*
 
 */
-void entitySetSource(Entity *pEntity, SDL_Rect newSource);
+void entitySetPosition(Entity *entity, Vec2 const vector);
 
 /*
 
 */
-void entityMove(Entity *pEntity, Vec2 velocity);
+void entitySetSource(Entity *entity, SDL_Rect newSource);
 
 /*
 Get the current position on both the x-axis and y-axis for the given Entity.
@@ -76,62 +75,62 @@ Vec2 entityGetMidPoint(Entity const entity);
 Call this function to update the positional values of a hitbox.
 Adds the given vector to the current positional values of x and y.
 */
-void hitboxPositionAdd(Hitbox *pHitbox, Vec2 const vector);
+void hitboxPositionAdd(Hitbox *hitbox, Vec2 const vector);
 
 /*
 Call this function to update the positional values of a hitbox.
 Subtracts the given vector from the current positional values of x and y.
 */
-void hitboxPositionSub(Hitbox *pHitbox, Vec2 const vector);
+void hitboxPositionSub(Hitbox *hitbox, Vec2 const vector);
 
 /*
 Check if there is any collision between two hitboxes.
 
 Returns 'true' if collision has been detected, otherwise returns 'false'.
 */
-bool hitboxCheckCollision(Hitbox const *pObject1, Hitbox const *pObject2);
+bool hitboxCheckCollision(Hitbox const *object1, Hitbox const *object2);
 
 /*
 Returns the current orientation of pObject relative to pReference.
 */
-int hitboxOrientation(Hitbox const *pObject, Hitbox const *pReference);
+int hitboxOrientation(Hitbox const *object, Hitbox const *reference);
 
 /*
 Compare two rectangles to see how they have collided.
 
 Returns a Vec2 containing the response to correct the collision.
 */
-Vec2 rectVsRect(Hitbox const *pObject, Hitbox const *pReference);
+Vec2 rectVsRect(Hitbox const *object, Hitbox const *reference);
 
 /*
 Check if a ray has any intersection along its trajectory.
 
 Returns a float containing the amount of "time" until collision.
 */
-float rayVsRect(Hitbox const *pObject, Hitbox const *pReference);
+float rayVsRect(Hitbox const *object, Hitbox const *reference);
 
 /*
 Check if a point in space (x,y) is inside the given Hitbox.
 
 Returns 'true' if the point is inside the given Hitbox, otherwise returns 'false'.
 */
-bool pointVsRect(Hitbox const *pHitbox, Vec2 const point);
+bool pointVsRect(Hitbox const *hitbox, Vec2 const point);
 
 /*
 Get the position of the given Hitbox.
 
 Returns a Vec2 containing the x and y coordinates.
 */
-Vec2 getHitboxPosition(Hitbox const *pHitbox);
+Vec2 getHitboxPosition(Hitbox const *hitbox);
 
 /*
 Get the halfSize of the given Hitbox.
 
 Returns a Vec2 containing the width (.x) and height (.y).
 */
-Vec2 getHitboxHalfSize(Hitbox const *pHitbox);
+Vec2 getHitboxHalfSize(Hitbox const *hitbox);
 
 /*
 Use this function to destroy the given Hitbox pointer and free up memory.
 */
-void destroyHitbox(Hitbox *pHitbox);
+void destroyHitbox(Hitbox *hitbox);

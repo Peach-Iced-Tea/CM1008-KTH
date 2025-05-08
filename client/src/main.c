@@ -37,7 +37,7 @@ int initGame(Game *pGame) {
     pGame->pInput = createInputTracker();
     if (pGame->pInput == NULL) { return 1; }
 
-    pGame->pMenu = createMenu(pGame->pWindow);
+    pGame->pMenu = createMenu(windowGetRenderer(pGame->pWindow));
     if (pGame->pMenu == NULL) { return 1; }
 
     pGame->pClient = createClient(0);
@@ -66,7 +66,7 @@ int initGame(Game *pGame) {
         }
     }
 
-    pGame->pCrosshair = createCrosshair(windowGetRenderer(pGame->pWindow), playerGetMidPoint(pGame->players[0]));
+    pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
 
     return 0;
 }
@@ -106,19 +106,19 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
             case SHOOTING:
             case RELEASE:
             case ROTATING:
-                windowRenderTongue(pGame->pWindow, playerGetTongue(pPlayer), pGame->pCamera);
+                windowRenderTongue(pGame->pWindow, playerGetTongue(pPlayer));
                 break;
         }
-        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), pGame->pCamera, RENDER_PLAYER1+i);
+        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);
     }
 
-    windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
+    windowRenderMapLayer(pGame->pWindow, pGame->pMap);
     
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
-        windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
+        windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i));
     }
 
-    windowRenderObject(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), pGame->pCamera, RENDER_CROSSHAIR);
+    windowRenderObject(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), RENDER_CROSSHAIR);
     windowDisplayFrame(pGame->pWindow);
     return;
 }
@@ -223,6 +223,7 @@ int main(int argv, char** args) {
 
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
+    windowSetCamera(game.pWindow, game.pCamera);
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;

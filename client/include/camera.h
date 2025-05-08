@@ -41,24 +41,6 @@ Such as setting what mode the given Camera should be set to.
 void cameraHandleInput(Camera *camera, Input const *inputs);
 
 /*
-Set the SDL_Renderer* that the given Camera should use when scaling.
-*/
-int cameraSetRenderer(Camera *camera, SDL_Renderer *renderer);
-
-/*
-Set what mode the given Camera should be set to.
-*/
-int cameraSetMode(Camera *camera, int newMode);
-
-/*
-Set the camera to a specific zoom level.
-
-A higher zoomScale means that the Camera is closer up, 
-and a lower zoomScale means that the Camera is further away.
-*/
-int cameraSetZoom(Camera *camera, float zoomScale);
-
-/*
 Update the position as well as the zoom level of the given Camera.
 
 What this does function does depends on what mode the given Camera is set to.
@@ -78,6 +60,24 @@ Use this function to adjust the position of a SDL_FRect and/or a Vec2 to the giv
 Either *dst or *position can be set as NULL.
 */
 void cameraAdjustToViewport(Camera const *camera, SDL_FRect *dst, Vec2 *position);
+
+/*
+Set the SDL_Renderer* that the given Camera should use when scaling.
+*/
+int cameraSetRenderer(Camera *camera, SDL_Renderer *renderer);
+
+/*
+Set what mode the given Camera should be set to.
+*/
+int cameraSetMode(Camera *camera, int newMode);
+
+/*
+Set the camera to a specific zoom level.
+
+A higher zoomScale means that the Camera is closer up, 
+and a lower zoomScale means that the Camera is further away.
+*/
+int cameraSetZoom(Camera *camera, float zoomScale);
 
 /*
 Returns the absolute position of the mouse cursor in the game world.

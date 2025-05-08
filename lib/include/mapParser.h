@@ -1,5 +1,4 @@
 #pragma once 
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
@@ -17,44 +16,44 @@ typedef struct clientMap ClientMap;
 typedef struct serverMap ServerMap;
 
 
-Tileset *createTileset(SDL_Renderer *pRenderer);
+Tileset *createTileset(SDL_Renderer *renderer);
 
-ClientMap *createClientMap(SDL_Renderer *pRenderer);
+ClientMap *createClientMap(SDL_Renderer *renderer);
 
 ServerMap *createServerMap();
 
 
 void mapLoadTileset(const char *filename, Tileset *devTiles);
 
-void mapLoadClient(const char *path, ClientMap *pMap);
+void mapLoadClient(const char *path, ClientMap *map);
 
-void mapLoadServer(const char *path, ServerMap *pMap);
+void mapLoadServer(const char *path, ServerMap *map);
 
 
-void mapSetTileSheetPosition(ClientMap *pMap, int x, int y);
+void mapSetTileSheetPosition(ClientMap *map, int x, int y);
 
-SDL_Texture *mapGetTileTextures(Tileset *pTileset);
+SDL_Texture *mapGetTileTextures(Tileset *tileset);
 
-xmlChar *mapGetColumns(Tileset *pTileset);
+xmlChar *mapGetColumns(Tileset *tileset);
 
-int mapGetWidth(ClientMap *pMap);
+int mapGetWidth(ClientMap *map);
 
-Tileset *mapGetTileset(ClientMap *pMap);
+Tileset *mapGetTileset(ClientMap *map);
 
-size_t mapGetLayerSize(ClientMap *pMap, int index);
+size_t mapGetLayerSize(ClientMap *map, int index);
 
-int mapGetLayerData(ClientMap *pMap, int layer, int index);
+int mapGetLayerData(ClientMap *map, int layer, int index);
 
-SDL_Rect mapGetTileSheetPosition(ClientMap *pMap);
+SDL_Rect mapGetTileSheetPosition(ClientMap *map);
 
-void destroyMap(ClientMap *pMap);
+void destroyMap(ClientMap *map);
 
 //---------------Server-------------------------
 
-int mapGetWidth_Server(ServerMap *pMap);
+int mapGetWidth_Server(ServerMap *map);
 
-size_t mapGetLayerSize_Server(ServerMap *pMap, int layer);
+size_t mapGetLayerSize_Server(ServerMap *map, int layer);
 
-int mapGetLayerData_Server(ServerMap *pMap, int layer, int index);
+int mapGetLayerData_Server(ServerMap *map, int layer, int index);
 
-void destroyMap_Server(ServerMap *pMap);
+void destroyMap_Server(ServerMap *map);

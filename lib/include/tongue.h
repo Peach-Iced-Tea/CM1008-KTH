@@ -22,26 +22,26 @@ typedef struct tongue Tongue;
 
 Tongue *createTongue(Vec2 position);
 
-bool tongueSetMousePosition(Tongue *pTongue, Vec2 mousePosition);
+void tongueUpdateVelocity(Tongue *tongue, Vec2 centerPoint);
 
-void tongueSetPosition(Tongue *pTongue, Vec2 newPosition);
+void tongueUpdatePosition(Tongue *tongue, Vec2 centerPoint, float timestep);
 
-void tongueSetShaftMidPoint(Tongue *pTongue, Vec2 newPosition);
+void tongueCalculateShaft(Tongue *tongue, Vec2 centerPoint, Vec2 referencePoint);
 
-void tongueSetVelocity(Tongue *pTongue, Vec2 centerPoint);
+bool tongueCheckCollision(Tongue *tongue, Entity const entity);
 
-void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep);
+bool tongueSetMousePosition(Tongue *tongue, Vec2 mousePosition);
 
-void tongueCalculateShaft(Tongue *pTongue, Vec2 centerPoint, Vec2 referencePoint);
+void tongueSetPosition(Tongue *tongue, Vec2 newPosition);
 
-bool tongueCheckCollision(Tongue *pTongue, Entity const entity);
+void tongueSetShaftMidPoint(Tongue *tongue, Vec2 newPosition);
 
-TongueInfo tongueGetInfo(Tongue const *pTongue);
+TongueInfo tongueGetInfo(Tongue const *tongue);
 
-Entity tongueGetTip(Tongue const *pTongue);
+Entity tongueGetTip(Tongue const *tongue);
 
-Hitbox *tongueGetHitbox(Tongue const *pTongue);
+Hitbox *tongueGetHitbox(Tongue const *tongue);
 
-void tongueOverrideVelocity(Tongue *pTongue, Vec2 velocity);
+void tongueOverrideVelocity(Tongue *tongue, Vec2 velocity);
 
-void destroyTongue(Tongue *pTongue);
+void destroyTongue(Tongue *tongue);

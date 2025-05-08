@@ -1,9 +1,10 @@
 #pragma once
+#include <SDL2/SDL_net.h>
+
 #include "networkData.h"
 #include "entity.h"
 #include "player.h"
 #include "utils.h"
-
 #include "mapParser.h"
 
 typedef struct {

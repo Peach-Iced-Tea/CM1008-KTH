@@ -9,7 +9,7 @@
 
 typedef struct menu Menu;
 
-Menu *createMenu(RenderWindow *window);
+Menu *createMenu(SDL_Renderer *renderer);
 
 bool mainMenu(Menu *menu, RenderWindow *window, IPaddress *serverAddress);
 
