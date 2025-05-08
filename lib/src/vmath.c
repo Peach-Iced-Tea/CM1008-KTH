@@ -54,7 +54,7 @@ float vectorGetAngle(Vec2 const vector1, Vec2 const vector2) {
     }
     //3rd quadrant
     if (dx <= 0 && dy < 0) {
-        return atanf(dy/dx) + M_PI;
+        return fabsf(atanf(dy/dx)) + M_PI;
     }
     //4th quadrant
     if (dx > 0 && dy <= 0) {

@@ -120,6 +120,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
             case ROTATING:
                 tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
                 pPlayer->state = RELEASE;
+                printf("release: state = %d\n", pPlayer->state);
                 break;
         }
     }
@@ -277,7 +278,6 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
         case RELEASE:
             if (pPlayer->pGrabbedEntity != NULL) { pPlayer->pGrabbedEntity = NULL; }
             tongueUpdate(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody), deltaTime);
-            if (tongueGetInfo(pPlayer->pTongue).state == MAX_EXTENSION) { tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody)); }
             if (tongueGetInfo(pPlayer->pTongue).length == 0.0f) {
                 if (pPlayer->sheetPosition.x == 64) {
                     pPlayer->sheetPosition.x = 0;

@@ -66,7 +66,7 @@ void tongueSetVelocity(Tongue *pTongue, Vec2 centerPoint) {
             pTongue->state = EXTENDING;
             break;
         case EXTENDING:
-        case MAX_EXTENSION:
+        case HIT_ENTITY:
             vectorSub(&tongueVec, centerPoint, entityGetMidPoint(pTongue->pTip));
             vectorNorm(&tongueVec);
         
@@ -92,7 +92,7 @@ void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep) {
                 pTongue->shaftRect.w = MAX_TONGUE_LENGTH;
                 pTongue->velocity.x = 0.0f;
                 pTongue->velocity.y = 0.0f;
-                pTongue->state = MAX_EXTENSION;
+                tongueSetVelocity(pTongue, centerPoint);
             }
             break;
         case RETRACTING:
@@ -125,6 +125,7 @@ bool tongueCheckCollision(Tongue *pTongue, Entity *pEntity) {
     Hitbox *pEntityHitbox = entityGetHitbox(pEntity);
     if (checkCollision(pTongueHitbox, pEntityHitbox)) {
         tongueSetPosition(pTongue, entityGetMidPoint(pEntity));
+        pTongue->state = HIT_ENTITY;
         pTongue->velocity.x = 0.0f;
         pTongue->velocity.y = 0.0f;
         return true;

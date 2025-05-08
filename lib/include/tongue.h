@@ -6,7 +6,7 @@
 #include "vmath.h"
 
 typedef enum {
-    NEUTRAL, EXTENDING, RETRACTING, MAX_EXTENSION
+    NEUTRAL, EXTENDING, RETRACTING, HIT_ENTITY
 } TongueState;
 
 typedef struct {
