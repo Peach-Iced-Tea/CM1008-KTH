@@ -467,6 +467,12 @@ void playerOverrideVelocity(Player *pPlayer, Vec2 newVelocity, float newRotation
     return;
 }
 
+//added to be used for friction application
+void playerSetVelocity(Player *pPlayer, Vec2 newVelocity) {
+    pPlayer->velocity = newVelocity;
+    return;
+}
+
 void destroyPlayer(Player *pPlayer) {
     if (pPlayer == NULL) { return; }
 

@@ -124,6 +124,11 @@ void playerOverrideState(Player *pPlayer, PlayerState newState);
 void playerOverrideVelocity(Player *pPlayer, Vec2 newVelocity, float newRotation);
 
 /*
+Added for movable platforms
+*/
+void playerSetVelocity(Player *pPlayer, Vec2 newVelocity);
+
+/*
 Use this function to destroy the given Player pointer and free up memory.
 */
 void destroyPlayer(Player *pPlayer);
