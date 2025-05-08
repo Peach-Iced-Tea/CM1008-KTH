@@ -138,6 +138,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInput) {
 void playerUpdateAnimation(Player *pPlayer) {
     SDL_Rect animation;
     animation.x = 0;
+    animation.y = 0;
     animation.w = pPlayer->body.source.w;
     animation.h = pPlayer->body.source.h;
     if (pPlayer->velocity.x < 0.0f) {

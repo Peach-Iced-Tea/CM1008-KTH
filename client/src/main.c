@@ -102,7 +102,6 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     windowClearFrame(pGame->pWindow);
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), pGame->pCamera, RENDER_PLAYER1+i);
         switch (playerGetInfo(pPlayer).state) {
             case SHOOTING:
             case RELEASE:
@@ -110,6 +109,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
                 windowRenderTongue(pGame->pWindow, playerGetTongue(pPlayer), pGame->pCamera);
                 break;
         }
+        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), pGame->pCamera, RENDER_PLAYER1+i);
     }
 
     windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
