@@ -19,5 +19,4 @@ typedef struct {
     ServerMap *pMap;
     DynamicArray *pHitforms;
     DynamicArray *pObstacles;
-    DynamicArray *pCheckpoints;
 } Server;

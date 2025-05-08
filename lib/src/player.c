@@ -27,7 +27,6 @@ struct player {
     float referenceAngle;
     SDL_Rect sheetPosition;
     Entity *pGrabbedEntity;
-    Checkpoint *lastCheckpoint;
 };
 
 Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
@@ -455,14 +454,6 @@ Hitbox *playerGetBodyHitbox(Player const *pPlayer) {
 
 SDL_Texture *playerGetBodyTexture(Player const *pPlayer) {
     return entityGetTexture(pPlayer->pBody);
-}
-
-Checkpoint *playerGetCheckpoint(Player const *pPlayer){
-    return pPlayer->lastCheckpoint;
-}
-
-void playerSetCheckpoint(Player *pPlayer, Checkpoint *newCheckpoint){
-    pPlayer->lastCheckpoint = newCheckpoint;
 }
 
 void playerOverrideState(Player *pPlayer, PlayerState newState) {

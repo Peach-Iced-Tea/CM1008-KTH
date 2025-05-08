@@ -49,9 +49,6 @@ int initServer(Server *pServer) {
     }
     if(arrayAddObject(pServer->pObstacles, createEntity(createVector(416,1088), NULL, 10, HITBOX_OBSTACLE))) { return 1; };
 
-    //add loading in checkpoints
-    if(arrayAddObjects(pServer->pCheckpoints, createHitbox(createVector(352, 1088), tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
-
     pServer->state = SERVER_WAITING;
     if (!(pServer->socket = SDLNet_UDP_Open(SERVER_PORT))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
@@ -100,7 +97,7 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, DynamicArray *pObstacles, DynamicArray *pCheckpoints, float const timestep) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, DynamicArray *pObstacles, float const timestep) {
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             vectorScale(&tongueVelocity, timestep);
@@ -128,18 +125,12 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, Dynam
             standingOnPlatform = true;
         }
     }
-    if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
     for (int i = 0; i < arrayGetSize(pObstacles); i++){
         if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pObstacles, i)))) {
-            gotoCheckpoint(pPlayer);
+            playerSetPosition(pPlayer, createVector(32, 32));
         }
     }
-    for (int i = 0; i < arrayGetSize(pCheckpoints); i++){
-        if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(pCheckpoints, i)))) {
-            playerSetCheckpoint(pPlayer, arrayGetObject(pCheckpoints, i));
-        }
-    }
-    
+    if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
     return;
 }
 
@@ -162,7 +153,7 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             playerUpdateAnimation(pPlayer);
     }
 
-    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, pServer->pObstacles, pServer->pCheckpoints, timestep);
+    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, pServer->pObstacles, timestep);
 
     prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);
     prepareEntityData(&(pServer->payload.entities[payload.playerID]), NULL, movedEntity, 0);
