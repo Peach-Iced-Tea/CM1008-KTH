@@ -120,7 +120,6 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
             case ROTATING:
                 tongueSetVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->pBody));
                 pPlayer->state = RELEASE;
-                printf("release: state = %d\n", pPlayer->state);
                 break;
         }
     }
