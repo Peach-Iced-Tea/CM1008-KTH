@@ -19,7 +19,7 @@ void closeServer(Server *pServer) {
 int initServer(Server *pServer) {
     pServer->nrOfPlayers = 0;
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pServer->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), NULL, i);
+        pServer->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), i);
         if (pServer->players[i] == NULL) { return 1; }
     }
 
@@ -93,22 +93,20 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, float const timestep) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pHitforms, float const timestep) {
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
-            vectorScale(&tongueVelocity, timestep);
-            entityMove(tongueGetTip(playerGetTongue(pPlayer)), tongueVelocity);
+            tongueUpdate(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
             if (playerGetInfo(pPlayer).state == SHOOTING) {
                 if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                     playerSetState(pPlayer, ROTATING);
                     playerOverrideState(pTeammate, LOCKED);
-                    playerSetGrabbedEntity(pPlayer, playerGetBody(pTeammate));
+                    playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
                 }
             }
             break;
         case RELEASE:
-            vectorScale(&tongueVelocity, timestep);
-            entityMove(tongueGetTip(playerGetTongue(pPlayer)), tongueVelocity);
+            tongueUpdate(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
             break;
         default:
             playerUpdatePosition(pPlayer, timestep);
@@ -143,9 +141,10 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             playerOverrideState(pPlayer, payload.player.state);
             playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
             playerUpdateAnimation(pPlayer);
+            tongueOverrideVelocity(playerGetTongue(pPlayer), payload.player.tongueInput);
     }
 
-    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, timestep);
+    updatePlayer(pPlayer, pTeammate, pServer->pHitforms, timestep);
 
     prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);
     prepareEntityData(&(pServer->payload.entities[payload.playerID]), NULL, movedEntity, 0);

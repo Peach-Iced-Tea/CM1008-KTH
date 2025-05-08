@@ -9,6 +9,7 @@ typedef struct textures {
     SDL_Texture *pPlayer2;
     SDL_Texture *pTongue;
     SDL_Texture *pCrosshair;
+    SDL_Texture *pObstacles;
 } Textures;
 
 struct renderWindow {
@@ -41,6 +42,11 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         return 1;
     }
     pTextures->pCrosshair = IMG_LoadTexture(pRenderer, "lib/resources/crosshair.png");
+    if (pTextures->pCrosshair == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    pTextures->pObstacles = IMG_LoadTexture(pRenderer, "lib/resources/player1.png");
     if (pTextures->pCrosshair == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
@@ -106,7 +112,7 @@ void toggleFullscreen(RenderWindow *pRenderWindow) {
     return;
 }
 
-void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
+void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInput) {
     Uint32 flags = SDL_GetWindowFlags(pRenderWindow->pWindow);
     if ((flags&SDL_WINDOW_INPUT_FOCUS)==0) {
         switch (pRenderWindow->state) {
@@ -129,12 +135,12 @@ void windowHandleInput(RenderWindow *pRenderWindow, Input const *pInputs) {
         }
     }
 
-    if (checkKeyCombo(pInputs, KEY_ALT, KEY_RETURN)) {
+    if (checkKeyCombo(pInput, KEY_ALT, KEY_RETURN)) {
         pRenderWindow->state++;
         if (pRenderWindow->state >= ALT_TABBED) { pRenderWindow->state = WINDOWED; }
         toggleFullscreen(pRenderWindow);
     }
-    if (checkKeyCombo(pInputs, KEY_ALT, KEY_T)) { pRenderWindow->renderHitboxes = !pRenderWindow->renderHitboxes; }
+    if (checkKeyCombo(pInput, KEY_ALT, KEY_T)) { pRenderWindow->renderHitboxes = !pRenderWindow->renderHitboxes; }
 
     return;
 }
@@ -148,6 +154,23 @@ SDL_Texture *windowLoadTexture(RenderWindow *pRenderWindow, char const *pFilePat
     }
     
     return pTexture;
+}
+
+SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
+    switch (renderType) {
+        case RENDER_PLAYER1:
+            return textures.pPlayer1;
+        case RENDER_PLAYER2:
+            return textures.pPlayer2;
+        case RENDER_TONGUE:
+            return textures.pTongue;
+        case RENDER_CROSSHAIR:
+            return textures.pCrosshair;
+        case RENDER_OBSTACLE:
+            return textures.pObstacles;
+    }
+
+    return NULL;
 }
 
 void windowRenderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Camera const *pCamera) {
@@ -202,18 +225,16 @@ void windowRenderText(RenderWindow *pRenderWindow, char const textToRender[], in
     return;
 }
 
-void windowRenderEntity(RenderWindow *pRenderWindow, Entity const *pEntity, Camera const *pCamera) {
-    SDL_FRect dst = entityGetCurrentFrame(pEntity);
+void windowRenderObject(RenderWindow *pRenderWindow, Entity const entity, Camera const *pCamera, RenderType renderType) {
+    SDL_FRect dst = entity.frame;
+    SDL_Rect src = entity.source;
     cameraAdjustToViewport(pCamera, &dst, NULL);
 
-    SDL_Rect src;
-    src.w = 32;
-    src.h = 32;
-    src.x = 0;
-    src.y = 0;
+    SDL_Texture *pTexture = windowGetTexture(pRenderWindow->textures, renderType);
+    if (pTexture == NULL) { return; }
 
-    SDL_RenderCopyF(pRenderWindow->pRenderer, entityGetTexture(pEntity), &src, &dst);
-    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, entityGetHitbox(pEntity), pCamera); }
+    SDL_RenderCopyF(pRenderWindow->pRenderer, pTexture, &src, &dst);
+    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, entity.pHitbox, pCamera); }
     pRenderWindow->nrOfRenderedEntites++;
     return;
 }
@@ -233,30 +254,12 @@ void windowRenderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Came
 
     SDL_RenderCopyExF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongue, &src, &dst, angle, NULL, 0);
 
-    dst = entityGetCurrentFrame(tongueGetTip(pTongue));
+    dst = tongueGetTip(pTongue).frame;
     cameraAdjustToViewport(pCamera, &dst, NULL);
     
     src.x = 32;
     SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongue, &src, &dst);
-    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, entityGetHitbox(tongueGetTip(pTongue)), pCamera); }
-    return;
-}
-
-void windowRenderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Camera const *pCamera) {
-    SDL_FRect dst = entityGetCurrentFrame(playerGetBody(pPlayer));
-    cameraAdjustToViewport(pCamera, &dst, NULL);
-
-    switch (playerGetInfo(pPlayer).state) {
-        case SHOOTING:
-        case RELEASE:
-        case ROTATING:
-            windowRenderTongue(pRenderWindow, playerGetTongue(pPlayer), pCamera);
-            break;
-    }
-
-    SDL_Rect src = playerGetInfo(pPlayer).sheetPosition;
-    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pPlayer1, &src, &dst);
-    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, playerGetBodyHitbox(pPlayer), pCamera); }
+    if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, tongueGetTip(pTongue).pHitbox, pCamera); }
     return;
 }
 
@@ -288,16 +291,6 @@ void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera c
             SDL_RenderCopyF(pRenderWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
         }
     }
-}
-
-void windowRenderCrosshair(RenderWindow *pRenderWindow, Crosshair const *pCrosshair, Camera *pCamera) {
-    Entity *pEntity = crosshairGetBody(pCrosshair);
-    SDL_Rect src = crosshairGetSheetPosition(pCrosshair);
-    SDL_FRect dst = entityGetCurrentFrame(pEntity);
-    cameraAdjustToViewport(pCamera, &dst, NULL);
-
-    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pCrosshair, &src, &dst);
-    return;
 }
 
 void windowClearFrame(RenderWindow *pRenderWindow) {

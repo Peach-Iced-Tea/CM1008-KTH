@@ -55,8 +55,8 @@ typedef struct {
     ClientState clientState;
 } ClientPayload;
 
-void prepareInputData(InputData *pData, Player *pPlayer, int tick);
+void prepareInputData(InputData *pData, Player const *pPlayer, int tick);
 
-void prepareStateData(StateData *pSData, Player *pPlayer, int tick);
+void prepareStateData(StateData *pSData, Player const *pPlayer, int tick);
 
-void prepareEntityData(EntityData *pEData, Entity *pEntity, int entityID, int tick);
+void prepareEntityData(EntityData *pEData, Entity const *pEntity, int entityID, int tick);

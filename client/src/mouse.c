@@ -5,7 +5,7 @@
 #define CROSSHAIR_MAX_DISTANCE 160.0f
 
 struct crosshair {
-    Entity *pBody;
+    Entity body;
     Vec2 relativePosition;
     Vec2 velocity;
     SDL_Rect sheetPosition;
@@ -13,7 +13,8 @@ struct crosshair {
 
 Crosshair *createCrosshair(SDL_Renderer *pRenderer, Vec2 const position) {
     Crosshair *pCrosshair = malloc(sizeof(Crosshair));
-    pCrosshair->pBody = createEntity(position, NULL, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK);
+    if (entityInitData(&(pCrosshair->body), position, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK)) { return NULL; }
+    
     pCrosshair->relativePosition = createVector(0.0f, 0.0f);
     pCrosshair->velocity = createVector(0.0f, 0.0f);
 
@@ -29,7 +30,7 @@ Crosshair *createCrosshair(SDL_Renderer *pRenderer, Vec2 const position) {
 void crosshairHandleInput(Crosshair *pCrosshair, Input *pInput) {
     pCrosshair->velocity = createVector((float)getMouseState(pInput, MOUSE_MOTION_X), (float)getMouseState(pInput, MOUSE_MOTION_Y));
     vectorAdd(&(pCrosshair->relativePosition), pCrosshair->relativePosition, pCrosshair->velocity);
-    Vec2 position = entityGetMidPoint(pCrosshair->pBody);
+    Vec2 position = entityGetMidPoint(pCrosshair->body);
     if (pCrosshair->relativePosition.x < -CROSSHAIR_MAX_DISTANCE) {
         pCrosshair->relativePosition.x = -CROSSHAIR_MAX_DISTANCE;
     }
@@ -60,16 +61,16 @@ void crosshairHandleInput(Crosshair *pCrosshair, Input *pInput) {
 void crosshairUpdatePosition(Crosshair *pCrosshair, Vec2 referencePosition) {
     Vec2 position;
     vectorAdd(&position, referencePosition, pCrosshair->relativePosition);
-    entitySetPosition(pCrosshair->pBody, position);
+    entitySetPosition(&(pCrosshair->body), position);
     return;
 }
 
-Entity *crosshairGetBody(Crosshair const *pCrosshair) {
-    return pCrosshair->pBody;
+Entity crosshairGetBody(Crosshair const *pCrosshair) {
+    return pCrosshair->body;
 }
 
 Vec2 crosshairGetPosition(Crosshair const *pCrosshair) {
-    return entityGetMidPoint(pCrosshair->pBody);
+    return entityGetMidPoint(pCrosshair->body);
 }
 
 SDL_Rect crosshairGetSheetPosition(Crosshair const *pCrosshair) {
@@ -79,7 +80,7 @@ SDL_Rect crosshairGetSheetPosition(Crosshair const *pCrosshair) {
 void destroyCrosshair(Crosshair *pCrosshair) {
     if (pCrosshair == NULL) { return; }
 
-    destroyEntity(pCrosshair->pBody);
+    destroyHitbox(pCrosshair->body.pHitbox);
     free(pCrosshair);
 
     return;

@@ -1,5 +1,4 @@
 #pragma once
-#include <SDL2/SDL.h>
 #include <stdbool.h>
 
 #include "entity.h"
@@ -21,7 +20,7 @@ typedef struct {
 
 typedef struct tongue Tongue;
 
-Tongue *createTongue(Vec2 position, SDL_Renderer *pRenderer);
+Tongue *createTongue(Vec2 position);
 
 bool tongueSetMousePosition(Tongue *pTongue, Vec2 mousePosition);
 
@@ -35,14 +34,14 @@ void tongueUpdate(Tongue *pTongue, Vec2 centerPoint, float timestep);
 
 void tongueCalculateShaft(Tongue *pTongue, Vec2 centerPoint, Vec2 referencePoint);
 
-bool tongueCheckCollision(Tongue *pTongue, Entity *pEntity);
+bool tongueCheckCollision(Tongue *pTongue, Entity const entity);
 
 TongueInfo tongueGetInfo(Tongue const *pTongue);
 
-Entity *tongueGetTip(Tongue const *pTongue);
+Entity tongueGetTip(Tongue const *pTongue);
 
 Hitbox *tongueGetHitbox(Tongue const *pTongue);
 
-SDL_Texture *tongueGetShaftTexture(Tongue const *pTongue);
+void tongueOverrideVelocity(Tongue *pTongue, Vec2 velocity);
 
 void destroyTongue(Tongue *pTongue);

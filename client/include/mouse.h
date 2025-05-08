@@ -10,7 +10,7 @@ void crosshairHandleInput(Crosshair *crosshair, Input *input);
 
 void crosshairUpdatePosition(Crosshair *crosshair, Vec2 referencePosition);
 
-Entity *crosshairGetBody(Crosshair const *pCrosshair);
+Entity crosshairGetBody(Crosshair const *pCrosshair);
 
 Vec2 crosshairGetPosition(Crosshair const *pCrosshair);
 

@@ -28,14 +28,12 @@ struct camera {
     int logicalWidth;
     int logicalHeight;
     SDL_Renderer *pRenderer;
-    Entity *pTarget1;
-    Entity *pTarget2;
     CameraMode mode;
     Tracker tracker;
     float currentZoom;
 };
 
-Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
+Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRenderer, int cameraMode) {
     Camera *pCamera = malloc(sizeof(Camera));
     pCamera->position = createVector(0.0f, 0.0f);
     pCamera->velocity = createVector(0.0f, 0.0f);
@@ -60,10 +58,7 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
 
     pCamera->logicalWidth = (float)width/MAX_ZOOM_IN;
     pCamera->logicalHeight = (float)height/MAX_ZOOM_IN;
-    pCamera->pRenderer = NULL;
-
-    pCamera->pTarget1 = NULL;
-    pCamera->pTarget2 = NULL;
+    pCamera->pRenderer = pRenderer;
 
     cameraSetMode(pCamera, cameraMode);
     pCamera->currentZoom = MAX_ZOOM_IN;
@@ -98,14 +93,6 @@ int cameraSetRenderer(Camera *pCamera, SDL_Renderer *pRenderer) {
             break;
     }
 
-    return 0;
-}
-
-int cameraSetTargets(Camera *pCamera, Entity *pTarget1, Entity *pTarget2) {
-    if (pCamera == NULL) { return IS_NULL; }
-
-    pCamera->pTarget1 = pTarget1;
-    pCamera->pTarget2 = pTarget2;
     return 0;
 }
 
@@ -147,11 +134,9 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
     return 0;
 }
 
-void cameraScaleToTargets(Camera *pCamera) {
+void cameraScaleToTargets(Camera *pCamera, Vec2 position1, Vec2 position2) {
     if (pCamera == NULL) { return; }
 
-    Vec2 position1 = entityGetMidPoint(pCamera->pTarget1);
-    Vec2 position2 = entityGetMidPoint(pCamera->pTarget2);
     Vec2 middlePoint;
     vectorMidPoint(&middlePoint, position1, position2);
 
@@ -224,7 +209,7 @@ void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
     return;
 }
 
-int cameraUpdate(Camera *pCamera) {
+int cameraUpdate(Camera *pCamera, Entity const target1, Entity const target2) {
     if (pCamera == NULL) { return IS_NULL; }
 
     if (pCamera->pRenderer == NULL) {
@@ -234,16 +219,13 @@ int cameraUpdate(Camera *pCamera) {
 
     switch (pCamera->mode) {
         case SCALING:
-            if (pCamera->pTarget1 == NULL && pCamera->pTarget2 == NULL) { return MISSING_TARGETS; }
-            cameraScaleToTargets(pCamera);
+            cameraScaleToTargets(pCamera, entityGetMidPoint(target1), entityGetMidPoint(target2));
             break;
         case TRACKING_T1:
-            if (pCamera->pTarget1 == NULL) { return MISSING_TARGET1; }
-            cameraTrackTarget(pCamera, entityGetMidPoint(pCamera->pTarget1));
+            cameraTrackTarget(pCamera, entityGetMidPoint(target1));
             break;
         case TRACKING_T2:
-            if (pCamera->pTarget2 == NULL) { return MISSING_TARGET2; }
-            cameraTrackTarget(pCamera, entityGetMidPoint(pCamera->pTarget2));
+            cameraTrackTarget(pCamera, entityGetMidPoint(target2));
             break;
         case FIXED:
             break;

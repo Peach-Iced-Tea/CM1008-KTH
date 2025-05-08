@@ -2,7 +2,6 @@
 #include <SDL2/SDL.h>
 
 #include "entity.h"
-#include "physics.h"
 
 #define ARRAY_ENTITIES 1
 #define ARRAY_HITBOXES 2

@@ -66,9 +66,6 @@ void destroyDynamicArray(DynamicArray *pArray) {
 
     for (size_t i = 0; i < pArray->size; i++) {
         switch (pArray->arrayType) {
-            case ARRAY_ENTITIES:
-                destroyEntity(pArray->objects[i]);
-                break;
             case ARRAY_HITBOXES:
                 destroyHitbox(pArray->objects[i]);
                 break;

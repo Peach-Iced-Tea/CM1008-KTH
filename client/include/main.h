@@ -5,7 +5,6 @@
 #include <stdbool.h>
 
 #include "vmath.h"
-#include "physics.h"
 #include "entity.h"
 #include "input.h"
 #include "camera.h"

@@ -27,11 +27,11 @@ int initGame(Game *pGame) {
     if (pGame->pWindow == NULL) { return 1; }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), windowGetRenderer(pGame->pWindow), i);
+        pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), i);
         if (pGame->players[i] == NULL) { return 1; }
     }
 
-    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
+    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, windowGetRenderer(pGame->pWindow), SCALING);
     if (pGame->pCamera == NULL) { return 1; }
 
     pGame->pInput = createInputTracker();
@@ -66,7 +66,7 @@ int initGame(Game *pGame) {
         }
     }
 
-    pGame->pCrosshair = createCrosshair(windowGetRenderer(pGame->pWindow), entityGetMidPoint(playerGetBody(pGame->players[0])));
+    pGame->pCrosshair = createCrosshair(windowGetRenderer(pGame->pWindow), playerGetMidPoint(pGame->players[0]));
 
     return 0;
 }
@@ -77,7 +77,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
         case SHOOTING:
             if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                 playerSetState(pPlayer, ROTATING);
-                playerSetGrabbedEntity(pPlayer, playerGetBody(pTeammate));
+                playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
             }
             break;
     }
@@ -102,7 +102,14 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     windowClearFrame(pGame->pWindow);
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        windowRenderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
+        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), pGame->pCamera, RENDER_PLAYER1+i);
+        switch (playerGetInfo(pPlayer).state) {
+            case SHOOTING:
+            case RELEASE:
+            case ROTATING:
+                windowRenderTongue(pGame->pWindow, playerGetTongue(pPlayer), pGame->pCamera);
+                break;
+        }
     }
 
     windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
@@ -111,7 +118,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
     }
 
-    windowRenderCrosshair(pGame->pWindow, pGame->pCrosshair, pGame->pCamera);
+    windowRenderObject(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), pGame->pCamera, RENDER_CROSSHAIR);
     windowDisplayFrame(pGame->pWindow);
     return;
 }
@@ -216,8 +223,6 @@ int main(int argv, char** args) {
 
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
-    cameraSetRenderer(game.pCamera, windowGetRenderer(game.pWindow));
-    cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
@@ -239,7 +244,6 @@ int main(int argv, char** args) {
                     pTeammate = game.players[0];
                 }
 
-                cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
                 lastTime = SDL_GetTicks64();
                 gameState = GAME_RUNNING;
                 break;
@@ -254,13 +258,13 @@ int main(int argv, char** args) {
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
                 crosshairHandleInput(game.pCrosshair, game.pInput);
-                crosshairUpdatePosition(game.pCrosshair, entityGetMidPoint(playerGetBody(pPlayer)));
+                crosshairUpdatePosition(game.pCrosshair, playerGetMidPoint(pPlayer));
 
                 Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
                 switch (playerGetInfo(pPlayer).state) {
                     case ROTATING:
-                        float targetAngle = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), crosshairGetPosition(game.pCrosshair));
+                        float targetAngle = vectorGetAngle(playerGetMidPoint(pPlayer), crosshairGetPosition(game.pCrosshair));
                         playerCalculateRotation(pPlayer, targetAngle);
                         break;
                 }
@@ -277,7 +281,7 @@ int main(int argv, char** args) {
                     accumulator -= timestep;
                 }
         
-                cameraUpdate(game.pCamera);
+                cameraUpdate(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
                 updateDisplay(&game, mousePosition);
                 
                 break;

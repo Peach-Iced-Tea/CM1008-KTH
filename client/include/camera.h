@@ -25,15 +25,13 @@ typedef struct camera Camera;
 
 // Error codes are defined below here.
 typedef enum {
-    IS_NULL = -5, MISSING_RENDERER, MISSING_TARGETS, MISSING_TARGET1, MISSING_TARGET2
+    IS_NULL = 1, MISSING_RENDERER, MISSING_TARGETS, MISSING_TARGET1, MISSING_TARGET2
 } CameraError;
 
 /*
 Create a Camera with the current resolution of the game window.
-
-The camera needs access to a SDL_renderer*, set one with cameraSetRenderer().
 */
-Camera *createCamera(int width, int height, int refreshRate, int cameraMode);
+Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *renderer, int cameraMode);
 
 /*
 Handles key inputs related to the functions of the Camera data type.
@@ -46,13 +44,6 @@ void cameraHandleInput(Camera *camera, Input const *inputs);
 Set the SDL_Renderer* that the given Camera should use when scaling.
 */
 int cameraSetRenderer(Camera *camera, SDL_Renderer *renderer);
-
-/*
-Set which targets the Camera should use for its calculations.
-
-CAMERA_SCALING expects both Targets to be set.
-*/
-int cameraSetTargets(Camera *camera, Entity *target1, Entity *target2);
 
 /*
 Set what mode the given Camera should be set to.
@@ -72,7 +63,7 @@ Update the position as well as the zoom level of the given Camera.
 
 What this does function does depends on what mode the given Camera is set to.
 */
-int cameraUpdate(Camera *camera);
+int cameraUpdate(Camera *camera, Entity const target1, Entity const target2);
 
 /*
 Check if the given Entity is visible inside the dimensions of the given Camera.
