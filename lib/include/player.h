@@ -10,6 +10,9 @@
 #define PLAYER_1 0
 #define PLAYER_2 1
 
+#define PLAYER_START_X 48.0f
+#define PLAYER_START_Y 48.0f
+
 typedef enum {
     IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING, RELEASE, LOCKED
 } PlayerState;
@@ -112,11 +115,6 @@ Tongue *playerGetTongue(Player const *pPlayer);
 
 */
 Hitbox *playerGetBodyHitbox(Player const *pPlayer);
-
-/*
-
-*/
-SDL_Texture *playerGetBodyTexture(Player const *pPlayer);
 
 /*
 

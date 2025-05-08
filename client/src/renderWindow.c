@@ -7,8 +7,7 @@ typedef enum {
 typedef struct textures {
     SDL_Texture *pPlayer1;
     SDL_Texture *pPlayer2;
-    SDL_Texture *pTongueTip;
-    SDL_Texture *pTongueShaft;
+    SDL_Texture *pTongue;
     SDL_Texture *pCrosshair;
 } Textures;
 
@@ -36,13 +35,8 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-    pTextures->pTongueTip = IMG_LoadTexture(pRenderer, "lib/resources/tongueTip.png");
-    if (pTextures->pTongueTip == NULL) {
-        printf("Error: %s\n", SDL_GetError());
-        return 1;
-    }
-    pTextures->pTongueShaft = IMG_LoadTexture(pRenderer, "lib/resources/tongueShaft.png");
-    if (pTextures->pTongueShaft == NULL) {
+    pTextures->pTongue = IMG_LoadTexture(pRenderer, "lib/resources/tongue.png");
+    if (pTextures->pTongue == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
@@ -231,18 +225,19 @@ void windowRenderTongue(RenderWindow *pRenderWindow, Tongue const *pTongue, Came
     float angle = info.angle * (180.0f/M_PI);
     dst.x -= dst.w*0.5f;
     dst.y -= dst.h*0.5f;
-
-    SDL_RenderCopyExF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongueShaft, NULL, &dst, angle, NULL, 0);
-
-    dst = entityGetCurrentFrame(tongueGetTip(pTongue));
-    cameraAdjustToViewport(pCamera, &dst, NULL);
     SDL_Rect src;
     src.w = 32;
     src.h = 32;
     src.x = 0;
     src.y = 0;
 
-    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongueTip, &src, &dst);
+    SDL_RenderCopyExF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongue, &src, &dst, angle, NULL, 0);
+
+    dst = entityGetCurrentFrame(tongueGetTip(pTongue));
+    cameraAdjustToViewport(pCamera, &dst, NULL);
+    
+    src.x = 32;
+    SDL_RenderCopyF(pRenderWindow->pRenderer, pRenderWindow->textures.pTongue, &src, &dst);
     if (pRenderWindow->renderHitboxes) { windowRenderHitbox(pRenderWindow, entityGetHitbox(tongueGetTip(pTongue)), pCamera); }
     return;
 }

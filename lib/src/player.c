@@ -11,8 +11,6 @@
 #define MOVE_LEFT_INPUT KEY_A
 #define MOVE_RIGHT_INPUT KEY_D
 #define JUMP_INPUT KEY_SPACE
-#define ROTATE_LEFT_INPUT KEY_Q
-#define ROTATE_RIGHT_INPUT KEY_E
 #define TOGGLE_GODMODE_INPUT KEY_G
 
 struct player {
@@ -65,7 +63,7 @@ void playerHandleInput(Player *pPlayer, Input const *pInputs) {
         case FLYING:
             if (getKeyState(pInputs, MOVE_UP_INPUT)) { movement.y = -PLAYER_VELOCITY; }
             if (getKeyState(pInputs, MOVE_DOWN_INPUT)) { movement.y += PLAYER_VELOCITY; }
-        default:        
+        default:
             if (getKeyState(pInputs, MOVE_LEFT_INPUT)) { movement.x = -PLAYER_VELOCITY; }
             if (getKeyState(pInputs, MOVE_RIGHT_INPUT)) { movement.x += PLAYER_VELOCITY; }
     }
@@ -456,10 +454,6 @@ Tongue *playerGetTongue(Player const *pPlayer) {
 
 Hitbox *playerGetBodyHitbox(Player const *pPlayer) {
     return entityGetHitbox(pPlayer->pBody);
-}
-
-SDL_Texture *playerGetBodyTexture(Player const *pPlayer) {
-    return entityGetTexture(pPlayer->pBody);
 }
 
 void playerOverrideState(Player *pPlayer, PlayerState newState) {

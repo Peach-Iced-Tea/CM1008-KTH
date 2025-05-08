@@ -8,8 +8,6 @@
 
 #define MAX_PLAYERS 2
 #define PACKET_SIZE 512
-#define PLAYER_START_X 48.0f
-#define PLAYER_START_Y 48.0f
 #define TICK_RATE 60.0f
 #define BUFFER_SIZE 1024
 #define SERVER_PORT 50505
