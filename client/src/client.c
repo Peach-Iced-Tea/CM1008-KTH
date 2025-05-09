@@ -176,7 +176,7 @@ void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicA
         bufferIndex = tickToProcess % BUFFER_SIZE;
         Vec2 velocity = pClient->inputBuffer[bufferIndex].input;
         vectorScale(&velocity, timestep);
-        entityMove(playerGetBody(pPlayer), velocity);
+        playerOverrideMove(pPlayer, velocity);
 
         bool standingOnPlatform = false;
         for (int i = 0; i < arrayGetSize(pObjects); i++) {

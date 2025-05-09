@@ -1,10 +1,8 @@
 #pragma once
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_net.h>
 #include <stdbool.h>
 
-#include "player.h"
 #include "vmath.h"
+#include "player.h"
 
 #define MAX_PLAYERS 2
 #define PACKET_SIZE 512
@@ -12,11 +10,11 @@
 #define BUFFER_SIZE 1024
 #define SERVER_PORT 50505
 
-typedef enum {
+typedef enum ServerState {
     SERVER_WAITING, SERVER_RUNNING, SERVER_CLOSING
 } ServerState;
 
-typedef enum {
+typedef enum ClientState {
     CONNECTED, DISCONNECTED
 } ClientState;
 
@@ -55,8 +53,17 @@ typedef struct {
     ClientState clientState;
 } ClientPayload;
 
-void prepareInputData(InputData *pData, Player *pPlayer, int tick);
+/*
+Prepares the given InputData with the relevant data from the supplied Player.
+*/
+void prepareInputData(InputData *data, Player const *player, int tick);
 
-void prepareStateData(StateData *pSData, Player *pPlayer, int tick);
+/*
+Prepares the given StateData with the relevant data from the supplied Player.
+*/
+void prepareStateData(StateData *data, Player const *player, int tick);
 
-void prepareEntityData(EntityData *pEData, Entity *pEntity, int entityID, int tick);
+/*
+Prepares the given EntityData with the relevant data from the supplied Entity.
+*/
+void prepareEntityData(EntityData *data, Entity const *entity, int entityID, int tick);

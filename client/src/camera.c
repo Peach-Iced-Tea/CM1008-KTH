@@ -28,14 +28,12 @@ struct camera {
     int logicalWidth;
     int logicalHeight;
     SDL_Renderer *pRenderer;
-    Entity *pTarget1;
-    Entity *pTarget2;
     CameraMode mode;
     Tracker tracker;
     float currentZoom;
 };
 
-Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
+Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRenderer, int cameraMode) {
     Camera *pCamera = malloc(sizeof(Camera));
     pCamera->position = createVector(0.0f, 0.0f);
     pCamera->velocity = createVector(0.0f, 0.0f);
@@ -60,10 +58,7 @@ Camera *createCamera(int width, int height, int refreshRate, int cameraMode) {
 
     pCamera->logicalWidth = (float)width/MAX_ZOOM_IN;
     pCamera->logicalHeight = (float)height/MAX_ZOOM_IN;
-    pCamera->pRenderer = NULL;
-
-    pCamera->pTarget1 = NULL;
-    pCamera->pTarget2 = NULL;
+    pCamera->pRenderer = pRenderer;
 
     cameraSetMode(pCamera, cameraMode);
     pCamera->currentZoom = MAX_ZOOM_IN;
@@ -84,74 +79,9 @@ void cameraHandleInput(Camera *pCamera, Input const *pInputs) {
     return;
 }
 
-int cameraSetRenderer(Camera *pCamera, SDL_Renderer *pRenderer) {
-    if (pCamera == NULL) { return IS_NULL; }
-
-    pCamera->pRenderer = pRenderer;
-    switch (pCamera->mode) {
-        case SCALING:
-            break;
-        case TRACKING_T1:
-        case TRACKING_T2:
-        case FIXED:
-            SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
-            break;
-    }
-
-    return 0;
-}
-
-int cameraSetTargets(Camera *pCamera, Entity *pTarget1, Entity *pTarget2) {
-    if (pCamera == NULL) { return IS_NULL; }
-
-    pCamera->pTarget1 = pTarget1;
-    pCamera->pTarget2 = pTarget2;
-    return 0;
-}
-
-int cameraSetMode(Camera *pCamera, int newMode) {
-    if (pCamera == NULL) { return IS_NULL; }
-
-    switch (newMode) {
-        case SCALING:
-        case FIXED:
-            pCamera->tracker.offsetX = 0;
-            pCamera->tracker.offsetY = 0;
-            pCamera->tracker.followX = false;
-            pCamera->tracker.followY = false;
-            break;
-        case TRACKING_T1:
-        case TRACKING_T2:
-            pCamera->tracker.offsetX = CAMERA_OFFSET_X;
-            pCamera->tracker.offsetY = CAMERA_OFFSET_Y;
-            pCamera->tracker.followX = false;
-            pCamera->tracker.followY = false;
-            break;
-    }
-
-    pCamera->mode = newMode;
-    
-    return 0;
-}
-
-int cameraSetZoom(Camera *pCamera, float zoomScale) {
-    if (pCamera == NULL) { return IS_NULL; }
-
-    if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
-    else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
-
-    pCamera->logicalWidth = round(pCamera->display.width / zoomScale);
-    pCamera->logicalHeight = round(pCamera->display.height / zoomScale);
-    pCamera->currentZoom = zoomScale;
-    SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
-    return 0;
-}
-
-void cameraScaleToTargets(Camera *pCamera) {
+void cameraScaleToTargets(Camera *pCamera, Vec2 position1, Vec2 position2) {
     if (pCamera == NULL) { return; }
 
-    Vec2 position1 = entityGetMidPoint(pCamera->pTarget1);
-    Vec2 position2 = entityGetMidPoint(pCamera->pTarget2);
     Vec2 middlePoint;
     vectorMidPoint(&middlePoint, position1, position2);
 
@@ -224,7 +154,7 @@ void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
     return;
 }
 
-int cameraUpdate(Camera *pCamera) {
+int cameraUpdate(Camera *pCamera, Entity const target1, Entity const target2) {
     if (pCamera == NULL) { return IS_NULL; }
 
     if (pCamera->pRenderer == NULL) {
@@ -234,16 +164,13 @@ int cameraUpdate(Camera *pCamera) {
 
     switch (pCamera->mode) {
         case SCALING:
-            if (pCamera->pTarget1 == NULL && pCamera->pTarget2 == NULL) { return MISSING_TARGETS; }
-            cameraScaleToTargets(pCamera);
+            cameraScaleToTargets(pCamera, entityGetMidPoint(target1), entityGetMidPoint(target2));
             break;
         case TRACKING_T1:
-            if (pCamera->pTarget1 == NULL) { return MISSING_TARGET1; }
-            cameraTrackTarget(pCamera, entityGetMidPoint(pCamera->pTarget1));
+            cameraTrackTarget(pCamera, entityGetMidPoint(target1));
             break;
         case TRACKING_T2:
-            if (pCamera->pTarget2 == NULL) { return MISSING_TARGET2; }
-            cameraTrackTarget(pCamera, entityGetMidPoint(pCamera->pTarget2));
+            cameraTrackTarget(pCamera, entityGetMidPoint(target2));
             break;
         case FIXED:
             break;
@@ -290,6 +217,61 @@ void cameraAdjustToViewport(Camera const *pCamera, SDL_FRect *pDst, Vec2 *pVecto
     return;
 }
 
+int cameraSetRenderer(Camera *pCamera, SDL_Renderer *pRenderer) {
+    if (pCamera == NULL) { return IS_NULL; }
+
+    pCamera->pRenderer = pRenderer;
+    switch (pCamera->mode) {
+        case SCALING:
+            break;
+        case TRACKING_T1:
+        case TRACKING_T2:
+        case FIXED:
+            SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
+            break;
+    }
+
+    return 0;
+}
+
+int cameraSetMode(Camera *pCamera, int newMode) {
+    if (pCamera == NULL) { return IS_NULL; }
+
+    switch (newMode) {
+        case SCALING:
+        case FIXED:
+            pCamera->tracker.offsetX = 0;
+            pCamera->tracker.offsetY = 0;
+            pCamera->tracker.followX = false;
+            pCamera->tracker.followY = false;
+            break;
+        case TRACKING_T1:
+        case TRACKING_T2:
+            pCamera->tracker.offsetX = CAMERA_OFFSET_X;
+            pCamera->tracker.offsetY = CAMERA_OFFSET_Y;
+            pCamera->tracker.followX = false;
+            pCamera->tracker.followY = false;
+            break;
+    }
+
+    pCamera->mode = newMode;
+    
+    return 0;
+}
+
+int cameraSetZoom(Camera *pCamera, float zoomScale) {
+    if (pCamera == NULL) { return IS_NULL; }
+
+    if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
+    else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
+
+    pCamera->logicalWidth = round(pCamera->display.width / zoomScale);
+    pCamera->logicalHeight = round(pCamera->display.height / zoomScale);
+    pCamera->currentZoom = zoomScale;
+    SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
+    return 0;
+}
+
 Vec2 cameraGetMousePosition(Camera const *pCamera) {
     Vec2 mousePosition = createVector(0.0f, 0.0f);
     int x, y;
@@ -324,12 +306,10 @@ Vec2 cameraGetPosition(Camera const *pCamera) {
     if (pCamera == NULL) { return createVector(0.0f, 0.0f); }
 
     Vec2 position = pCamera->position;
-    position.y -= pCamera->tracker.offsetY;
-
     return position;
 }
 
-int cameraGetMode(Camera const *pCamera) {
+CameraMode cameraGetMode(Camera const *pCamera) {
     if (pCamera == NULL) { return IS_NULL; }
 
     return pCamera->mode;

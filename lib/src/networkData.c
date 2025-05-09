@@ -1,6 +1,6 @@
 #include "networkData.h"
 
-void prepareInputData(InputData *pData, Player *pPlayer, int tick) {
+void prepareInputData(InputData *pData, Player const *pPlayer, int tick) {
     PlayerInfo info = playerGetInfo(pPlayer);
     pData->input = info.velocity;
     pData->tongueInput = tongueGetInfo(playerGetTongue(pPlayer)).velocity;
@@ -9,7 +9,7 @@ void prepareInputData(InputData *pData, Player *pPlayer, int tick) {
     return;
 }
 
-void prepareStateData(StateData *pData, Player *pPlayer, int tick) {
+void prepareStateData(StateData *pData, Player const *pPlayer, int tick) {
     PlayerInfo info = playerGetInfo(pPlayer);
     pData->position = info.position;
     pData->tonguePosition = tongueGetInfo(playerGetTongue(pPlayer)).position;
@@ -22,9 +22,9 @@ void prepareStateData(StateData *pData, Player *pPlayer, int tick) {
     return;
 }
 
-void prepareEntityData(EntityData *pData, Entity *pEntity, int entityID, int tick) {
+void prepareEntityData(EntityData *pData, Entity const *pEntity, int entityID, int tick) {
     if (pEntity != NULL) {
-        pData->position = entityGetPosition(pEntity);
+        pData->position = entityGetPosition(*pEntity);
     }
     else {
         pData->position = createVector(0.0f, 0.0f);

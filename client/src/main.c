@@ -27,17 +27,17 @@ int initGame(Game *pGame) {
     if (pGame->pWindow == NULL) { return 1; }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), windowGetRenderer(pGame->pWindow), i);
+        pGame->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), i);
         if (pGame->players[i] == NULL) { return 1; }
     }
 
-    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, SCALING);
+    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, windowGetRenderer(pGame->pWindow), SCALING);
     if (pGame->pCamera == NULL) { return 1; }
 
     pGame->pInput = createInputTracker();
     if (pGame->pInput == NULL) { return 1; }
 
-    pGame->pMenu = createMenu(pGame->pWindow);
+    pGame->pMenu = createMenu(windowGetRenderer(pGame->pWindow));
     if (pGame->pMenu == NULL) { return 1; }
 
     pGame->pClient = createClient(0);
@@ -52,7 +52,7 @@ int initGame(Game *pGame) {
     int tileSize = 32;
 
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
-    if (pGame->pHitforms == NULL) {return 1;}
+    if (pGame->pHitforms == NULL) { return 1; }
 
     Vec2 tmp;
     for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {
@@ -66,7 +66,7 @@ int initGame(Game *pGame) {
         }
     }
 
-    pGame->pCrosshair = createCrosshair(windowGetRenderer(pGame->pWindow), entityGetMidPoint(playerGetBody(pGame->players[0])));
+    pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
 
     return 0;
 }
@@ -77,7 +77,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
         case SHOOTING:
             if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
                 playerSetState(pPlayer, ROTATING);
-                playerSetGrabbedEntity(pPlayer, playerGetBody(pTeammate));
+                playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
             }
             break;
     }
@@ -101,18 +101,25 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     windowClearFrame(pGame->pWindow);
 
-    windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
+    windowRenderMapLayer(pGame->pWindow, pGame->pMap);
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        windowRenderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
+        switch (playerGetInfo(pGame->players[i]).state) {
+            case SHOOTING:
+            case RELEASE:
+            case ROTATING:
+                windowRenderObject(pGame->pWindow, tongueGetShaft(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
+                windowRenderObject(pGame->pWindow, tongueGetTip(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
+                break;
+        }
+        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);
     }
-
     
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
-        windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
+        windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i));
     }
 
-    windowRenderCrosshair(pGame->pWindow, pGame->pCrosshair, pGame->pCamera);
+    windowRenderObject(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), RENDER_CROSSHAIR);
     windowDisplayFrame(pGame->pWindow);
     return;
 }
@@ -217,8 +224,7 @@ int main(int argv, char** args) {
 
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
-    cameraSetRenderer(game.pCamera, windowGetRenderer(game.pWindow));
-    cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
+    windowSetCamera(game.pWindow, game.pCamera);
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
@@ -240,7 +246,6 @@ int main(int argv, char** args) {
                     pTeammate = game.players[0];
                 }
 
-                cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
                 lastTime = SDL_GetTicks64();
                 gameState = GAME_RUNNING;
                 break;
@@ -255,13 +260,13 @@ int main(int argv, char** args) {
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
                 crosshairHandleInput(game.pCrosshair, game.pInput);
-                crosshairUpdatePosition(game.pCrosshair, entityGetMidPoint(playerGetBody(pPlayer)));
+                crosshairUpdatePosition(game.pCrosshair, cameraGetPosition(game.pCamera));
 
                 Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
                 switch (playerGetInfo(pPlayer).state) {
                     case ROTATING:
-                        float targetAngle = vectorGetAngle(entityGetMidPoint(playerGetBody(pPlayer)), crosshairGetPosition(game.pCrosshair));
+                        float targetAngle = vectorGetAngle(playerGetMidPoint(pPlayer), crosshairGetPosition(game.pCrosshair));
                         playerCalculateRotation(pPlayer, targetAngle);
                         break;
                 }
@@ -278,7 +283,8 @@ int main(int argv, char** args) {
                     accumulator -= timestep;
                 }
         
-                cameraUpdate(game.pCamera);
+                cameraUpdate(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
+                crosshairSetBorders(game.pCrosshair, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
                 updateDisplay(&game, mousePosition);
                 
                 break;

@@ -11,9 +11,9 @@ struct menu {
     int nrOfButtons;
 };
 
-Menu *createMenu(RenderWindow *pWindow) {
+Menu *createMenu(SDL_Renderer *pRenderer) {
     Menu *pMenu = malloc(sizeof(Menu));
-    pMenu->pMenuTexture = windowLoadTexture(pWindow, "lib/resources/menyButtonsHJ.png");
+    pMenu->pMenuTexture = IMG_LoadTexture(pRenderer, "lib/resources/menyButtonsHJ.png");
     if (pMenu->pMenuTexture == NULL) { return NULL; }
 
     for (int i = 0; i < MAX_MENU_BUTTONS; i++) {

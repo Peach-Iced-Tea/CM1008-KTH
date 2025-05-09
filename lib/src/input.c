@@ -18,7 +18,7 @@ Input *createInputTracker() {
     return pInput;
 }
 
-int keyInputs(Input *pInputs, SDL_Event event) {
+int keyInputs(SDL_Event event) {
     int pressedKey = -1;
     bool state = (event.type == SDL_KEYDOWN);
     switch (event.key.keysym.scancode) {
@@ -118,7 +118,7 @@ int keyInputs(Input *pInputs, SDL_Event event) {
     return pressedKey;
 }
 
-int mouseInputs(Input *pInputs, SDL_Event event) {
+int mouseInputs(Input *pInput, SDL_Event event) {
     int pressedKey = -1;
     bool state = (event.type == SDL_MOUSEBUTTONDOWN);
     switch (event.button.button) {
@@ -132,15 +132,15 @@ int mouseInputs(Input *pInputs, SDL_Event event) {
 
     switch (event.type) {
         case SDL_MOUSEMOTION:
-            pInputs->mouse[MOUSE_MOTION_X] += event.motion.xrel;
-            pInputs->mouse[MOUSE_MOTION_Y] += event.motion.yrel;
+            pInput->mouse[MOUSE_MOTION_X] += event.motion.xrel;
+            pInput->mouse[MOUSE_MOTION_Y] += event.motion.yrel;
             break;
     }
 
     return pressedKey;
 }
 
-bool checkUserInput(Input *pInputs) {
+bool checkUserInput(Input *pInput) {
     SDL_Event event;
     bool gameRunning = true;
     while (SDL_PollEvent(&event)) {
@@ -148,7 +148,7 @@ bool checkUserInput(Input *pInputs) {
             gameRunning = false;
         }
         else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-            int pressedKey = keyInputs(pInputs, event);
+            int pressedKey = keyInputs(event);
 
             if (pressedKey == -1) { continue; }
 
@@ -156,24 +156,24 @@ bool checkUserInput(Input *pInputs) {
 
             switch (event.type) {
                 case SDL_KEYDOWN:
-                    if (pInputs->keys[pressedKey] == KEY_STATE_UP) { pInputs->keys[pressedKey] = KEY_STATE_DOWN; }
+                    if (pInput->keys[pressedKey] == KEY_STATE_UP) { pInput->keys[pressedKey] = KEY_STATE_DOWN; }
                     break;
                 case SDL_KEYUP:
-                    pInputs->keys[pressedKey] = KEY_STATE_UP;
+                    pInput->keys[pressedKey] = KEY_STATE_UP;
                     break;
             }
         }
         else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEMOTION) {
-            int pressedKey = mouseInputs(pInputs, event);
+            int pressedKey = mouseInputs(pInput, event);
 
             if (pressedKey == -1) { continue; }
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONDOWN:
-                    if (pInputs->mouse[pressedKey] == KEY_STATE_UP) { pInputs->mouse[pressedKey] = KEY_STATE_DOWN; }
+                    if (pInput->mouse[pressedKey] == KEY_STATE_UP) { pInput->mouse[pressedKey] = KEY_STATE_DOWN; }
                     break;
                 case SDL_MOUSEBUTTONUP:
-                    pInputs->mouse[pressedKey] = KEY_STATE_UP;
+                    pInput->mouse[pressedKey] = KEY_STATE_UP;
                     break;
             }
         }
@@ -182,55 +182,55 @@ bool checkUserInput(Input *pInputs) {
     return gameRunning;
 }
 
-void inputHoldTimer(Input *pInputs) {
+void inputHoldTimer(Input *pInput) {
     for (int i = 0; i < MAX_KEY_INPUTS; i++) {
-        if (!pInputs->keys[i]) { continue; }
+        if (!pInput->keys[i]) { continue; }
 
-        if (pInputs->keys[i] < KEY_STATE_HOLD) { pInputs->keys[i]++; }
+        if (pInput->keys[i] < KEY_STATE_HOLD) { pInput->keys[i]++; }
     }
 
     for (int i = 0; i < MAX_MOUSE_INPUTS; i++) {
-        if (!pInputs->mouse[i]) { continue; }
+        if (!pInput->mouse[i]) { continue; }
 
         switch (i) {
             case MOUSE_MOTION_X:
             case MOUSE_MOTION_Y:
-                if (pInputs->mouse[i] != 0) { pInputs->mouse[i] = 0; }
+                if (pInput->mouse[i] != 0) { pInput->mouse[i] = 0; }
                 break;
             default:
-                if (pInputs->mouse[i] < KEY_STATE_HOLD) { pInputs->mouse[i]++; }
+                if (pInput->mouse[i] < KEY_STATE_HOLD) { pInput->mouse[i]++; }
         }
     }
 
     return;
 }
 
-int getKeyState(Input const *pInputs, int keyboardButton) {
+int getKeyState(Input const *pInput, int keyboardButton) {
     if (keyboardButton < 0 || keyboardButton >= MAX_KEY_INPUTS) { return false; }
 
-    return pInputs->keys[keyboardButton];
+    return pInput->keys[keyboardButton];
 }
 
-int getMouseState(Input const *pInputs, int mouseButton) {
+int getMouseState(Input const *pInput, int mouseButton) {
     if (mouseButton < 0 || mouseButton >= MAX_MOUSE_INPUTS) { return false; }
 
-    return pInputs->mouse[mouseButton];
+    return pInput->mouse[mouseButton];
 }
 
-bool checkKeyCombo(Input const *pInputs, int key1, int key2) {
+bool checkKeyCombo(Input const *pInput, int key1, int key2) {
     if (key1 < 0 || key1 >= MAX_KEY_INPUTS) { return false; }
     if (key2 < 0 || key2 >= MAX_KEY_INPUTS) { return false; }
 
-    if (pInputs->keys[key1] == KEY_STATE_DOWN && (pInputs->keys[key2] >= KEY_STATE_DOWN && pInputs->keys[key2] <= KEY_STATE_HOLD)) { return true; }
+    if (pInput->keys[key1] == KEY_STATE_DOWN && (pInput->keys[key2] >= KEY_STATE_DOWN && pInput->keys[key2] <= KEY_STATE_HOLD)) { return true; }
 
-    if (pInputs->keys[key2] == KEY_STATE_DOWN && (pInputs->keys[key1] >= KEY_STATE_DOWN && pInputs->keys[key1] <= KEY_STATE_HOLD)) { return true; }
+    if (pInput->keys[key2] == KEY_STATE_DOWN && (pInput->keys[key1] >= KEY_STATE_DOWN && pInput->keys[key1] <= KEY_STATE_HOLD)) { return true; }
 
     return false;
 }
 
-void destroyInputTracker(Input *pInputs) {
-    if (pInputs == NULL) { return; }
+void destroyInputTracker(Input *pInput) {
+    if (pInput == NULL) { return; }
 
-    free(pInputs);
+    free(pInput);
     return;
 }
