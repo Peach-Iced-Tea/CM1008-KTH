@@ -102,7 +102,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     windowClearFrame(pGame->pWindow);
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        switch (playerGetInfo(pPlayer).state) {
+        switch (playerGetInfo(pGame->players[i]).state) {
             case SHOOTING:
             case RELEASE:
             case ROTATING:
