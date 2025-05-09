@@ -102,12 +102,12 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     windowClearFrame(pGame->pWindow);
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        switch (playerGetInfo(pPlayer).state) {
+        switch (playerGetInfo(pGame->players[i]).state) {
             case SHOOTING:
             case RELEASE:
             case ROTATING:
-                windowRenderObject(pGame->pWindow, tongueGetShaft(playerGetTongue(pPlayer)), RENDER_TONGUE);
-                windowRenderObject(pGame->pWindow, tongueGetTip(playerGetTongue(pPlayer)), RENDER_TONGUE);
+                windowRenderObject(pGame->pWindow, tongueGetShaft(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
+                windowRenderObject(pGame->pWindow, tongueGetTip(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
                 break;
         }
         windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);
