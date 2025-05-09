@@ -6,6 +6,8 @@ struct crosshair {
     Entity body;
     Vec2 relativePosition;
     Vec2 velocity;
+    Vec2 borders;
+    bool lockPosition;
 };
 
 Crosshair *createCrosshair(Vec2 const position) {
@@ -14,6 +16,8 @@ Crosshair *createCrosshair(Vec2 const position) {
     
     pCrosshair->relativePosition = createVector(0.0f, 0.0f);
     pCrosshair->velocity = createVector(0.0f, 0.0f);
+    pCrosshair->borders = createVector(0.0f, 0.0f);
+    pCrosshair->lockPosition = false;
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     return pCrosshair;
@@ -22,20 +26,22 @@ Crosshair *createCrosshair(Vec2 const position) {
 void crosshairHandleInput(Crosshair *pCrosshair, Input *pInput) {
     pCrosshair->velocity = createVector((float)getMouseState(pInput, MOUSE_MOTION_X), (float)getMouseState(pInput, MOUSE_MOTION_Y));
     vectorAdd(&(pCrosshair->relativePosition), pCrosshair->relativePosition, pCrosshair->velocity);
-    Vec2 position = entityGetMidPoint(pCrosshair->body);
-    if (pCrosshair->relativePosition.x < -CROSSHAIR_MAX_DISTANCE) {
-        pCrosshair->relativePosition.x = -CROSSHAIR_MAX_DISTANCE;
+    if (pCrosshair->relativePosition.x < -pCrosshair->borders.x) {
+        pCrosshair->relativePosition.x = -pCrosshair->borders.x;
     }
-    else if (pCrosshair->relativePosition.x > CROSSHAIR_MAX_DISTANCE) {
-        pCrosshair->relativePosition.x = CROSSHAIR_MAX_DISTANCE;
+    else if (pCrosshair->relativePosition.x > pCrosshair->borders.x-pCrosshair->body.frame.w) {
+        pCrosshair->relativePosition.x = pCrosshair->borders.x-pCrosshair->body.frame.w;
     }
 
-    if (pCrosshair->relativePosition.y < -CROSSHAIR_MAX_DISTANCE) {
-        pCrosshair->relativePosition.y = -CROSSHAIR_MAX_DISTANCE;
+    if (pCrosshair->relativePosition.y < -pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f) {
+        pCrosshair->relativePosition.y = -pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f;
     }
-    else if (pCrosshair->relativePosition.y > CROSSHAIR_MAX_DISTANCE) {
-        pCrosshair->relativePosition.y = CROSSHAIR_MAX_DISTANCE;
+    else if (pCrosshair->relativePosition.y > pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f) {
+        pCrosshair->relativePosition.y = pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f;
     }
+
+    pCrosshair->lockPosition = false;
+    if (pCrosshair->velocity.x == 0.0f && pCrosshair->velocity.y == 0.0f) { pCrosshair->lockPosition = true; }
 
     pCrosshair->body.source.x = 0;
     pCrosshair->body.source.y = 0;
@@ -54,6 +60,12 @@ void crosshairUpdatePosition(Crosshair *pCrosshair, Vec2 referencePosition) {
     Vec2 position;
     vectorAdd(&position, referencePosition, pCrosshair->relativePosition);
     entitySetPosition(&(pCrosshair->body), position);
+    return;
+}
+
+void crosshairSetBorders(Crosshair *pCrosshair, float borderX, float borderY) {
+    pCrosshair->borders.x = borderX*0.5f;
+    pCrosshair->borders.y = borderY*0.5f - pCrosshair->body.frame.h*0.5f;
     return;
 }
 

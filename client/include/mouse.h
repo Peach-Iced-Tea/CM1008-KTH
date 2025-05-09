@@ -17,6 +17,11 @@ Calling this function updates the current position of the Crosshair based on the
 void crosshairUpdatePosition(Crosshair *crosshair, Vec2 referencePosition);
 
 /*
+Set the borders that the crosshair can move within relative to its referencePosition.
+*/
+void crosshairSetBorders(Crosshair *pCrosshair, float borderX, float borderY);
+
+/*
 Get the body (Entity) of the given Crosshair.
 */
 Entity crosshairGetBody(Crosshair const *crosshair);

@@ -306,8 +306,6 @@ Vec2 cameraGetPosition(Camera const *pCamera) {
     if (pCamera == NULL) { return createVector(0.0f, 0.0f); }
 
     Vec2 position = pCamera->position;
-    position.y -= pCamera->tracker.offsetY;
-
     return position;
 }
 

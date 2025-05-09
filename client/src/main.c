@@ -260,7 +260,7 @@ int main(int argv, char** args) {
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
                 crosshairHandleInput(game.pCrosshair, game.pInput);
-                crosshairUpdatePosition(game.pCrosshair, playerGetMidPoint(pPlayer));
+                crosshairUpdatePosition(game.pCrosshair, cameraGetPosition(game.pCamera));
 
                 Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
@@ -284,6 +284,7 @@ int main(int argv, char** args) {
                 }
         
                 cameraUpdate(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
+                crosshairSetBorders(game.pCrosshair, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
                 updateDisplay(&game, mousePosition);
                 
                 break;
