@@ -52,7 +52,7 @@ int initGame(Game *pGame) {
     int tileSize = 32;
 
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
-    if (pGame->pHitforms == NULL) {return 1;}
+    if (pGame->pHitforms == NULL) { return 1; }
 
     Vec2 tmp;
     for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {

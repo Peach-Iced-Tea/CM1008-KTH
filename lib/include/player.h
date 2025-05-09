@@ -12,7 +12,7 @@
 #define PLAYER_START_X 1088.0f
 #define PLAYER_START_Y 3968.0f
 
-typedef enum {
+typedef enum PlayerState {
     IDLE, RUNNING, JUMPING, FALLING, ROTATING, FLYING, SHOOTING, RELEASE, LOCKED
 } PlayerState;
 

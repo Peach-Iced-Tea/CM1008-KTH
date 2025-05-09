@@ -7,7 +7,7 @@
 #define KEY_STATE_DOWN 1
 #define KEY_STATE_HOLD 20
 
-typedef enum {
+typedef enum Keys {
     KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9,
     KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E, KEY_R, KEY_T, KEY_F, KEY_G,
     KEY_H, KEY_J, KEY_SPACE, KEY_COMMA, KEY_PERIOD, KEY_RETURN, KEY_ALT,
@@ -15,7 +15,7 @@ typedef enum {
     MAX_KEY_INPUTS
 } Keys;
 
-typedef enum {
+typedef enum Mouse {
     MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MOTION_X, MOUSE_MOTION_Y,
     MAX_MOUSE_INPUTS
 } Mouse;

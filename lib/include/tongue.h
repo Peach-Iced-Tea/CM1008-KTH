@@ -4,7 +4,7 @@
 #include "entity.h"
 #include "vmath.h"
 
-typedef enum {
+typedef enum TongueState {
     NEUTRAL, EXTENDING, RETRACTING, HIT_ENTITY
 } TongueState;
 

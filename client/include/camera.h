@@ -12,7 +12,7 @@ TRACKING_T1: The camera will track the first Entity given with cameraSetTargets(
 TRACKING_T2: The camera will track the second Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
 FIXED: The camera is set to a specific position and will not move unless manually done.
 */
-typedef enum {
+typedef enum CameraMode {
     SCALING, TRACKING_T1, TRACKING_T2, FIXED
 } CameraMode;
 

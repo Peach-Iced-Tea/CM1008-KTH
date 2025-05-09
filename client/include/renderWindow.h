@@ -9,8 +9,9 @@
 #include "mapParser.h"
 #include "tongue.h"
 
-typedef enum {
-    RENDER_PLAYER1, RENDER_PLAYER2, RENDER_TONGUE, RENDER_OBSTACLE, RENDER_CROSSHAIR
+typedef enum RenderType {
+    RENDER_PLAYER1, RENDER_PLAYER2, RENDER_TONGUE,
+    RENDER_OBSTACLE, RENDER_CROSSHAIR, RENDER_CHECKPOINT
 } RenderType;
 
 typedef struct renderWindow RenderWindow;

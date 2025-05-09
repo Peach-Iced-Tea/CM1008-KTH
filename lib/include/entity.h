@@ -5,22 +5,22 @@
 
 #include "vmath.h"
 
-typedef enum {
+typedef enum EntityType {
     ENTITY_PLAYER = 1, ENTITY_TONGUE_TIP, ENTITY_TONGUE_SHAFT, ENTITY_CROSSHAIR
 } EntityType;
 
-#define HITBOX_NONE 0
-#define HITBOX_PLAYER 1 // Create a hitbox specifically designated for a player Entity.
-#define HITBOX_FULL_BLOCK 2 // Create a hitbox that is exactly the same size as the sprite/image.
-#define HITBOX_HALF_BLOCK 3 // Create a hitbox that is half the height of the sprite/image height.
+typedef enum HitboxType {
+    HITBOX_NONE, HITBOX_PLAYER, HITBOX_FULL_BLOCK,
+    HITBOX_HALF_BLOCK_TOP, HITBOX_HALF_BLOCK_BOTTOM, HITBOX_HALF_BLOCK_LEFT, HITBOX_HALF_BLOCK_RIGHT
+} HitboxType;
 
 #define OBJECT_IS_NORTH 1   // The object is above the reference.
 #define OBJECT_IS_SOUTH 2   // The object is below the reference.
 #define OBJECT_IS_WEST 3    // The object is to the left of the reference.
 #define OBJECT_IS_EAST 4    // The object is to the right of the reference.
 
-#define GRAVITY_ACCELERATION 60.0f    // The simulation of gravity uses this constant.
-#define MAX_GRAVITY_VELOCITY 660.0f // The absolute max value that the velocity of gravity can reach.
+#define GRAVITY_ACCELERATION 60.0f      // The simulation of gravity uses this constant.
+#define MAX_GRAVITY_VELOCITY 660.0f     // The absolute max value that the velocity of gravity can reach.
 
 typedef struct hitbox Hitbox;
 
@@ -30,6 +30,7 @@ typedef struct entity {
     Hitbox *pHitbox;
     SDL_RendererFlip flip;
     float angle;
+    EntityType type;
 } Entity;
 
 /*

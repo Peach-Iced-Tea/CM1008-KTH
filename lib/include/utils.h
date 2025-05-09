@@ -1,8 +1,9 @@
 #pragma once
 #include "entity.h"
 
-#define ARRAY_ENTITIES 1
-#define ARRAY_HITBOXES 2
+typedef enum ArrayType {
+    ARRAY_ENTITIES, ARRAY_HITBOXES
+} ArrayType;
 
 typedef struct dynamicArray DynamicArray;
 

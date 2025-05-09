@@ -1,5 +1,12 @@
 #include "entity.h"
 
+#define ENTITY_DEFAULT_SOURCE_X 0
+#define ENTITY_DEFAULT_SOURCE_Y 0
+#define ENTITY_DEFAULT_SOURCE_WIDTH 32
+#define ENTITY_DEFAULT_SOURCE_HEIGHT 32
+#define ENTITY_DEFAULT_FLIP SDL_FLIP_NONE
+#define ENTITY_DEFAULT_ANGLE 0.0f
+
 struct hitbox {
     Vec2 position;
     Vec2 halfSize;
@@ -28,12 +35,37 @@ Hitbox *createFullBlockHitbox(Vec2 const position, float w, float h) {
     return pHitbox;
 }
 
-Hitbox *createHalfBlockHitbox(Vec2 const position, float w, float h) {
+Hitbox *createHalfBlockHitboxVertical(Vec2 const position, float w, float h, HitboxType type) {
     Hitbox *pHitbox = malloc(sizeof(Hitbox));
     w *= 0.5f;
     h *= 0.25f;
-    pHitbox->position = createVector(position.x+w, position.y+h);
     pHitbox->halfSize = createVector(w, h);
+    switch (type) {
+        case HITBOX_HALF_BLOCK_TOP:
+            pHitbox->position = createVector(position.x+w, position.y+h);
+            break;
+        case HITBOX_HALF_BLOCK_BOTTOM:
+            pHitbox->position = createVector(position.x+w, position.y+3*h);
+            break;
+    }
+
+    return pHitbox;
+}
+
+Hitbox *createHalfBlockHitboxHorizontal(Vec2 const position, float w, float h, HitboxType type) {
+    Hitbox *pHitbox = malloc(sizeof(Hitbox));
+    w *= 0.25f;
+    h *= 0.5f;
+    pHitbox->halfSize = createVector(w, h);
+    switch (type) {
+        case HITBOX_HALF_BLOCK_LEFT:
+            pHitbox->position = createVector(position.x+w, position.y+h);
+            break;
+        case HITBOX_HALF_BLOCK_RIGHT:
+            pHitbox->position = createVector(position.x+3*w, position.y+h);
+            break;
+    }
+
     return pHitbox;
 }
 
@@ -46,8 +78,13 @@ Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType) {
         case HITBOX_FULL_BLOCK:
             pHitbox = createFullBlockHitbox(position, w, h);
             break;
-        case HITBOX_HALF_BLOCK:
-            pHitbox = createHalfBlockHitbox(position, w, h);
+        case HITBOX_HALF_BLOCK_TOP:
+        case HITBOX_HALF_BLOCK_BOTTOM:
+            pHitbox = createHalfBlockHitboxVertical(position, w, h, hitboxType);
+            break;
+        case HITBOX_HALF_BLOCK_LEFT:
+        case HITBOX_HALF_BLOCK_RIGHT:
+            pHitbox = createHalfBlockHitboxHorizontal(position, w, h, hitboxType);
             break;
         case HITBOX_NONE:
             break;
@@ -59,6 +96,8 @@ Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType) {
 int entityInitData(Entity *pEntity, Vec2 position, int entityType, int hitboxType) {
     pEntity->frame.x = position.x;
     pEntity->frame.y = position.y;
+    pEntity->frame.w = 32.0f;
+    pEntity->frame.h = 32.0f;
     switch (entityType) {
         case ENTITY_PLAYER:
             pEntity->frame.w = 48.0f;
@@ -76,28 +115,25 @@ int entityInitData(Entity *pEntity, Vec2 position, int entityType, int hitboxTyp
             pEntity->frame.w = 12.0f;
             pEntity->frame.h = 12.0f;
             break;
-        default:
-            pEntity->frame.w = 32.0f;
-            pEntity->frame.h = 32.0f;
-            break;
     }
 
-    pEntity->source.x = 0;
-    pEntity->source.y = 0;
-    pEntity->source.w = 32;
-    pEntity->source.h = 32;
-    pEntity->flip = SDL_FLIP_NONE;
-    pEntity->angle = 0.0f;
+    pEntity->source.x = ENTITY_DEFAULT_SOURCE_X;
+    pEntity->source.y = ENTITY_DEFAULT_SOURCE_Y;
+    pEntity->source.w = ENTITY_DEFAULT_SOURCE_WIDTH;
+    pEntity->source.h = ENTITY_DEFAULT_SOURCE_HEIGHT;
+    pEntity->flip = ENTITY_DEFAULT_FLIP;
+    pEntity->angle = ENTITY_DEFAULT_ANGLE;
 
     switch (hitboxType) {
         case HITBOX_NONE:
-            pEntity->pHitbox = createHitbox(position, pEntity->frame.w, pEntity->frame.h, hitboxType);
+            pEntity->pHitbox = NULL;
             break;
         default:
             pEntity->pHitbox = createHitbox(position, pEntity->frame.w, pEntity->frame.h, hitboxType);
             if (pEntity->pHitbox == NULL) { return 1; }
     }
 
+    pEntity->type = entityType;
     return 0;
 }
 

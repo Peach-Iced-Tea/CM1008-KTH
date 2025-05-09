@@ -10,11 +10,11 @@
 #define BUFFER_SIZE 1024
 #define SERVER_PORT 50505
 
-typedef enum {
+typedef enum ServerState {
     SERVER_WAITING, SERVER_RUNNING, SERVER_CLOSING
 } ServerState;
 
-typedef enum {
+typedef enum ClientState {
     CONNECTED, DISCONNECTED
 } ClientState;
 

@@ -44,11 +44,7 @@ Player *createPlayer(Vec2 position, int id) {
     pPlayer->referenceAngle = 0.0f;
     pPlayer->targetAngle = 0.0f;
 
-    pPlayer->body.source.w = 32;
-    pPlayer->body.source.h = 32;
-
     pPlayer->pGrabbedEntity = NULL;
-
     return pPlayer;
 }
 
