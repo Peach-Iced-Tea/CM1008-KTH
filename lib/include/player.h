@@ -104,6 +104,8 @@ Entity *playerGetBody(Player const *pPlayer);
 */
 Tongue *playerGetTongue(Player const *pPlayer);
 
+int playerGetCheckpointID(Player const *pPlayer);
+void playerSetCheckpointID(Player *pPlayer, int newID);
 /*
 
 */

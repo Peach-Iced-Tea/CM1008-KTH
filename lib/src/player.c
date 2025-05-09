@@ -27,6 +27,7 @@ struct player {
     float referenceAngle;
     SDL_Rect sheetPosition;
     Entity *pGrabbedEntity;
+    int lastCheckpointID;
 };
 
 Player *createPlayer(Vec2 position, SDL_Renderer *pRenderer, int id) {
@@ -469,6 +470,13 @@ PlayerInfo playerGetInfo(Player const *pPlayer) {
     info.tongueAngle = pPlayer->referenceAngle;
     info.state = pPlayer->state;
     return info;
+}
+
+int playerGetCheckpointID(Player const *pPlayer){
+    return pPlayer->lastCheckpointID;
+}
+void playerSetCheckpointID(Player *pPlayer, int newID){
+    pPlayer->lastCheckpointID = newID;
 }
 
 Entity *playerGetBody(Player const *pPlayer) {

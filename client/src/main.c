@@ -53,6 +53,9 @@ int initGame(Game *pGame) {
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if (pGame->pHitforms == NULL) {return 1;}
 
+    pGame->pObstacles = createDynamicArray(ARRAY_ENTITIES);
+    if (pGame->pObstacles == NULL) {return 1;}
+
     pGame->pCheckpoints = createDynamicArray(ARRAY_ENTITIES);
     pGame->lastSaveID = 0;
     if (pGame->pCheckpoints == NULL) {return 1;}
@@ -71,9 +74,10 @@ int initGame(Game *pGame) {
     SDL_Texture *pTexture1, *pTexture2;
     pTexture1 = IMG_LoadTexture(windowGetRenderer(pGame->pWindow), "lib/resources/powerSpike.png");
     pTexture2 = IMG_LoadTexture(windowGetRenderer(pGame->pWindow), "lib/resources/purpg.png");
-    pGame->pSpikes = createEntity(createVector(416,1088),pTexture1,10,HITBOX_OBSTACLE);
+    arrayAddObject(pGame->pObstacles, createEntity(createVector(416,1088),pTexture1,10,HITBOX_OBSTACLE));
     arrayAddObject(pGame->pCheckpoints, createEntity(createVector(32, 32), pTexture2, 10, HITBOX_FULL_BLOCK));
     arrayAddObject(pGame->pCheckpoints, createEntity(createVector(352, 1088), pTexture2, 10, HITBOX_FULL_BLOCK));
+    arrayAddObject(pGame->pCheckpoints, createEntity(createVector(288, 1088), pTexture2, 10, HITBOX_FULL_BLOCK));
     return 0;
 }
 
@@ -112,7 +116,9 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     }
 
     windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
-    windowRenderEntity(pGame->pWindow, pGame->pSpikes, pGame->pCamera);
+    for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++){
+        windowRenderEntity(pGame->pWindow, arrayGetObject(pGame->pObstacles, i), pGame->pCamera);
+    }
     for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++){
         windowRenderEntity(pGame->pWindow, arrayGetObject(pGame->pCheckpoints, i), pGame->pCamera);
     }
@@ -273,12 +279,14 @@ int main(int argv, char** args) {
                     };
                 }
 
-                if (playerCheckCollision(pPlayer, entityGetHitbox(game.pSpikes))){
-                    playerSetState(pPlayer, IDLE);
-                    int x = entityGetPosition(arrayGetObject(game.pCheckpoints, game.lastSaveID)).x;
-                    int y = entityGetPosition(arrayGetObject(game.pCheckpoints, game.lastSaveID)).y - 32;
-                    playerSetPosition(pPlayer, createVector(x, y));
-                };
+                for (int i = 0; i < arrayGetSize(game.pObstacles); i++){
+                    if (playerCheckCollision(pPlayer, entityGetHitbox(arrayGetObject(game.pObstacles, i)))){
+                        playerSetState(pPlayer, IDLE);
+                        int x = entityGetPosition(arrayGetObject(game.pCheckpoints, game.lastSaveID)).x;
+                        int y = entityGetPosition(arrayGetObject(game.pCheckpoints, game.lastSaveID)).y - 32;
+                        playerSetPosition(pPlayer, createVector(x, y));
+                    };
+                }
 
                 while (accumulator >= timestep) {    
                     // Add physics related calculations here...

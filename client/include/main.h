@@ -27,7 +27,7 @@ typedef struct {
     Client *pClient;
     ClientMap *pMap;
     DynamicArray *pHitforms;
-    Entity *pSpikes;
+    DynamicArray *pObstacles;
     DynamicArray *pCheckpoints;
     int lastSaveID;
 } Game;

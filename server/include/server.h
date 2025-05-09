@@ -20,5 +20,4 @@ typedef struct {
     DynamicArray *pHitforms;
     DynamicArray *pObstacles;
     DynamicArray *pCheckpoints;
-    int lastSaveID;
 } Server;
