@@ -103,37 +103,43 @@ Returns data for the given Player, such as position values and velocity.
 PlayerInfo playerGetInfo(Player const *player);
 
 /*
-Get the current Entity representing the given Player's body.
+Get the Entity representing the given Player's body.
 */
 Entity playerGetBody(Player const *player);
 
 /*
-
-*/
-Vec2 playerGetMidPoint(Player const *player);
-
-/*
-
-*/
-Tongue *playerGetTongue(Player const *player);
-
-/*
-
+Get the Hitbox of the body (Entity) of the given Player.
 */
 Hitbox *playerGetBodyHitbox(Player const *player);
 
 /*
+Get the middle point of the given Player.
+*/
+Vec2 playerGetMidPoint(Player const *player);
 
+/*
+Get the Tongue of the given Player.
+*/
+Tongue *playerGetTongue(Player const *player);
+
+/*
+This function is very aggressive and moves the given Player with no checks.
+
+!!! Should only be used if you're completely sure.
 */
 void playerOverrideMove(Player *player, Vec2 velocity);
 
 /*
+This function is very aggressive and overrides the PlayerState of the given Player with no checks.
 
+!!! Should only be used if you're completely sure.
 */
 void playerOverrideState(Player *player, PlayerState newState);
 
 /*
+This function is very aggressive and overrides the velocities of the given Player with no checks.
 
+!!! Should only be used if you're completely sure.
 */
 void playerOverrideVelocity(Player *player, Vec2 newVelocity, float newRotation);
 

@@ -311,7 +311,7 @@ Vec2 cameraGetPosition(Camera const *pCamera) {
     return position;
 }
 
-int cameraGetMode(Camera const *pCamera) {
+CameraMode cameraGetMode(Camera const *pCamera) {
     if (pCamera == NULL) { return IS_NULL; }
 
     return pCamera->mode;

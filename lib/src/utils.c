@@ -4,7 +4,7 @@ struct dynamicArray {
     void **objects;
     size_t size;
     size_t capacity;
-    int arrayType;
+    ArrayType type;
 };
 
 DynamicArray *createDynamicArray(int arrayType) {
@@ -25,7 +25,7 @@ DynamicArray *createDynamicArray(int arrayType) {
 
     pArray->size = 0;
     pArray->capacity = 4;
-    pArray->arrayType = arrayType;
+    pArray->type = arrayType;
     return pArray;
 }
 
@@ -34,7 +34,7 @@ int arrayAddObject(DynamicArray *pArray, void *pNewObject) {
 
     if (pArray->size == pArray->capacity) {
         pArray->capacity *=2;
-        switch (pArray->arrayType) {
+        switch (pArray->type) {
             case ARRAY_ENTITIES:
                 pArray->objects = realloc(pArray->objects, pArray->capacity * sizeof(Entity*));
                 break;
@@ -57,15 +57,19 @@ void *arrayGetObject(DynamicArray *pArray, int index) {
     return pArray->objects[index];
 }
 
-size_t arrayGetSize(DynamicArray *pArray) {
+size_t arrayGetSize(DynamicArray const *pArray) {
     return pArray->size;
+}
+
+ArrayType arrayGetType(DynamicArray const *pArray) {
+    return pArray->type;
 }
 
 void destroyDynamicArray(DynamicArray *pArray) {
     if (pArray == NULL) { return; }
 
     for (size_t i = 0; i < pArray->size; i++) {
-        switch (pArray->arrayType) {
+        switch (pArray->type) {
             case ARRAY_HITBOXES:
                 destroyHitbox(pArray->objects[i]);
                 break;

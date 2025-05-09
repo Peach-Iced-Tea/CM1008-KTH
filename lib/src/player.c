@@ -455,16 +455,16 @@ Entity playerGetBody(Player const *pPlayer) {
     return pPlayer->body;
 }
 
+Hitbox *playerGetBodyHitbox(Player const *pPlayer) {
+    return pPlayer->body.pHitbox;
+}
+
 Vec2 playerGetMidPoint(Player const *pPlayer) {
     return entityGetMidPoint(pPlayer->body);
 }
 
 Tongue *playerGetTongue(Player const *pPlayer) {
     return pPlayer->pTongue;
-}
-
-Hitbox *playerGetBodyHitbox(Player const *pPlayer) {
-    return pPlayer->body.pHitbox;
 }
 
 void playerOverrideMove(Player *pPlayer, Vec2 velocity) {

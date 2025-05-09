@@ -1,14 +1,11 @@
 #include "mouse.h"
 
-#define CROSSHAIR_WIDTH 32
-#define CROSSHAIR_HEIGHT 32
 #define CROSSHAIR_MAX_DISTANCE 160.0f
 
 struct crosshair {
     Entity body;
     Vec2 relativePosition;
     Vec2 velocity;
-    SDL_Rect sheetPosition;
 };
 
 Crosshair *createCrosshair(Vec2 const position) {
@@ -17,11 +14,6 @@ Crosshair *createCrosshair(Vec2 const position) {
     
     pCrosshair->relativePosition = createVector(0.0f, 0.0f);
     pCrosshair->velocity = createVector(0.0f, 0.0f);
-
-    pCrosshair->sheetPosition.x = 0;
-    pCrosshair->sheetPosition.y = 0;
-    pCrosshair->sheetPosition.w = CROSSHAIR_WIDTH;
-    pCrosshair->sheetPosition.h = CROSSHAIR_HEIGHT;
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     return pCrosshair;
@@ -45,14 +37,14 @@ void crosshairHandleInput(Crosshair *pCrosshair, Input *pInput) {
         pCrosshair->relativePosition.y = CROSSHAIR_MAX_DISTANCE;
     }
 
-    pCrosshair->sheetPosition.x = 0;
-    pCrosshair->sheetPosition.y = 0;
+    pCrosshair->body.source.x = 0;
+    pCrosshair->body.source.y = 0;
     if (getMouseState(pInput, MOUSE_LEFT)) {
-        pCrosshair->sheetPosition.x += pCrosshair->sheetPosition.w;
+        pCrosshair->body.source.x += pCrosshair->body.source.w;
     }
 
     if (getMouseState(pInput, MOUSE_RIGHT)) {
-        pCrosshair->sheetPosition.y += pCrosshair->sheetPosition.h;
+        pCrosshair->body.source.y += pCrosshair->body.source.h;
     }
 
     return;
@@ -71,10 +63,6 @@ Entity crosshairGetBody(Crosshair const *pCrosshair) {
 
 Vec2 crosshairGetPosition(Crosshair const *pCrosshair) {
     return entityGetMidPoint(pCrosshair->body);
-}
-
-SDL_Rect crosshairGetSheetPosition(Crosshair const *pCrosshair) {
-    return pCrosshair->sheetPosition;
 }
 
 void destroyCrosshair(Crosshair *pCrosshair) {

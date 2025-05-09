@@ -53,8 +53,17 @@ typedef struct {
     ClientState clientState;
 } ClientPayload;
 
+/*
+Prepares the given InputData with the relevant data from the supplied Player.
+*/
 void prepareInputData(InputData *data, Player const *player, int tick);
 
+/*
+Prepares the given StateData with the relevant data from the supplied Player.
+*/
 void prepareStateData(StateData *data, Player const *player, int tick);
 
+/*
+Prepares the given EntityData with the relevant data from the supplied Entity.
+*/
 void prepareEntityData(EntityData *data, Entity const *entity, int entityID, int tick);

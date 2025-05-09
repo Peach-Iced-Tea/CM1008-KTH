@@ -123,12 +123,6 @@ void tongueSetPosition(Tongue *pTongue, Vec2 newPosition) {
     return;
 }
 
-void tongueSetShaftMidPoint(Tongue *pTongue, Vec2 newPosition) {
-    pTongue->shaft.frame.x = newPosition.x;
-    pTongue->shaft.frame.y = newPosition.y;
-    return;
-}
-
 TongueInfo tongueGetInfo(Tongue const *pTongue) {
     TongueInfo info;
     info.position = entityGetMidPoint(pTongue->tip);

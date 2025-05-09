@@ -39,7 +39,7 @@ Create a hitbox based on the type specified with hitboxType.
 Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType);
 
 /*
-
+Initialise all the values of the given Entity based on the entityType that is given.
 */
 int entityInitData(Entity *entity, Vec2 position, int entityType, int hitboxType);
 
@@ -50,17 +50,17 @@ Expects a Vec2 containing the correctional values for the x-axis and y-axis.
 void entityCollisionResponse(Entity *entity, Vec2 const correction);
 
 /*
-
+Moves the given Entity from its current position based on the values inside velocity.
 */
 void entityMove(Entity *entity, Vec2 velocity);
 
 /*
-
+This function overrides the current position of the given Entity with the supplied values inside newPosition.
 */
-void entitySetPosition(Entity *entity, Vec2 const vector);
+void entitySetPosition(Entity *entity, Vec2 const newPosition);
 
 /*
-
+Sets the values inside source paramater with the values of newSource.
 */
 void entitySetSource(Entity *entity, SDL_Rect newSource);
 

@@ -16,17 +16,16 @@ typedef enum CameraMode {
     SCALING, TRACKING_T1, TRACKING_T2, FIXED
 } CameraMode;
 
+typedef enum CameraError {
+    IS_NULL = 1, MISSING_RENDERER, MISSING_TARGETS, MISSING_TARGET1, MISSING_TARGET2
+} CameraError;
+
 typedef struct camera Camera;
 
 #define MAX_ZOOM_IN 2.5f
 #define MAX_ZOOM_OUT 1.2f
 #define REFERENCE_WIDTH 1920
 #define REFERENCE_HEIGHT 1080
-
-// Error codes are defined below here.
-typedef enum {
-    IS_NULL = 1, MISSING_RENDERER, MISSING_TARGETS, MISSING_TARGET1, MISSING_TARGET2
-} CameraError;
 
 /*
 Create a Camera with the current resolution of the game window.
@@ -111,7 +110,7 @@ Vec2 cameraGetPosition(Camera const *camera);
 /*
 Returns the current mode that the given Camera is set to.
 */
-int cameraGetMode(Camera const *camera);
+CameraMode cameraGetMode(Camera const *camera);
 
 /*
 Use this function to destroy the given Camera pointer and free up memory.
