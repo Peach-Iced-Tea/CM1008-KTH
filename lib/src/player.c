@@ -13,11 +13,17 @@
 #define JUMP_INPUT KEY_SPACE
 #define TOGGLE_GODMODE_INPUT KEY_G
 
+typedef struct {
+    bool jump;
+    bool shoot;
+} ActionLock;
+
 struct player {
     Entity body;
     Tongue *pTongue;
-    PlayerState state;
     Vec2 velocity;
+    ActionLock lock;
+    PlayerState state;
     float rotateVelocity;
     int jumpTimer;
     float radius;
@@ -25,6 +31,12 @@ struct player {
     float targetAngle;
     Entity *pGrabbedEntity;
 };
+
+void initActionLock(ActionLock *pLock) {
+    pLock->jump = false;
+    pLock->shoot = false;
+    return;
+}
 
 Player *createPlayer(Vec2 position, int id) {
     if (id < 0 || id > 1) { return NULL; }
@@ -35,8 +47,9 @@ Player *createPlayer(Vec2 position, int id) {
     pPlayer->pTongue = createTongue(entityGetMidPoint(pPlayer->body));
     if (pPlayer->pTongue == NULL) { return NULL; }
 
-    pPlayer->state = IDLE;
     pPlayer->velocity = createVector(0.0f, 0.0f);
+    initActionLock(&(pPlayer->lock));
+    pPlayer->state = IDLE;
     pPlayer->rotateVelocity = 0.0f;
 
     pPlayer->jumpTimer = 0;
@@ -63,17 +76,19 @@ void playerHandleInput(Player *pPlayer, Input const *pInput) {
             if (getKeyState(pInput, MOVE_RIGHT_INPUT)) { movement.x += PLAYER_VELOCITY; }
     }
     
-    if (getKeyState(pInput, JUMP_INPUT)) {
+    if (getKeyState(pInput, JUMP_INPUT) && !pPlayer->lock.jump) {
         switch (pPlayer->state) {
             case IDLE:
             case RUNNING:
                 pPlayer->velocity.y = -JUMP_VELOCITY;
                 pPlayer->jumpTimer = JUMP_TIMER;
+                pPlayer->lock.jump = true;
                 pPlayer->state = JUMPING;
                 break;
         }
     }
-    else {
+    else if (getKeyState(pInput, JUMP_INPUT) == KEY_STATE_UP) {
+        pPlayer->lock.jump = false;
         switch (pPlayer->state) {
             case JUMPING:
                 pPlayer->state = FALLING;
@@ -100,16 +115,18 @@ void playerHandleInput(Player *pPlayer, Input const *pInput) {
             break;
     }
 
-    if (getMouseState(pInput, MOUSE_LEFT)) {
+    if (getMouseState(pInput, MOUSE_LEFT) && !pPlayer->lock.shoot) {
         switch (pPlayer->state) {
             case IDLE:
+                pPlayer->lock.shoot = true;
                 pPlayer->state = SHOOTING;
                 pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->body), tongueGetInfo(pPlayer->pTongue).mousePosition);
                 tongueUpdateVelocity(pPlayer->pTongue, entityGetMidPoint(pPlayer->body));
                 break;
         }
     }
-    else if (!getMouseState(pInput, MOUSE_LEFT)) {
+    else if (getMouseState(pInput, MOUSE_LEFT) == KEY_STATE_UP) {
+        pPlayer->lock.shoot = false;
         switch (pPlayer->state) {
             case SHOOTING:
             case ROTATING:
