@@ -28,7 +28,7 @@ Tileset *createTileset(SDL_Renderer *pRenderer) {
     pTileset->width = NULL;
     pTileset->height = NULL;
 
-    pTileset->tileSheet = IMG_LoadTexture(pRenderer, "lib/resources/mapData/devTiles.png");
+    pTileset->tileSheet = IMG_LoadTexture(pRenderer, "lib/resources/mapData/mountainTrumps.png");
     if (pTileset->tileSheet == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;

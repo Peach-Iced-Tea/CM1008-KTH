@@ -47,7 +47,7 @@ int initGame(Game *pGame) {
     if (pGame->pMap == NULL) { return 1; }
 
     mapLoadClient("lib/resources/mapData/map.tmj", pGame->pMap);
-    mapLoadTileset("lib/resources/mapData/devTiles.tsx", mapGetTileset(pGame->pMap));
+    mapLoadTileset("lib/resources/mapData/mountainTrumps.tsx", mapGetTileset(pGame->pMap));
     int mapWidth = mapGetWidth(pGame->pMap);
     int tileSize = 32;
 
@@ -101,11 +101,12 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     windowClearFrame(pGame->pWindow);
 
+    windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
+
     for (int i = 0; i < MAX_PLAYERS; i++) {
         windowRenderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
     }
 
-    windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
     
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
