@@ -106,7 +106,8 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
             case SHOOTING:
             case RELEASE:
             case ROTATING:
-                windowRenderTongue(pGame->pWindow, playerGetTongue(pPlayer));
+                windowRenderObject(pGame->pWindow, tongueGetShaft(playerGetTongue(pPlayer)), RENDER_TONGUE);
+                windowRenderObject(pGame->pWindow, tongueGetTip(playerGetTongue(pPlayer)), RENDER_TONGUE);
                 break;
         }
         windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);

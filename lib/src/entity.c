@@ -64,9 +64,13 @@ int entityInitData(Entity *pEntity, Vec2 position, int entityType, int hitboxTyp
             pEntity->frame.w = 48.0f;
             pEntity->frame.h = 48.0f;
             break;
-        case ENTITY_TONGUE:
+        case ENTITY_TONGUE_TIP:
             pEntity->frame.w = 12.0f;
             pEntity->frame.h = 12.0f;
+            break;
+        case ENTITY_TONGUE_SHAFT:
+            pEntity->frame.w = 0.0f;
+            pEntity->frame.h = 20.0f;
             break;
         case ENTITY_CROSSHAIR:
             pEntity->frame.w = 12.0f;
@@ -82,9 +86,17 @@ int entityInitData(Entity *pEntity, Vec2 position, int entityType, int hitboxTyp
     pEntity->source.y = 0;
     pEntity->source.w = 32;
     pEntity->source.h = 32;
+    pEntity->flip = SDL_FLIP_NONE;
+    pEntity->angle = 0.0f;
 
-    pEntity->pHitbox = createHitbox(position, pEntity->frame.w, pEntity->frame.h, hitboxType);
-    if (pEntity->pHitbox == NULL) { return 1; }
+    switch (hitboxType) {
+        case HITBOX_NONE:
+            pEntity->pHitbox = createHitbox(position, pEntity->frame.w, pEntity->frame.h, hitboxType);
+            break;
+        default:
+            pEntity->pHitbox = createHitbox(position, pEntity->frame.w, pEntity->frame.h, hitboxType);
+            if (pEntity->pHitbox == NULL) { return 1; }
+    }
 
     return 0;
 }
@@ -229,11 +241,11 @@ bool pointVsRect(Hitbox const *pHitbox, Vec2 const point) {
     return collisionDetected;
 }
 
-Vec2 getHitboxPosition(Hitbox const *pHitbox) {
+Vec2 hitboxGetPosition(Hitbox const *pHitbox) {
     return pHitbox->position;
 }
 
-Vec2 getHitboxHalfSize(Hitbox const *pHitbox) {
+Vec2 hitboxGetHalfSize(Hitbox const *pHitbox) {
     return pHitbox->halfSize;
 }
 

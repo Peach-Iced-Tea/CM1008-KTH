@@ -5,23 +5,22 @@
 
 struct tongue {
     Entity tip;
+    Entity shaft;
     Vec2 velocity;
-    TongueState state;
     Vec2 mousePosition;
-    SDL_FRect shaftRect;
-    float angle;
+    TongueState state;
 };
 
 Tongue *createTongue(Vec2 position) {
     Tongue *pTongue = malloc(sizeof(Tongue));
-    if (entityInitData(&(pTongue->tip), position, ENTITY_TONGUE, HITBOX_FULL_BLOCK)) { return NULL; }
+    if (entityInitData(&(pTongue->tip), position, ENTITY_TONGUE_TIP, HITBOX_FULL_BLOCK)) { return NULL; }
+    pTongue->tip.source.x = 32;
+
+    if (entityInitData(&(pTongue->shaft), createVector(0.0f, 0.0f), ENTITY_TONGUE_SHAFT, HITBOX_NONE)) { return NULL; }
 
     pTongue->velocity = createVector(0.0f, 0.0f);
+    pTongue->mousePosition = createVector(0.0f, 0.0f);
     pTongue->state = NEUTRAL;
-    pTongue->shaftRect.x = 0.0f;
-    pTongue->shaftRect.y = 0.0f;
-    pTongue->shaftRect.w = 0.0f;
-    pTongue->shaftRect.h = 20.0f;
 
     return pTongue;
 }
@@ -59,17 +58,17 @@ void tongueUpdatePosition(Tongue *pTongue, Vec2 centerPoint, float timestep) {
     tongueCalculateShaft(pTongue, centerPoint, entityGetMidPoint(pTongue->tip));
     switch (pTongue->state) {
         case EXTENDING:
-            if (pTongue->shaftRect.w >= MAX_TONGUE_LENGTH) {
-                pTongue->shaftRect.w = MAX_TONGUE_LENGTH;
+            if (pTongue->shaft.frame.w >= MAX_TONGUE_LENGTH) {
+                pTongue->shaft.frame.w = MAX_TONGUE_LENGTH;
                 pTongue->velocity.x = 0.0f;
                 pTongue->velocity.y = 0.0f;
                 tongueUpdateVelocity(pTongue, centerPoint);
             }
             break;
         case RETRACTING:
-            if (pTongue->shaftRect.w < 16.0f) {
+            if (pTongue->shaft.frame.w < 16.0f) {
                 entitySetPosition(&(pTongue->tip), centerPoint);
-                pTongue->shaftRect.w = 0.0f;
+                pTongue->shaft.frame.w = 0.0f;
                 pTongue->velocity.x = 0.0f;
                 pTongue->velocity.y = 0.0f;
                 pTongue->state = NEUTRAL;
@@ -81,13 +80,13 @@ void tongueUpdatePosition(Tongue *pTongue, Vec2 centerPoint, float timestep) {
 }
 
 void tongueCalculateShaft(Tongue *pTongue, Vec2 centerPoint, Vec2 referencePoint) {
-    pTongue->shaftRect.w = vectorLength(centerPoint, referencePoint);
+    pTongue->shaft.frame.w = vectorLength(centerPoint, referencePoint);
     tongueSetPosition(pTongue, referencePoint);
     Vec2 midPoint;
     vectorMidPoint(&midPoint, centerPoint, referencePoint);
-    pTongue->shaftRect.x = midPoint.x;
-    pTongue->shaftRect.y = midPoint.y;
-    pTongue->angle = vectorGetAngle(centerPoint, referencePoint);
+    pTongue->shaft.frame.x = midPoint.x - pTongue->shaft.frame.w*0.5f;
+    pTongue->shaft.frame.y = midPoint.y - pTongue->shaft.frame.h*0.5f;
+    pTongue->shaft.angle = vectorGetAngle(centerPoint, referencePoint) * (180.0f/M_PI);
     return;
 }
 
@@ -125,8 +124,8 @@ void tongueSetPosition(Tongue *pTongue, Vec2 newPosition) {
 }
 
 void tongueSetShaftMidPoint(Tongue *pTongue, Vec2 newPosition) {
-    pTongue->shaftRect.x = newPosition.x;
-    pTongue->shaftRect.y = newPosition.y;
+    pTongue->shaft.frame.x = newPosition.x;
+    pTongue->shaft.frame.y = newPosition.y;
     return;
 }
 
@@ -135,15 +134,17 @@ TongueInfo tongueGetInfo(Tongue const *pTongue) {
     info.position = entityGetMidPoint(pTongue->tip);
     info.velocity = pTongue->velocity;
     info.mousePosition = pTongue->mousePosition;
-    info.length = pTongue->shaftRect.w;
-    info.angle = pTongue->angle;
+    info.length = pTongue->shaft.frame.w;
     info.state = pTongue->state;
-    info.tongueShaft = pTongue->shaftRect;
     return info;
 }
 
 Entity tongueGetTip(Tongue const *pTongue) {
     return pTongue->tip;
+}
+
+Entity tongueGetShaft(Tongue const *pTongue) {
+    return pTongue->shaft;
 }
 
 Hitbox *tongueGetHitbox(Tongue const *pTongue) {

@@ -33,6 +33,7 @@ Player *createPlayer(Vec2 position, int id) {
     if (entityInitData(&(pPlayer->body), position, ENTITY_PLAYER, HITBOX_PLAYER)) { return NULL; }
 
     pPlayer->pTongue = createTongue(entityGetMidPoint(pPlayer->body));
+    if (pPlayer->pTongue == NULL) { return NULL; }
 
     pPlayer->state = IDLE;
     pPlayer->velocity = createVector(0.0f, 0.0f);

@@ -22,16 +22,19 @@ int initServer(Server *pServer) {
         pServer->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), i);
         if (pServer->players[i] == NULL) { return 1; }
     }
+    printf("Created %d player(s)\n", MAX_PLAYERS);
 
     pServer->pMap = createServerMap();
     if (pServer->pMap == NULL) { return 1; }
     mapLoadServer("lib/resources/mapData/map.tmj", pServer->pMap);
+    printf("Initiated map\n");
 
     int mapWidth = mapGetWidth_Server(pServer->pMap);
     int tileSize = 32;
 
     pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if(pServer->pHitforms == NULL) { return 1; }
+    printf("Initiated DynamicArray of type (Hitbox)\n");
 
     Vec2 tmp;
     for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 0); i++) {
@@ -44,26 +47,31 @@ int initServer(Server *pServer) {
             if (arrayAddObject(pServer->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
         }
     }
+    printf("Created %ld hitboxes from the map\n", arrayGetSize(pServer->pHitforms));
 
     pServer->state = SERVER_WAITING;
     if (!(pServer->socket = SDLNet_UDP_Open(SERVER_PORT))) {
         printf("SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         return 1;
     }
+    printf("Opened a UDP socket on port: %d\n", SERVER_PORT);
 
     if (!(pServer->pPacket = SDLNet_AllocPacket(PACKET_SIZE))) {
         printf("SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 1;
     }
+    printf("Allocated packet with size: %d\n", PACKET_SIZE);
 
     pServer->payload.serverState = SERVER_WAITING;
     for (int i = 0; i < MAX_PLAYERS; i++) {
         prepareStateData(&(pServer->payload.players[i]), pServer->players[i], 0);
     }
+    printf("Prepared StateData for all players\n");
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
         prepareEntityData(&(pServer->payload.entities[i]), NULL, -1, 0);
     }
+    printf("Prepared EntityData for movable entities\n");
 
     pServer->currentTick = 0;
 
@@ -191,6 +199,7 @@ int main(int argv, char** args) {
     SDL_Event event;
 
     bool serverRunning = true;
+    printf("Waiting for players\n");
     while (serverRunning) {
         Uint64 currentTime = SDL_GetTicks64();
         deltaTime = (currentTime - lastTime) * 0.001f; // ms till sekunder

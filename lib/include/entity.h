@@ -5,9 +5,9 @@
 
 #include "vmath.h"
 
-#define ENTITY_PLAYER 1
-#define ENTITY_TONGUE 2
-#define ENTITY_CROSSHAIR 3
+typedef enum {
+    ENTITY_PLAYER = 1, ENTITY_TONGUE_TIP, ENTITY_TONGUE_SHAFT, ENTITY_CROSSHAIR
+} EntityType;
 
 #define HITBOX_NONE 0
 #define HITBOX_PLAYER 1 // Create a hitbox specifically designated for a player Entity.
@@ -28,6 +28,8 @@ typedef struct entity {
     SDL_FRect frame;
     SDL_Rect source;
     Hitbox *pHitbox;
+    SDL_RendererFlip flip;
+    float angle;
 } Entity;
 
 /*
@@ -121,14 +123,14 @@ Get the position of the given Hitbox.
 
 Returns a Vec2 containing the x and y coordinates.
 */
-Vec2 getHitboxPosition(Hitbox const *hitbox);
+Vec2 hitboxGetPosition(Hitbox const *hitbox);
 
 /*
 Get the halfSize of the given Hitbox.
 
 Returns a Vec2 containing the width (.x) and height (.y).
 */
-Vec2 getHitboxHalfSize(Hitbox const *hitbox);
+Vec2 hitboxGetHalfSize(Hitbox const *hitbox);
 
 /*
 Use this function to destroy the given Hitbox pointer and free up memory.

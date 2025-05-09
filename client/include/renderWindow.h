@@ -47,11 +47,6 @@ void windowRenderObject(RenderWindow *renderWindow, Entity const entity, RenderT
 /*
 
 */
-void windowRenderTongue(RenderWindow *renderWindow, Tongue const *tongue);
-
-/*
-
-*/
 void windowRenderMapLayer(RenderWindow *renderWindow, ClientMap *map);
 
 /*

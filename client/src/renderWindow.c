@@ -170,11 +170,13 @@ void windowRenderHitbox(RenderWindow *pWindow, Hitbox const *pHitbox) {
         return;
     }
 
+    if (pHitbox == NULL) { return; }
+
     if (!pWindow->renderHitboxes) { return; }
 
-    Vec2 halfSize = getHitboxHalfSize(pHitbox);
+    Vec2 halfSize = hitboxGetHalfSize(pHitbox);
     Vec2 topLeftCorner;
-    vectorSub(&topLeftCorner, getHitboxPosition(pHitbox), halfSize);
+    vectorSub(&topLeftCorner, hitboxGetPosition(pHitbox), halfSize);
     SDL_FRect dst;
     dst.x = topLeftCorner.x;
     dst.y = topLeftCorner.y;
@@ -234,38 +236,9 @@ void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType r
     SDL_Texture *pTexture = windowGetTexture(pWindow->textures, renderType);
     if (pTexture == NULL) { return; }
 
-    SDL_RenderCopyF(pWindow->pRenderer, pTexture, &src, &dst);
+    SDL_RenderCopyExF(pWindow->pRenderer, pTexture, &src, &dst, entity.angle, NULL, entity.flip);
     if (pWindow->renderHitboxes) { windowRenderHitbox(pWindow, entity.pHitbox); }
     pWindow->nrOfRenderedEntites++;
-    return;
-}
-
-void windowRenderTongue(RenderWindow *pWindow, Tongue const *pTongue) {
-    if (pWindow->pCamera == NULL) {
-        printf("Error: RenderWindow is missing Camera\n");
-        return;
-    }
-
-    TongueInfo info = tongueGetInfo(pTongue);
-    SDL_FRect dst = info.tongueShaft;
-    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
-    float angle = info.angle * (180.0f/M_PI);
-    dst.x -= dst.w*0.5f;
-    dst.y -= dst.h*0.5f;
-    SDL_Rect src;
-    src.w = 32;
-    src.h = 32;
-    src.x = 0;
-    src.y = 0;
-
-    SDL_RenderCopyExF(pWindow->pRenderer, pWindow->textures.pTongue, &src, &dst, angle, NULL, 0);
-
-    dst = tongueGetTip(pTongue).frame;
-    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
-    
-    src.x = 32;
-    SDL_RenderCopyF(pWindow->pRenderer, pWindow->textures.pTongue, &src, &dst);
-    if (pWindow->renderHitboxes) { windowRenderHitbox(pWindow, tongueGetTip(pTongue).pHitbox); }
     return;
 }
 

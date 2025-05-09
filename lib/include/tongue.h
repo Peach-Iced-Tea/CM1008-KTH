@@ -12,10 +12,8 @@ typedef struct {
     Vec2 position;
     Vec2 velocity;
     Vec2 mousePosition;
-    float length;
-    float angle;
     TongueState state;
-    SDL_FRect tongueShaft;
+    float length;
 } TongueInfo;
 
 typedef struct tongue Tongue;
@@ -39,6 +37,8 @@ void tongueSetShaftMidPoint(Tongue *tongue, Vec2 newPosition);
 TongueInfo tongueGetInfo(Tongue const *tongue);
 
 Entity tongueGetTip(Tongue const *tongue);
+
+Entity tongueGetShaft(Tongue const *tongue);
 
 Hitbox *tongueGetHitbox(Tongue const *tongue);
 
