@@ -123,7 +123,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pHitforms, f
 
     bool standingOnPlatform = false;
     for (int i = 0; i < arrayGetSize(pHitforms); i++) {
-        if (playerCheckCollision(pPlayer, arrayGetObject(pHitforms, i)) == OBJECT_IS_NORTH) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pHitforms, i), true) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }

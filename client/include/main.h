@@ -13,6 +13,8 @@
 #include "menu.h"
 #include "mapParser.h"
 #include "mouse.h"
+#include "checkpoint.h"
+#include "obstacle.h"
 
 typedef struct {
     RenderWindow *pWindow;
@@ -23,5 +25,8 @@ typedef struct {
     Client *pClient;
     ClientMap *pMap;
     DynamicArray *pHitforms;
+    DynamicArray *pCheckpoints;
+    DynamicArray *pObstacles;
     Crosshair *pCrosshair;
+    int lastCheckpoint;
 } Game;

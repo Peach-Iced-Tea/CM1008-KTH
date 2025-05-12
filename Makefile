@@ -68,9 +68,6 @@ $(OBJDIR)/entity.o: $(LIBSRC)/entity.c $(LIBINC)/entity.h
 $(OBJDIR)/vmath.o: $(LIBSRC)/vmath.c $(LIBINC)/vmath.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-$(OBJDIR)/physics.o: $(LIBSRC)/physics.c $(LIBINC)/physics.h
-	$(CC) $(CFLAGS) -o $@ $<
-
 $(OBJDIR)/utils.o: $(LIBSRC)/utils.c $(LIBINC)/utils.h
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -87,6 +84,12 @@ $(OBJDIR)/networkData.o: $(LIBSRC)/networkData.c $(LIBINC)/networkData.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/mapParser.o: $(LIBSRC)/mapParser.c $(LIBINC)/mapParser.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+$(OBJDIR)/checkpoint.o: $(LIBSRC)/checkpoint.c $(LIBINC)/checkpoint.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+$(OBJDIR)/obstacle.o: $(LIBSRC)/obstacle.c $(LIBINC)/obstacle.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 

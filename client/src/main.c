@@ -9,6 +9,9 @@ void cleanUp(Game *pGame) {
     if (pGame->pCrosshair) { destroyCrosshair(pGame->pCrosshair); }
     if (pGame->pCamera) { destroyCamera(pGame->pCamera); }
     if (pGame->pWindow) { destroyRenderWindow(pGame->pWindow); }
+    if (pGame->pHitforms) { destroyDynamicArray(pGame->pHitforms); }
+    if (pGame->pCheckpoints) { destroyDynamicArray(pGame->pCheckpoints); }
+    if (pGame->pObstacles) { destroyDynamicArray(pGame->pObstacles); }
     if (pGame->pMenu) { destroyMenu(pGame->pMenu); }
     if (pGame->pClient) { destroyClient(pGame->pClient); }
     if (pGame->pMap) { destroyMap(pGame->pMap); }
@@ -67,11 +70,24 @@ int initGame(Game *pGame) {
     }
 
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
+    if (pGame->pCrosshair == NULL) { return 1; }
+
+    printf("debug1\n");
+    pGame->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
+    if (pGame->pObstacles == NULL) { return 1; }
+    if (arrayAddObject(pGame->pObstacles, createObstacle(createVector(1216.0f, 4000.0f)))) { return 1; }
+    printf("debug2\n");
+
+    pGame->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
+    if (pGame->pCheckpoints == NULL) { return 1; }
+    if (arrayAddObject(pGame->pCheckpoints, createCheckpoint(createVector(1152.0f, 4000.0f)))) { return 1; }
+
+    pGame->lastCheckpoint = -1;
 
     return 0;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float const timestep) {
+void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const timestep) {
     playerUpdatePosition(pPlayer, timestep);
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
@@ -82,9 +98,15 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, fl
             break;
     }
 
+    for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
+        if (playerCheckCollision(pPlayer, checkpointGetHitbox(arrayGetObject(pGame->pCheckpoints, i)), false)) {
+            pGame->lastCheckpoint = i;
+        }
+    }
+
     bool standingOnPlatform = false;
-    for (int i = 0; i < arrayGetSize(pObjects); i++) {
-        if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
+    for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pGame->pHitforms, i), true) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }
@@ -102,6 +124,14 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     windowClearFrame(pGame->pWindow);
 
     windowRenderMapLayer(pGame->pWindow, pGame->pMap);
+
+    for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
+        windowRenderObject(pGame->pWindow, checkpointGetBody(arrayGetObject(pGame->pCheckpoints, i)), RENDER_CHECKPOINT);
+    }
+
+    for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {
+        windowRenderObject(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pObstacles, i)), RENDER_OBSTACLE);
+    }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
         switch (playerGetInfo(pGame->players[i]).state) {
@@ -275,7 +305,7 @@ int main(int argv, char** args) {
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
                     handleTick(&game, pTeammate);
-                    updatePlayer(pPlayer, pTeammate, game.pHitforms, timestep);
+                    updatePlayer(&game, pPlayer, pTeammate, timestep);
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);

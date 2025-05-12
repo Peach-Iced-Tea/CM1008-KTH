@@ -180,7 +180,7 @@ void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicA
 
         bool standingOnPlatform = false;
         for (int i = 0; i < arrayGetSize(pObjects); i++) {
-            if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
+            if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i), true) == OBJECT_IS_NORTH) {
                 standingOnPlatform = true;
             }
         }

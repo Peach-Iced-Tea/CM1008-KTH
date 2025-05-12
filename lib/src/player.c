@@ -353,12 +353,14 @@ void playerCalculateRotation(Player *pPlayer, float targetAngle) {
     return;
 }
 
-int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
+int playerCheckCollision(Player *pPlayer, Hitbox *pObject, bool applyCollisionResponse) {
     int collisionDetected = 0;    
     Hitbox *pPlayerHitbox = pPlayer->body.pHitbox;
     if (hitboxCheckCollision(pPlayerHitbox, pObject)) {
-        Vec2 correction = rectVsRect(pPlayerHitbox, pObject);
-        entityCollisionResponse(&(pPlayer->body), correction);
+        if (applyCollisionResponse) {
+            Vec2 correction = rectVsRect(pPlayerHitbox, pObject);
+            entityCollisionResponse(&(pPlayer->body), correction);
+        }
         collisionDetected = hitboxOrientation(pPlayerHitbox, pObject);
         switch (collisionDetected) {
             case OBJECT_IS_NORTH:
@@ -383,7 +385,7 @@ int playerCheckCollision(Player *pPlayer, Hitbox *pObject) {
         }
     }
 
-    if (pPlayer->pGrabbedEntity != NULL) {
+    if (pPlayer->pGrabbedEntity != NULL && applyCollisionResponse) {
         Hitbox *pGrabbedHitbox = pPlayer->pGrabbedEntity->pHitbox;
         if (hitboxCheckCollision(pGrabbedHitbox, pObject)) {
             Vec2 correction = rectVsRect(pGrabbedHitbox, pObject);

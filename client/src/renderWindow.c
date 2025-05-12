@@ -10,6 +10,7 @@ typedef struct textures {
     SDL_Texture *pTongue;
     SDL_Texture *pCrosshair;
     SDL_Texture *pObstacles;
+    SDL_Texture *pCheckpoint;
 } Textures;
 
 struct renderWindow {
@@ -47,8 +48,13 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-    pTextures->pObstacles = IMG_LoadTexture(pRenderer, "lib/resources/player1.png");
-    if (pTextures->pCrosshair == NULL) {
+    pTextures->pObstacles = IMG_LoadTexture(pRenderer, "lib/resources/obstacles.png");
+    if (pTextures->pObstacles == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    pTextures->pCheckpoint = IMG_LoadTexture(pRenderer, "lib/resources/checkpoint.png");
+    if (pTextures->pCheckpoint == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
@@ -159,6 +165,8 @@ SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
             return textures.pCrosshair;
         case RENDER_OBSTACLE:
             return textures.pObstacles;
+        case RENDER_CHECKPOINT:
+            return textures.pCheckpoint;
     }
 
     return NULL;

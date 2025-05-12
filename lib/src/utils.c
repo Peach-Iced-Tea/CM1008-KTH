@@ -7,7 +7,7 @@ struct dynamicArray {
     ArrayType type;
 };
 
-DynamicArray *createDynamicArray(int arrayType) {
+DynamicArray *createDynamicArray(ArrayType arrayType) {
     DynamicArray *pArray = malloc(sizeof(DynamicArray));
     switch (arrayType) {
         case ARRAY_ENTITIES:
@@ -15,6 +15,12 @@ DynamicArray *createDynamicArray(int arrayType) {
             break;
         case ARRAY_HITBOXES:
             pArray->objects = malloc(4 * sizeof(Hitbox*));
+            break;
+        case ARRAY_CHECKPOINTS:
+            pArray->objects = malloc(4 * sizeof(Checkpoint*));
+            break;
+        case ARRAY_OBSTACLES:
+            pArray->objects = malloc(4 * sizeof(Obstacle*));
             break;
     }
 
@@ -40,6 +46,12 @@ int arrayAddObject(DynamicArray *pArray, void *pNewObject) {
                 break;
             case ARRAY_HITBOXES:
                 pArray->objects = realloc(pArray->objects, pArray->capacity * sizeof(Hitbox*));
+                break;
+            case ARRAY_CHECKPOINTS:
+                pArray->objects = realloc(pArray->objects, pArray->capacity * sizeof(Checkpoint*));
+                break;
+            case ARRAY_OBSTACLES:
+                pArray->objects = realloc(pArray->objects, pArray->capacity * sizeof(Obstacle*));
                 break;
         }
 
@@ -72,6 +84,12 @@ void destroyDynamicArray(DynamicArray *pArray) {
         switch (pArray->type) {
             case ARRAY_HITBOXES:
                 destroyHitbox(pArray->objects[i]);
+                break;
+            case ARRAY_CHECKPOINTS:
+                destroyCheckpoint(pArray->objects[i]);
+                break;
+            case ARRAY_OBSTACLES:
+                destroyObstacle(pArray->objects[i]);
                 break;
         }
     }
