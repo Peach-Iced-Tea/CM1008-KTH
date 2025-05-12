@@ -9,7 +9,7 @@ void closeServer(Server *pServer) {
 
     if (pServer->pHitforms) { destroyDynamicArray(pServer->pHitforms); }
 
-    if (pServer->pMap) { destroyMap_Server(pServer->pMap); }
+    if (pServer->pMap) { destroyMap(pServer->pMap);}    // ändrat namn tll bara map
 
     SDLNet_Quit();
     SDL_Quit();
@@ -22,28 +22,29 @@ int initServer(Server *pServer) {
         pServer->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), NULL, i);
         if (pServer->players[i] == NULL) { return 1; }
     }
+    //////////////////////////////////// ny /////////////////////////////////////////////
+    pServer->pMap = createMap_Server("lib/resources/mapData2/mapNr1.tmj");
 
-    pServer->pMap = createServerMap();
-    if (pServer->pMap == NULL) { return 1; }
-    mapLoadServer("lib/resources/mapData/map.tmj", pServer->pMap);
-
-    int mapWidth = mapGetWidth_Server(pServer->pMap);
-    int tileSize = 32;
+    int mapWidth = pServer->pMap->layerNr1_tile.width;
 
     pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if(pServer->pHitforms == NULL) { return 1; }
 
-    Vec2 tmp;
-    for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 0); i++) {
-        int check = mapGetLayerData_Server(pServer->pMap, 0, i);
-        if (check > 0) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
+    size_t dataSize = (pServer->pMap->layerNr1_tile.width * pServer->pMap->layerNr1_tile.height);
 
-            if (arrayAddObject(pServer->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
+    for (size_t i = 0; i < dataSize; i++) {
+        int check = pServer->pMap->layerNr1_tile.data[i];
+        if (check > 0) {
+
+            float posX = (i % mapWidth) * TILE_SIZE;
+            float posY = (i / mapWidth) * TILE_SIZE;
+
+            Vec2 tmp = createVector(posX, posY);
+
+            if (arrayAddObject(pServer->pHitforms, createHitbox(tmp, (float)TILE_SIZE, (float)TILE_SIZE, HITBOX_FULL_BLOCK))) { return 1; }
         }
     }
+    //////////////////////////////////// end /////////////////////////////////////////////
 
     pServer->state = SERVER_WAITING;
     if (!(pServer->socket = SDLNet_UDP_Open(SERVER_PORT))) {
@@ -177,7 +178,7 @@ int main(int argv, char** args) {
     }
 
     Server server;
-    if (initServer(&server)) {
+    if (initServer(&server)) {      // har ändrat i den
         closeServer(&server);
         return 1;
     }

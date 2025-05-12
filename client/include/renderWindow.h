@@ -56,7 +56,7 @@ void windowRenderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Came
 /*
 
 */
-void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera);
+void windowRenderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamera);
 
 /*
 

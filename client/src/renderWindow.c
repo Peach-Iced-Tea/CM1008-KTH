@@ -42,7 +42,7 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
 
     pRenderWindow->width = w;
     pRenderWindow->height = h;
-    pRenderWindow->renderHitboxes = false;
+    pRenderWindow->renderHitboxes = true;       // har sett den till true 
     SDL_SetWindowIcon(pRenderWindow->pWindow, IMG_Load("lib/resources/gameIcon.png"));
 
     return pRenderWindow;
@@ -129,7 +129,7 @@ void windowRenderHitbox(RenderWindow *pRenderWindow, Hitbox const *pHitbox, Came
     dst.h = halfSize.y*2.0f;
     cameraAdjustToViewport(pCamera, &dst, NULL);
 
-    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 255, 0, 255);
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 255, 0, 0, 255);
     SDL_RenderDrawRectF(pRenderWindow->pRenderer, &dst);
     SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 0, 0, 0, 255);
     return;
@@ -216,37 +216,39 @@ void windowRenderPlayer(RenderWindow *pRenderWindow, Player const *pPlayer, Came
 
 }
 
-void windowRenderMapLayer(RenderWindow *pRenderWindow, ClientMap *pMap, Camera const *pCamera) {
-    int mapWidth = mapGetWidth(pMap);
-    int tileSize = 32;
+/////////////////////////////////////////////////// ändrat ///////////////////////////////
+void windowRenderMapLayer(RenderWindow *pRenderWindow, Map *pMap, Camera const *pCamera) {
 
-    for (size_t i = 0; i < mapGetLayerSize(pMap, 1); i++) {
+    SDL_Texture *tilesheet = pMap->mapSheetImage.texture;
+    int nrOfColumns = pMap->mapSheetImage.width / TILE_SIZE;
 
-        int gid = mapGetLayerData(pMap, 1, i) - 15;
+    for (int i = 0; i < pMap->blockCount; i++) {
+        Block *pBlock = &pMap->blocks[i];
 
-        if (gid >= 0) {
-            int columns = atoi((char *)mapGetColumns(mapGetTileset(pMap)));
+        if (pBlock->blockId > 0) { 
+            int DataArrayIndex = pBlock->blockId - 1;
+
+            SDL_Rect srcRect;
+            srcRect.x = (DataArrayIndex % nrOfColumns) * TILE_SIZE;
+            srcRect.y = (DataArrayIndex / nrOfColumns) * TILE_SIZE;
+            srcRect.w = TILE_SIZE;
+            srcRect.h = TILE_SIZE;
+
+            SDL_FRect destRect;
+            destRect.x = pBlock->x;
+            destRect.y = pBlock->y;
+            destRect.w = (float)TILE_SIZE;
+            destRect.h = (float)TILE_SIZE;
             
-            int tileX = (gid % columns) * 32;
-            int tileY = (gid / columns) * 32;
-
-            mapSetTileSheetPosition(pMap, tileX, tileY);
-
-            int screenX = (i % mapWidth) * tileSize;
-            int screenY = (i / mapWidth) * tileSize;
-
-            SDL_Rect src = mapGetTileSheetPosition(pMap);
-
-            SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
-
-            cameraAdjustToViewport(pCamera, &dst, NULL);
-
-            SDL_RenderCopyF(pRenderWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
+            cameraAdjustToViewport(pCamera, &destRect, NULL); 
+            SDL_RenderCopyF(pRenderWindow->pRenderer, tilesheet, &srcRect, &destRect);
         }
     }
+    
 }
 
 void windowClearFrame(RenderWindow *pRenderWindow) {
+    SDL_SetRenderDrawColor(pRenderWindow->pRenderer, 135, 206, 235, 255); // ändrat i background färgen
     SDL_RenderClear(pRenderWindow->pRenderer);
     pRenderWindow->nrOfRenderedEntites = 0;
     return;

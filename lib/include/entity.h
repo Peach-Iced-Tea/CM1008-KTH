@@ -8,6 +8,7 @@
 
 #define ENTITY_PLAYER 1
 #define ENTITY_TONGUE 2
+#define ENTITY_BLOCK 3  // lagt till den
 
 typedef struct entity Entity;
 

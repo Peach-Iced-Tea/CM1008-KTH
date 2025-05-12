@@ -1,15 +1,5 @@
 #include "main.h"
 
-#define MAX_MOVE_PLATFORMS 8
-#define PLATFORM_SPEED_RIGHT 2.0f
-#define PLATFORM_SPEED_LEFT -2.0f
-
-struct movablePlatform {
-    Entity *pPlatform;
-    Vec2 velocity;
-    SDL_Rect sheetPosition;
-};typedef struct movablePlatform MovablePlatform;
-
 void cleanUp(Game *pGame) {
     if (pGame->pInput) { destroyInputTracker(pGame->pInput); }
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -20,7 +10,7 @@ void cleanUp(Game *pGame) {
     if (pGame->pWindow) { destroyRenderWindow(pGame->pWindow); }
     if (pGame->pMenu) { destroyMenu(pGame->pMenu); }
     if (pGame->pClient) { destroyClient(pGame->pClient); }
-    if (pGame->pMap) { destroyMap(pGame->pMap); }
+    if (pGame->pMap) { destroyMap(pGame->pMap); }         // ändrat i den
     SDLNet_Quit();
     TTF_Quit();
     SDL_Quit();
@@ -52,32 +42,76 @@ int initGame(Game *pGame) {
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
 
-    pGame->pMap = createClientMap(windowGetRenderer(pGame->pWindow));
-    if (pGame->pMap == NULL) { return 1; }
+    /////////////////////////////////////////////////////// Ny /////////////////////////////////////////////////////////////////
 
-    mapLoadClient("lib/resources/mapData/map.tmj", pGame->pMap);
-    mapLoadTileset("lib/resources/mapData/devTiles.tsx", mapGetTileset(pGame->pMap));
-    int mapWidth = mapGetWidth(pGame->pMap);
-    int tileSize = 32;
+    loadMap(pGame); //har bytt ut mot createClientMap(windowGetRenderer(pGame->pWindow));
 
-    pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
+    if (pGame->pMap->mapSheetImage.filePath) {
+        
+        SDL_Surface* surface = IMG_Load(pGame->pMap->mapSheetImage.filePath);
+        if (surface) {
+            pGame->pMap->mapSheetImage.texture = SDL_CreateTextureFromSurface(windowGetRenderer(pGame->pWindow), surface);
+            pGame->pMap->mapSheetImage.width = surface->w;
+            pGame->pMap->mapSheetImage.height = surface->h;
+            SDL_FreeSurface(surface);
+        }
+    } 
+
+    pGame->pHitforms = createDynamicArray(ARRAY_ENTITIES);
     if (pGame->pHitforms == NULL) {return 1;}
 
-    Vec2 tmp;
-    for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {
-        int check = mapGetLayerData(pGame->pMap, 0, i);
-        if (check > 0) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pGame->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
-        }
-    }
+    for (int i = 0; i < pGame->pMap->blockCount; i++) {
+        Block* pBlock = &pGame->pMap->blocks[i];
+        Vec2 tmp = createVector(pBlock->x + 16, pBlock->y + 16);    // det var enda settet att få bilden till hitboxen ( om någon kan fixa det skulle det vara snyggare utan offseten av halva intity storklek)
+        if (arrayAddObject(pGame->pHitforms, createEntity(tmp,pGame->pMap->mapSheetImage.texture,ENTITY_BLOCK,HITBOX_FULL_BLOCK))) { return 1; }
+    } 
     return 0;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects,  MovablePlatform pPlatformOne[], float const timestep) {
+
+// test funkon för att flytta horisontella och vertikala (Kan flyttas på och utvecklas så att den köter alla typer men då type av kollisioner måste läggas till)
+// på något set måste vi också sätta så att platformer ska ha sina pos från varandra så att blocken inte lägger efter eller överlappar när dem rör sig annars så är statiska stabila
+void updatePlatforms(Game *pGame, float timestep) {
+ 
+    for (int i = 0; i < pGame->pMap->blockCount; i++) {
+        Block *pBlock = &pGame->pMap->blocks[i];
+        Hitbox *pHitbox = arrayGetObject(pGame->pHitforms, i); // Get the corresponding hitbox
+
+        float oldX = pBlock->x;
+        float oldY = pBlock->y;
+
+        switch (pBlock->type) { 
+            case HORIZONTAL:
+                pBlock->x += pBlock->direction * pBlock->speed * timestep;
+                if (pBlock->x >= pBlock->origX + pBlock->moveRange || pBlock->x <= pBlock->origX - pBlock->moveRange) {
+                    pBlock->direction = -pBlock->direction;
+                }
+                break;
+            case VERTICAL:
+                pBlock->y += pBlock->direction * pBlock->speed * timestep;  
+                if (pBlock->y >= pBlock->origY + pBlock->moveRange || pBlock->y <= pBlock->origY - pBlock->moveRange) {
+                    pBlock->direction = -pBlock->direction;
+                }
+                break;
+            case DROP:
+                break;
+            case LIFT:
+                break;
+            case SWITCH:
+                break;
+            
+        }
+        hitboxPositionAdd(pHitbox, createVector(pBlock->x - oldX, pBlock->y - oldY));
+    }
+}
+//////////////////////////////////////////////////END///////////////////////////////////////////////////////
+
+
+
+
+
+
+void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects, float const timestep) {
     playerUpdatePosition(pPlayer, timestep);
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
@@ -87,29 +121,11 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects,  M
             }
             break;
     }
-    //collision check for bottom platform
-    for (int i = 0; i < MAX_MOVE_PLATFORMS-5; i++) {
-        playerCheckCollision(pPlayer, entityGetHitbox(pPlatformOne[i+5].pPlatform));
-    }
-    //collision check for top platform
-    bool movingPlatform = false;
-    for (int i = 0; i < MAX_MOVE_PLATFORMS-3; i++) {
-        if (playerCheckCollision(pPlayer, entityGetHitbox(pPlatformOne[i].pPlatform)) == OBJECT_IS_NORTH) {
-            movingPlatform = true;
-        }
-    }
-    //friction
-    if (movingPlatform){
-        //playerSetVelocity(pPlayer, pPlatformOne[0].velocity);
-    }
-    
-    //normal chech applied if player is not standing on a moving platform
+
     bool standingOnPlatform = false;
-    if(!movingPlatform){
-        for (int i = 0; i < arrayGetSize(pObjects); i++) {
-            if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
-                standingOnPlatform = true;
-            }
+    for (int i = 0; i < arrayGetSize(pObjects); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pObjects, i)) == OBJECT_IS_NORTH) {
+            standingOnPlatform = true;
         }
     }
 
@@ -117,11 +133,11 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects,  M
         standingOnPlatform = true;
     }*/
 
-    if (!standingOnPlatform&&!movingPlatform) { playerSetState(pPlayer, FALLING); }
+    if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
     return;
 }
 
-void updateDisplay(Game *pGame, Vec2 mousePosition, MovablePlatform platformOne[]) {
+void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     windowClearFrame(pGame->pWindow);
 
@@ -129,17 +145,12 @@ void updateDisplay(Game *pGame, Vec2 mousePosition, MovablePlatform platformOne[
         windowRenderPlayer(pGame->pWindow, pGame->players[i], pGame->pCamera);
     }
 
-    windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);
-    
-    //---------------------added loop-------------------------------------------------//
-    for(int i = 0; i < MAX_MOVE_PLATFORMS; i++){
-        windowRenderEntity(pGame->pWindow, platformOne[i].pPlatform, pGame->pCamera);
-    }
+    windowRenderMapLayer(pGame->pWindow, pGame->pMap, pGame->pCamera);   // har ändrat i den
 
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i), pGame->pCamera);
     }
-
+    
     windowDisplayFrame(pGame->pWindow);
     return;
 }
@@ -212,43 +223,6 @@ bool initiateConnection(Game *pGame) {
     return gameRunning;
 }
 
-void initMovablePlatforms(Game *pGame, MovablePlatform pPlatformOne[]){
-    Vec2 platformInitPos;
-    SDL_Texture *pPlatformTexture = windowLoadTexture(pGame->pWindow, "lib/resources/player1.png");
-    platformInitPos.x = 192.0f;
-    platformInitPos.y = 992.0f;
-    for(int i = 0;i < MAX_MOVE_PLATFORMS; i++){
-        if(i == 5){
-            platformInitPos.y += 32.0f;
-            platformInitPos.x = 224.0f;
-        }
-        pPlatformOne[i].pPlatform = createEntity(platformInitPos, pPlatformTexture, 10, HITBOX_FULL_BLOCK);
-        pPlatformOne[i].velocity.x = PLATFORM_SPEED_RIGHT;
-        pPlatformOne[i].velocity.y = 0.0f;
-        pPlatformOne[i].sheetPosition.x = 0.0f;
-        pPlatformOne[i].sheetPosition.y = 0.0f;
-        platformInitPos.x += 32.0f;
-    }
-}
-
-void movePlatforms(MovablePlatform pPlatformOne[]){
-    Vec2 pos1, pos2, vel1, vel2;
-    vel1.x = PLATFORM_SPEED_LEFT, vel1.y = 0.0f;
-    vel2.x = PLATFORM_SPEED_RIGHT, vel2.y = 0.0f;
-
-    pos1 = entityGetPosition(pPlatformOne[0].pPlatform);
-    pos2 = entityGetPosition(pPlatformOne[4].pPlatform);
-    for(int i = 0; i < MAX_MOVE_PLATFORMS; i++){
-        if(pos2.x >= 512){
-            pPlatformOne[i].velocity = vel1;
-        }
-        else if(pos1.x <= 192){
-            pPlatformOne[i].velocity = vel2;
-        }
-        entityMove(pPlatformOne[i].pPlatform, pPlatformOne[i].velocity);
-    }
-}
-
 int main(int argv, char** args) {
     if (SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
@@ -269,7 +243,7 @@ int main(int argv, char** args) {
     }
 
     Game game;
-    if (initGame(&game)) {
+    if (initGame(&game)) {      // har ändrat i den så att den loadar mapen
         cleanUp(&game);
         return 1;
     }
@@ -283,9 +257,6 @@ int main(int argv, char** args) {
     Player *pTeammate = game.players[1];
     cameraSetRenderer(game.pCamera, windowGetRenderer(game.pWindow));
     cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
-
-    MovablePlatform platformOne[MAX_MOVE_PLATFORMS];                                            //added
-    initMovablePlatforms(&game,platformOne);                                                    //added
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
@@ -330,18 +301,17 @@ int main(int argv, char** args) {
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
                     handleTick(&game, pTeammate);
-                    updatePlayer(pPlayer, pTeammate, game.pHitforms, platformOne, timestep);
+                    updatePlatforms(&game, timestep);       // ny funkon för att flytta platformer (Kan utvecklas för att hantera Switch trigade och kollikon trigade)
+                    updatePlayer(pPlayer, pTeammate, game.pHitforms, timestep);
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);
-                    
-                    movePlatforms(platformOne);                                                 //added
-
+        
                     accumulator -= timestep;
                 }
         
                 cameraUpdate(game.pCamera);
-                updateDisplay(&game, mousePosition,platformOne);
+                updateDisplay(&game, mousePosition);
                 
                 break;
             case GAME_CLOSING:

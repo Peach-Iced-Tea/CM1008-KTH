@@ -21,6 +21,11 @@ Entity *createEntity(Vec2 position, SDL_Texture *pTexture, int entityType, int h
             pEntity->currentFrame.w = 12.0f;
             pEntity->currentFrame.h = 12.0f;
             break;
+            // har lagt till detta för halv 32 block
+        case ENTITY_BLOCK:
+            pEntity->currentFrame.w = 16.0f;
+            pEntity->currentFrame.h = 16.0f;
+            break;
         default:
             pEntity->currentFrame.w = 32.0f;
             pEntity->currentFrame.h = 32.0f;
