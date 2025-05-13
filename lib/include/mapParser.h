@@ -8,7 +8,7 @@
 
 //#include "levelHandling.h"
 
-#define MAX_LAYERS 2
+#define MAX_LAYERS 3
 
 
 typedef struct tileset Tileset;
