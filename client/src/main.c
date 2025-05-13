@@ -93,18 +93,8 @@ int initGame(Game *pGame) {
         }
     }
 
-    //printf("size: checkpoint=%d, obstacle=%d\n", arrayGetSize(pGame->pCheckpoints), arrayGetSize(pGame->pObstacles));
-
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
     if (pGame->pCrosshair == NULL) { return 1; }
-
-    //pGame->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
-    //if (pGame->pObstacles == NULL) { return 1; }
-    //if (arrayAddObject(pGame->pObstacles, createObstacle(createVector(1216.0f, 4000.0f)))) { return 1; }
-
-    //pGame->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
-    //if (pGame->pCheckpoints == NULL) { return 1; }
-    //if (arrayAddObject(pGame->pCheckpoints, createCheckpoint(createVector(1152.0f, 4000.0f)))) { return 1; }
 
     pGame->lastCheckpoint = -1;
 
@@ -143,10 +133,6 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
             standingOnPlatform = true;
         }
     }
-
-    /*if (playerCheckCollision(pPlayer, playerGetBodyHitbox(pTeammate)) == OBJECT_IS_NORTH) {
-        standingOnPlatform = true;
-    }*/
 
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
     return;
