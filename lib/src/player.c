@@ -106,12 +106,15 @@ void playerHandleInput(Player *pPlayer, Input const *pInput) {
     if ((movement.x > 0.0f && pPlayer->velocity.x <= 0.0f) || (movement.x < 0.0f && pPlayer->velocity.x >= 0.0f) || (movement.x == 0.0f)) {
         pPlayer->velocity.x = movement.x;
     }
+    
     switch (pPlayer->state) {
         case FALLING:
         case JUMPING:
             break;
         default:
-            pPlayer->velocity.y = movement.y;
+            if ((movement.y > 0.0f && pPlayer->velocity.y <= 0.0f) || (movement.y < 0.0f && pPlayer->velocity.y >= 0.0f) || (movement.y == 0.0f)) {
+                pPlayer->velocity.y = movement.y;
+            }
             break;
     }
 
@@ -234,6 +237,27 @@ void playerUpdateState(Player *pPlayer) {
             if (pPlayer->jumpTimer > 0) {
                 pPlayer->jumpTimer--;
                 if (pPlayer->jumpTimer == 0) {pPlayer->state = FALLING;}
+            }
+            break;
+    }
+
+    switch (pPlayer->state) {
+        case FLYING:
+            if (pPlayer->velocity.y > 0.0f) {
+                if (pPlayer->velocity.y >= MAX_PLAYER_VELOCITY) {
+                    pPlayer->velocity.y = MAX_PLAYER_VELOCITY;
+                }
+                else {
+                    pPlayer->velocity.y += PLAYER_ACCELERATION;
+                }
+                }
+                else if (pPlayer->velocity.y < 0.0f) {
+                if (pPlayer->velocity.y <= -MAX_PLAYER_VELOCITY) {
+                    pPlayer->velocity.y = -MAX_PLAYER_VELOCITY;
+                }
+                else {
+                    pPlayer->velocity.y -= PLAYER_ACCELERATION;
+                }
             }
             break;
     }
