@@ -57,6 +57,12 @@ int initGame(Game *pGame) {
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if (pGame->pHitforms == NULL) { return 1; }
 
+    pGame->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
+    if (pGame->pObstacles == NULL) { return 1; }
+
+    pGame->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
+    if (pGame->pCheckpoints == NULL) { return 1; }
+
     Vec2 tmp;
     for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {
         int check = mapGetLayerData(pGame->pMap, 0, i);
@@ -69,16 +75,36 @@ int initGame(Game *pGame) {
         }
     }
 
+    for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 2); i++) {
+        int check = mapGetLayerData(pGame->pMap, 2, i);
+        if (check == 1) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+            tmp = createVector(posX, posY);
+
+            if (arrayAddObject(pGame->pObstacles, createObstacle(tmp))) { return 1; }
+        }
+        else if(check == 2) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+            tmp = createVector(posX, posY);
+
+            if (arrayAddObject(pGame->pCheckpoints, createCheckpoint(tmp))) { return 1; }
+        }
+    }
+
+    //printf("size: checkpoint=%d, obstacle=%d\n", arrayGetSize(pGame->pCheckpoints), arrayGetSize(pGame->pObstacles));
+
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
     if (pGame->pCrosshair == NULL) { return 1; }
 
-    pGame->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
-    if (pGame->pObstacles == NULL) { return 1; }
-    if (arrayAddObject(pGame->pObstacles, createObstacle(createVector(1216.0f, 4000.0f)))) { return 1; }
+    //pGame->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
+    //if (pGame->pObstacles == NULL) { return 1; }
+    //if (arrayAddObject(pGame->pObstacles, createObstacle(createVector(1216.0f, 4000.0f)))) { return 1; }
 
-    pGame->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
-    if (pGame->pCheckpoints == NULL) { return 1; }
-    if (arrayAddObject(pGame->pCheckpoints, createCheckpoint(createVector(1152.0f, 4000.0f)))) { return 1; }
+    //pGame->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
+    //if (pGame->pCheckpoints == NULL) { return 1; }
+    //if (arrayAddObject(pGame->pCheckpoints, createCheckpoint(createVector(1152.0f, 4000.0f)))) { return 1; }
 
     pGame->lastCheckpoint = -1;
 

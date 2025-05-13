@@ -79,14 +79,31 @@ int initServer(Server *pServer) {
     pServer->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
     printf("Initiated DynamicArray of type (Obstacle)\n");
     if (pServer->pObstacles == NULL) { return 1; }
-    if (arrayAddObject(pServer->pObstacles, createCheckpoint(createVector(1216.0f, 4000.0f)))) { return 1; }
-    printf("Created %ld checkpoints\n", arrayGetSize(pServer->pObstacles));
-
+    
     pServer->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
     printf("Initiated DynamicArray of type (Checkpoint)\n");
     if (pServer->pCheckpoints == NULL) { return 1; }
-    if (arrayAddObject(pServer->pCheckpoints, createCheckpoint(createVector(1152.0f, 4000.0f)))) { return 1; }
-    printf("Created %ld obstacles\n", arrayGetSize(pServer->pCheckpoints));
+
+    for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 2); i++) {
+        int check = mapGetLayerData_Server(pServer->pMap, 2, i);
+        if (check == 1) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+            tmp = createVector(posX, posY);
+
+            if (arrayAddObject(pServer->pObstacles, createObstacle(tmp))) { return 1; }
+        }
+        else if (check == 2) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+            tmp = createVector(posX, posY);
+
+            if (arrayAddObject(pServer->pCheckpoints, createCheckpoint(tmp))) { return 1; }
+        }
+    }
+    
+    printf("Created %ld obstacles\n", arrayGetSize(pServer->pObstacles));
+    printf("Created %ld checkpoints\n", arrayGetSize(pServer->pCheckpoints));
 
     pServer->currentTick = 0;
 
