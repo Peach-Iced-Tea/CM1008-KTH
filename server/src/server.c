@@ -8,6 +8,8 @@ void closeServer(Server *pServer) {
     }
 
     if (pServer->pHitforms) { destroyDynamicArray(pServer->pHitforms); }
+    if (pServer->pCheckpoints) { destroyDynamicArray(pServer->pCheckpoints); }
+    if (pServer->pObstacles) { destroyDynamicArray(pServer->pObstacles); }
 
     if (pServer->pMap) { destroyMap_Server(pServer->pMap); }
 
@@ -21,6 +23,7 @@ int initServer(Server *pServer) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pServer->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), i);
         if (pServer->players[i] == NULL) { return 1; }
+        pServer->lastCheckpoint[i] = -1;
     }
     printf("Created %d player(s)\n", MAX_PLAYERS);
 
@@ -73,6 +76,18 @@ int initServer(Server *pServer) {
     }
     printf("Prepared EntityData for movable entities\n");
 
+    pServer->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
+    printf("Initiated DynamicArray of type (Obstacle)\n");
+    if (pServer->pObstacles == NULL) { return 1; }
+    if (arrayAddObject(pServer->pObstacles, createCheckpoint(createVector(1216.0f, 4000.0f)))) { return 1; }
+    printf("Created %ld checkpoints\n", arrayGetSize(pServer->pObstacles));
+
+    pServer->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
+    printf("Initiated DynamicArray of type (Checkpoint)\n");
+    if (pServer->pCheckpoints == NULL) { return 1; }
+    if (arrayAddObject(pServer->pCheckpoints, createCheckpoint(createVector(1152.0f, 4000.0f)))) { return 1; }
+    printf("Created %ld obstacles\n", arrayGetSize(pServer->pCheckpoints));
+
     pServer->currentTick = 0;
 
     return 0;
@@ -101,7 +116,22 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pHitforms, float const timestep) {
+void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playerID, float const timestep) {
+    for (int i = 0; i < arrayGetSize(pServer->pCheckpoints); i++) {
+        if (playerCheckCollision(pPlayer, checkpointGetHitbox(arrayGetObject(pServer->pCheckpoints, i)), false)) {
+            pServer->lastCheckpoint[playerID] = i;
+        }
+    }
+
+    for (int i = 0; i < arrayGetSize(pServer->pObstacles); i++) {
+        if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pServer->pObstacles, i)), false)) {
+            playerSetState(pPlayer, IDLE);
+            Vec2 tmp = checkpointGetPosition(arrayGetObject(pServer->pCheckpoints, pServer->lastCheckpoint[playerID]));
+            tmp.y -= 32;
+            playerSetPosition(pPlayer, tmp);
+        }
+    }
+
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             tongueUpdatePosition(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
@@ -122,8 +152,8 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pHitforms, f
     }
 
     bool standingOnPlatform = false;
-    for (int i = 0; i < arrayGetSize(pHitforms); i++) {
-        if (playerCheckCollision(pPlayer, arrayGetObject(pHitforms, i), true) == OBJECT_IS_NORTH) {
+    for (int i = 0; i < arrayGetSize(pServer->pHitforms); i++) {
+        if (playerCheckCollision(pPlayer, arrayGetObject(pServer->pHitforms, i), true) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
         }
     }
@@ -152,7 +182,7 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             tongueOverrideVelocity(playerGetTongue(pPlayer), payload.player.tongueInput);
     }
 
-    updatePlayer(pPlayer, pTeammate, pServer->pHitforms, timestep);
+    updatePlayer(pServer, pPlayer, pTeammate, payload.playerID, timestep);
 
     prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);
     prepareEntityData(&(pServer->payload.entities[payload.playerID]), NULL, movedEntity, 0);

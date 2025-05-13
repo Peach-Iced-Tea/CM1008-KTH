@@ -18,4 +18,7 @@ typedef struct {
     int currentTick;
     ServerMap *pMap;
     DynamicArray *pHitforms;
+    DynamicArray *pCheckpoints;
+    DynamicArray *pObstacles;
+    int lastCheckpoint[MAX_PLAYERS];
 } Server;

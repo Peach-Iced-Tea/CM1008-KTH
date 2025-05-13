@@ -72,11 +72,9 @@ int initGame(Game *pGame) {
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
     if (pGame->pCrosshair == NULL) { return 1; }
 
-    printf("debug1\n");
     pGame->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
     if (pGame->pObstacles == NULL) { return 1; }
     if (arrayAddObject(pGame->pObstacles, createObstacle(createVector(1216.0f, 4000.0f)))) { return 1; }
-    printf("debug2\n");
 
     pGame->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
     if (pGame->pCheckpoints == NULL) { return 1; }
@@ -101,6 +99,15 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
     for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
         if (playerCheckCollision(pPlayer, checkpointGetHitbox(arrayGetObject(pGame->pCheckpoints, i)), false)) {
             pGame->lastCheckpoint = i;
+        }
+    }
+
+    for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {
+        if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pGame->pObstacles, i)), false)) {
+            playerSetState(pPlayer, IDLE);
+            Vec2 tmp = checkpointGetPosition(arrayGetObject(pGame->pCheckpoints, pGame->lastCheckpoint));
+            tmp.y -= 32;
+            playerSetPosition(pPlayer, tmp);
         }
     }
 
