@@ -192,7 +192,10 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             }
             break;
         default:
-            playerOverrideState(pPlayer, payload.player.state);
+            if (payload.player.state != ROTATING) {
+                playerOverrideState(pPlayer, payload.player.state);
+            }
+            
             if (payload.player.state == SHOOTING && tongueGetInfo(playerGetTongue(pPlayer)).state == NEUTRAL) {
                 tongueSetMousePosition(playerGetTongue(pPlayer), payload.player.mouseAim);
                 tongueUpdateVelocity(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer));

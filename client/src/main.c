@@ -105,9 +105,7 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
     playerUpdatePosition(pPlayer, timestep);
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
-            if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
-                playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
-            }
+            tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate));
             break;
     }
 
