@@ -16,7 +16,7 @@ struct client {
 
 void initClientPayload(ClientPayload *pPayload) {
     pPayload->player.input = createVector(0.0f, 0.0f);
-    pPayload->player.tongueInput = createVector(0.0f, 0.0f);
+    pPayload->player.mouseAim = createVector(0.0f, 0.0f);
     pPayload->player.rotateVelocity = 0.0f;
     pPayload->player.state = IDLE;
     pPayload->player.tick = 0;

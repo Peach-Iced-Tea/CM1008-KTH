@@ -290,6 +290,7 @@ void playerUpdateState(Player *pPlayer) {
 }
 
 Vec2 rotationCalculations(Player *pPlayer, float deltaTime) {
+    if (pPlayer->pGrabbedEntity == NULL) { printf("grabbedEntity is NULL\n"); }
     Vec2 newPosition;
     pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->body), entityGetMidPoint(*(pPlayer->pGrabbedEntity)));
     pPlayer->referenceAngle += (M_PI/180) * deltaTime * pPlayer->rotateVelocity;
@@ -328,8 +329,10 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             }
             break;
         case ROTATING:
+            printf("debug3.1\n");
             Vec2 newPosition = rotationCalculations(pPlayer, deltaTime);
             playerUpdateAnimation(pPlayer);
+            printf("debug3.2\n");
             entitySetPosition(pPlayer->pGrabbedEntity, newPosition);
             tongueCalculateShaft(pPlayer->pTongue, entityGetMidPoint(pPlayer->body), entityGetMidPoint(*(pPlayer->pGrabbedEntity)));
             break;
@@ -522,6 +525,7 @@ void playerOverrideState(Player *pPlayer, PlayerState newState) {
             if (pPlayer->jumpTimer > 0) {
                 pPlayer->jumpTimer = 0;
             }
+            pPlayer->velocity = createVector(0.0f, 0.0f);
             break;
     }
     return;

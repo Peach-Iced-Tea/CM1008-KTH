@@ -149,22 +149,16 @@ void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playe
         }
     }
 
+    playerUpdatePosition(pPlayer, timestep);
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
-            tongueUpdatePosition(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
-            if (playerGetInfo(pPlayer).state == SHOOTING) {
-                if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
-                    playerSetState(pPlayer, ROTATING);
-                    playerOverrideState(pTeammate, LOCKED);
-                    playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
-                }
+            printf("SHOOTING\n");
+            if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
+                printf("ROTATING\n");
+                playerSetState(pPlayer, ROTATING);
+                playerOverrideState(pTeammate, LOCKED);
+                playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
             }
-            break;
-        case RELEASE:
-            tongueUpdatePosition(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer), timestep);
-            break;
-        default:
-            playerUpdatePosition(pPlayer, timestep);
             break;
     }
 
@@ -192,13 +186,26 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     switch (playerGetInfo(pPlayer).state) {
         case LOCKED:
             break;
+        case ROTATING:
+            if (payload.player.state == RELEASE) {
+                playerOverrideState(pPlayer, payload.player.state);
+                tongueSetMousePosition(playerGetTongue(pPlayer), payload.player.mouseAim);
+                tongueUpdateVelocity(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer));
+            }
+            break;
         default:
             playerOverrideState(pPlayer, payload.player.state);
-            playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
-            playerUpdateAnimation(pPlayer);
-            tongueOverrideVelocity(playerGetTongue(pPlayer), payload.player.tongueInput);
+            if (payload.player.state == SHOOTING && tongueGetInfo(playerGetTongue(pPlayer)).state == NEUTRAL) {
+                tongueSetMousePosition(playerGetTongue(pPlayer), payload.player.mouseAim);
+                tongueUpdateVelocity(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer));
+            }
+            else if (payload.player.state == RELEASE && tongueGetInfo(playerGetTongue(pPlayer)).state == EXTENDING) {
+                tongueUpdateVelocity(playerGetTongue(pPlayer), playerGetMidPoint(pPlayer));
+            }
     }
 
+    playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
+    playerUpdateAnimation(pPlayer);
     updatePlayer(pServer, pPlayer, pTeammate, payload.playerID, timestep);
 
     prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);

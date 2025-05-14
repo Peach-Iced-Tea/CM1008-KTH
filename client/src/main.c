@@ -106,7 +106,6 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
-                playerSetState(pPlayer, ROTATING);
                 playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
             }
             break;
@@ -197,6 +196,10 @@ void handleTick(Game *pGame, Player *pPlayer2) {
             if (i == clientGetPlayerID(pGame->pClient)) {
                 if (payload.players[i].state != LOCKED) {
                     if (playerGetInfo(pPlayer).state == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
+                    if (payload.players[i].state == ROTATING) {
+                        printf("ROTATING\n");
+                        playerOverrideState(pPlayer, payload.players[i].state);
+                    }
 
                     if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
                         clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pHitforms);

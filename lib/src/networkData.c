@@ -3,7 +3,7 @@
 void prepareInputData(InputData *pData, Player const *pPlayer, int tick) {
     PlayerInfo info = playerGetInfo(pPlayer);
     pData->input = info.velocity;
-    pData->tongueInput = tongueGetInfo(playerGetTongue(pPlayer)).velocity;
+    pData->mouseAim = tongueGetInfo(playerGetTongue(pPlayer)).mousePosition;
     pData->rotateVelocity = info.rotateVelocity;
     pData->state = info.state;
     return;

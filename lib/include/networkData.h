@@ -28,7 +28,7 @@ typedef struct {
 
 typedef struct {
     Vec2 input;
-    Vec2 tongueInput;
+    Vec2 mouseAim;
     float rotateVelocity;
     int state;
     int tick;
