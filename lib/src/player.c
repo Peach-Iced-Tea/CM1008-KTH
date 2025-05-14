@@ -329,10 +329,8 @@ void playerUpdatePosition(Player *pPlayer, float deltaTime) {
             }
             break;
         case ROTATING:
-            printf("debug3.1\n");
             Vec2 newPosition = rotationCalculations(pPlayer, deltaTime);
             playerUpdateAnimation(pPlayer);
-            printf("debug3.2\n");
             entitySetPosition(pPlayer->pGrabbedEntity, newPosition);
             tongueCalculateShaft(pPlayer->pTongue, entityGetMidPoint(pPlayer->body), entityGetMidPoint(*(pPlayer->pGrabbedEntity)));
             break;
@@ -469,6 +467,8 @@ bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition) {
 }
 
 void playerSetGrabbedEntity(Player *pPlayer, Entity *pEntity, Player *pTeammate) {
+    if (pPlayer->pGrabbedEntity != NULL) { return; }
+
     if (pEntity != NULL && pTeammate != NULL) { return; }
 
     if (pEntity != NULL) {

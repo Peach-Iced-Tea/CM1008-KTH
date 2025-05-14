@@ -152,9 +152,7 @@ void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playe
     playerUpdatePosition(pPlayer, timestep);
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
-            printf("SHOOTING\n");
             if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
-                printf("ROTATING\n");
                 playerSetState(pPlayer, ROTATING);
                 playerOverrideState(pTeammate, LOCKED);
                 playerSetGrabbedEntity(pPlayer, NULL, pTeammate);

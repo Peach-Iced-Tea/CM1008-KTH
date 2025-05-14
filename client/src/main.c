@@ -172,7 +172,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     return;
 }
 
-void handleTick(Game *pGame, Player *pPlayer2) {
+void handleTick(Game *pGame, Player *pTeammate) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     playerUpdateAnimation(pPlayer);
     playerUpdateState(pPlayer);
@@ -197,7 +197,7 @@ void handleTick(Game *pGame, Player *pPlayer2) {
                 if (payload.players[i].state != LOCKED) {
                     if (playerGetInfo(pPlayer).state == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
                     if (payload.players[i].state == ROTATING) {
-                        printf("ROTATING\n");
+                        playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
                         playerOverrideState(pPlayer, payload.players[i].state);
                     }
 
