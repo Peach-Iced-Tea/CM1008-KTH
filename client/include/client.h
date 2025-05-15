@@ -32,10 +32,14 @@ void clientHandleServerReconciliation(Client *pClient, Player *pPlayer, DynamicA
 
 int clientCheckServerPayload(Client *pClient, StateData latestServerState);
 
+void clientSetLastServerTick(Client *pClient, int newTick);
+
 InputData clientGetLatestInput(Client const *pClient);
 
 StateData clientGetLatestState(Client const *pClient);
 
 int clientGetPlayerID(Client const *pClient);
+
+int clientGetLastServerTick(Client const *pClient);
 
 void destroyClient(Client *pClient);

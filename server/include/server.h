@@ -4,7 +4,7 @@
 #include "player.h"
 #include "utils.h"
 #include "physics.h"
-
+#include "platforms.h"
 #include "mapParser.h"
 
 typedef struct {
@@ -18,4 +18,5 @@ typedef struct {
     int currentTick;
     ServerMap *pMap;
     DynamicArray *pHitforms;
+    MovablePlatform *pPlatform;
 } Server;

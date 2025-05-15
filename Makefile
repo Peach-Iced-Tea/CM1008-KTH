@@ -86,7 +86,9 @@ $(OBJDIR)/networkData.o: $(LIBSRC)/networkData.c $(LIBINC)/networkData.h
 $(OBJDIR)/mapParser.o: $(LIBSRC)/mapParser.c $(LIBINC)/mapParser.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-
+$(OBJDIR)/platforms.o: $(LIBSRC)/platforms.c $(LIBINC)/platforms.h
+	$(CC) $(CFLAGS) -o $@ $<
+	
 all: $(TARGETCLIENT) $(TARGETSERVER)
 
 

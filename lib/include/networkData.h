@@ -49,6 +49,7 @@ typedef struct {
     EntityData entities[MAX_PLAYERS];
     int playerID;
     ServerState serverState;
+    int serverTick;
 } ServerPayload;
 
 typedef struct {

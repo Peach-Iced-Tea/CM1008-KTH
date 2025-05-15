@@ -17,6 +17,7 @@
 #include "menu.h"
 #include "tongue.h"
 #include "mapParser.h"
+#include "platforms.h"
 
 typedef struct {
     RenderWindow *pWindow;
@@ -27,4 +28,5 @@ typedef struct {
     Client *pClient;
     ClientMap *pMap;
     DynamicArray *pHitforms;
+    MovablePlatform *pPlatform;
 } Game;

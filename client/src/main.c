@@ -1,15 +1,5 @@
 #include "main.h"
 
-#define MAX_MOVE_PLATFORMS 8
-#define PLATFORM_SPEED_RIGHT 2.0f
-#define PLATFORM_SPEED_LEFT -2.0f
-
-struct movablePlatform {
-    Entity *pPlatform;
-    Vec2 velocity;
-    SDL_Rect sheetPosition;
-};typedef struct movablePlatform MovablePlatform;
-
 void cleanUp(Game *pGame) {
     if (pGame->pInput) { destroyInputTracker(pGame->pInput); }
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -74,10 +64,14 @@ int initGame(Game *pGame) {
             if (arrayAddObject(pGame->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
         }
     }
+
+    pGame->pPlatform = createPlatform();
+    initMovablePlatforms(windowGetRenderer(pGame->pWindow), pGame->pPlatform);
+
     return 0;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects,  MovablePlatform pPlatformOne[], float const timestep) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects,  MovablePlatform *pPlatformOne, float const timestep) {
     playerUpdatePosition(pPlayer, timestep);
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
@@ -88,19 +82,21 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects,  M
             break;
     }
     //collision check for bottom platform
-    for (int i = 0; i < MAX_MOVE_PLATFORMS-5; i++) {
-        playerCheckCollision(pPlayer, entityGetHitbox(pPlatformOne[i+5].pPlatform));
-    }
+    // for (int i = 0; i < MAX_MOVE_PLATFORMS-5; i++) {
+    //     playerCheckCollision(pPlayer, entityGetHitbox(platformGetEntity(pPlatformOne, i)));
+    // }
     //collision check for top platform
     bool movingPlatform = false;
-    for (int i = 0; i < MAX_MOVE_PLATFORMS-3; i++) {
-        if (playerCheckCollision(pPlayer, entityGetHitbox(pPlatformOne[i].pPlatform)) == OBJECT_IS_NORTH) {
+    for (int i = 0; i < MAX_MOVE_PLATFORMS; i++) {
+        if (playerCheckCollision(pPlayer, entityGetHitbox(platformGetEntity(pPlatformOne, i))) == OBJECT_IS_NORTH) {
             movingPlatform = true;
         }
     }
     //friction
-    if (movingPlatform){
-        //playerSetVelocity(pPlayer, pPlatformOne[0].velocity);
+    if (movingPlatform) {
+        Vec2 playerCurPos = playerGetInfo(pPlayer).position;
+        Vec2 newPos = createVector(playerCurPos.x + platformGetVelocity(pPlatformOne).x, playerCurPos.y);
+        playerSetPosition(pPlayer, newPos);
     }
     
     //normal chech applied if player is not standing on a moving platform
@@ -121,7 +117,7 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, DynamicArray *pObjects,  M
     return;
 }
 
-void updateDisplay(Game *pGame, Vec2 mousePosition, MovablePlatform platformOne[]) {
+void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     windowClearFrame(pGame->pWindow);
 
@@ -133,7 +129,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition, MovablePlatform platformOne[
     
     //---------------------added loop-------------------------------------------------//
     for(int i = 0; i < MAX_MOVE_PLATFORMS; i++){
-        windowRenderEntity(pGame->pWindow, platformOne[i].pPlatform, pGame->pCamera);
+        windowRenderEntity(pGame->pWindow, platformGetEntity(pGame->pPlatform, i), pGame->pCamera);
     }
 
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
@@ -164,6 +160,12 @@ void handleTick(Game *pGame, Player *pPlayer2) {
             }
         }
 
+        if (clientGetLastServerTick(pGame->pClient) < payload.serverTick){
+            int missingTicks = payload.serverTick - clientGetLastServerTick(pGame->pClient);
+            movePlatforms(pGame->pPlatform);
+            clientSetLastServerTick(pGame->pClient, payload.serverTick);
+        }
+        
         for (int i = 0; i < MAX_PLAYERS; i++) {
             if (i == clientGetPlayerID(pGame->pClient)) {
                 if (payload.players[i].state != LOCKED) {
@@ -212,43 +214,6 @@ bool initiateConnection(Game *pGame) {
     return gameRunning;
 }
 
-void initMovablePlatforms(Game *pGame, MovablePlatform pPlatformOne[]){
-    Vec2 platformInitPos;
-    SDL_Texture *pPlatformTexture = windowLoadTexture(pGame->pWindow, "lib/resources/player1.png");
-    platformInitPos.x = 192.0f;
-    platformInitPos.y = 992.0f;
-    for(int i = 0;i < MAX_MOVE_PLATFORMS; i++){
-        if(i == 5){
-            platformInitPos.y += 32.0f;
-            platformInitPos.x = 224.0f;
-        }
-        pPlatformOne[i].pPlatform = createEntity(platformInitPos, pPlatformTexture, 10, HITBOX_FULL_BLOCK);
-        pPlatformOne[i].velocity.x = PLATFORM_SPEED_RIGHT;
-        pPlatformOne[i].velocity.y = 0.0f;
-        pPlatformOne[i].sheetPosition.x = 0.0f;
-        pPlatformOne[i].sheetPosition.y = 0.0f;
-        platformInitPos.x += 32.0f;
-    }
-}
-
-void movePlatforms(MovablePlatform pPlatformOne[]){
-    Vec2 pos1, pos2, vel1, vel2;
-    vel1.x = PLATFORM_SPEED_LEFT, vel1.y = 0.0f;
-    vel2.x = PLATFORM_SPEED_RIGHT, vel2.y = 0.0f;
-
-    pos1 = entityGetPosition(pPlatformOne[0].pPlatform);
-    pos2 = entityGetPosition(pPlatformOne[4].pPlatform);
-    for(int i = 0; i < MAX_MOVE_PLATFORMS; i++){
-        if(pos2.x >= 512){
-            pPlatformOne[i].velocity = vel1;
-        }
-        else if(pos1.x <= 192){
-            pPlatformOne[i].velocity = vel2;
-        }
-        entityMove(pPlatformOne[i].pPlatform, pPlatformOne[i].velocity);
-    }
-}
-
 int main(int argv, char** args) {
     if (SDL_Init(SDL_INIT_VIDEO)!=0) {
         printf("Error: %s\n",SDL_GetError());
@@ -284,8 +249,8 @@ int main(int argv, char** args) {
     cameraSetRenderer(game.pCamera, windowGetRenderer(game.pWindow));
     cameraSetTargets(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
 
-    MovablePlatform platformOne[MAX_MOVE_PLATFORMS];                                            //added
-    initMovablePlatforms(&game,platformOne);                                                    //added
+    /* MovablePlatform *pPlatformOne = createPlatform();                                            //added
+    initMovablePlatforms(windowGetRenderer(game.pWindow),pPlatformOne); */                                                    //added
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
@@ -330,18 +295,17 @@ int main(int argv, char** args) {
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
                     handleTick(&game, pTeammate);
-                    updatePlayer(pPlayer, pTeammate, game.pHitforms, platformOne, timestep);
+                    updatePlayer(pPlayer, pTeammate, game.pHitforms, game.pPlatform, timestep);
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
                     clientAddStateToBuffer(game.pClient, state);
                     
-                    movePlatforms(platformOne);                                                 //added
 
                     accumulator -= timestep;
                 }
         
                 cameraUpdate(game.pCamera);
-                updateDisplay(&game, mousePosition,platformOne);
+                updateDisplay(&game, mousePosition);
                 
                 break;
             case GAME_CLOSING:

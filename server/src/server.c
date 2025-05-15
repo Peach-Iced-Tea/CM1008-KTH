@@ -65,6 +65,9 @@ int initServer(Server *pServer) {
         prepareEntityData(&(pServer->payload.entities[i]), NULL, -1, 0);
     }
 
+    pServer->pPlatform = createPlatform();                                            //added
+    initMovablePlatforms(NULL,pServer->pPlatform);
+
     pServer->currentTick = 0;
 
     return 0;
@@ -83,6 +86,7 @@ bool addIP(IPaddress clients[], IPaddress newAddress, int *pNrOfClients) {
 
 void sendDataToClients(Server *pServer) {
     pServer->payload.serverState = pServer->state;
+    pServer->payload.serverTick = pServer->currentTick;
     for (int i = 0; i < pServer->nrOfPlayers; i++) {
         pServer->payload.playerID = i;
         memcpy(pServer->pPacket->data, &(pServer->payload), sizeof(ServerPayload));
@@ -93,7 +97,7 @@ void sendDataToClients(Server *pServer) {
     return;
 }
 
-void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, float const timestep) {
+void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, DynamicArray *pHitforms, MovablePlatform *pPlatform, float const timestep) {
     switch (playerGetInfo(pPlayer).state) {
         case SHOOTING:
             vectorScale(&tongueVelocity, timestep);
@@ -122,6 +126,25 @@ void updatePlayer(Player *pPlayer, Player *pTeammate, Vec2 tongueVelocity, Dynam
         }
     }
 
+        //collision check for bottom platform
+    // for (int i = 0; i < MAX_MOVE_PLATFORMS-5; i++) {
+    //     playerCheckCollision(pPlayer, entityGetHitbox(platformGetEntity(pPlatform, i)));
+    // }
+    //collision check for top platform
+    bool movingPlatform = false;
+    for (int i = 0; i < MAX_MOVE_PLATFORMS; i++) {
+        if (playerCheckCollision(pPlayer, entityGetHitbox(platformGetEntity(pPlatform, i))) == OBJECT_IS_NORTH) {
+            movingPlatform = true;
+        }
+    }
+    //friction
+    // printf("Platform: %d, %d | Player: %d, %d\n", platformGetVelocity(pPlatform).x, platformGetVelocity(pPlatform).y, playerGetInfo(pPlayer).velocity.x, playerGetInfo(pPlayer).velocity.y);
+    if (movingPlatform){
+        Vec2 playerCurPos = playerGetInfo(pPlayer).position;
+        Vec2 newPos = createVector(playerCurPos.x + platformGetVelocity(pPlatform).x, playerCurPos.y);
+        playerSetPosition(pPlayer, newPos);
+    }
+
     if (!standingOnPlatform) { playerSetState(pPlayer, FALLING); }
     return;
 }
@@ -145,8 +168,7 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
             playerUpdateAnimation(pPlayer);
     }
 
-    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, timestep);
-
+    updatePlayer(pPlayer, pTeammate, payload.player.tongueInput, pServer->pHitforms, pServer->pPlatform, timestep);
     prepareStateData(&(pServer->payload.players[payload.playerID]), pPlayer, payload.player.tick);
     prepareEntityData(&(pServer->payload.entities[payload.playerID]), NULL, movedEntity, 0);
     return;
@@ -226,6 +248,7 @@ int main(int argv, char** args) {
                     }
                     
                     sendDataToClients(&server);
+                    movePlatforms(server.pPlatform);
                     while (SDLNet_UDP_Recv(server.socket, server.pPacket) == 1) {
                         memcpy(&clientPayload, server.pPacket->data, server.pPacket->len);
                         switch (clientPayload.clientState) {
