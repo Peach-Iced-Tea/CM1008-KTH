@@ -23,7 +23,7 @@ int initServer(Server *pServer) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pServer->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), i);
         if (pServer->players[i] == NULL) { return 1; }
-        pServer->lastCheckpoint[i] = 0;
+        pServer->lastCheckpoint[i] = -1;
     }
     printf("Created %d player(s)\n", MAX_PLAYERS);
 

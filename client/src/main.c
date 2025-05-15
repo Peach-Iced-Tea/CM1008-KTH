@@ -96,7 +96,7 @@ int initGame(Game *pGame) {
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
     if (pGame->pCrosshair == NULL) { return 1; }
 
-    pGame->lastCheckpoint = 0;
+    pGame->lastCheckpoint = -1;
 
     return 0;
 }
@@ -144,7 +144,10 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     windowRenderMapLayer(pGame->pWindow, pGame->pMap);
 
     for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
-        windowRenderObject(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pCheckpoints, i)), RENDER_CHECKPOINT);
+        Entity body = obstacleGetBody(arrayGetObject(pGame->pCheckpoints, i));
+        if (i == pGame->lastCheckpoint) { body.source.x += 32; }
+
+        windowRenderObject(pGame->pWindow, body, RENDER_OBSTACLE);
     }
 
     for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {

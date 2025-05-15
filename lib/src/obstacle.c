@@ -13,12 +13,11 @@ Obstacle *createObstacle(Vec2 position, ObstacleType type) {
     switch (pObstacle->type) {
         case OBSTACLE_SPIKE:
             if (entityInitData(&(pObstacle->body), position, ENTITY_DEFAULT, HITBOX_HALF_BLOCK_BOTTOM)) { return NULL; }
-            pObstacle->body.source.x = 0;
-            pObstacle->body.source.y = 0;
             pObstacle->hazardLevel = HAZARD_LETHAL;
             break;
         case OBSTACLE_CHECKPOINT:
             if (entityInitData(&(pObstacle->body), position, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+            pObstacle->body.source.y = 32;
             break;
         default:
             printf("Error: Unknown ObstacleType %d", type);
