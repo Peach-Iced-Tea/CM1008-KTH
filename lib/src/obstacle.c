@@ -2,13 +2,34 @@
 
 struct obstacle {
     Entity body;
+    HazardLevel hazardLevel;
+    ObstacleType type;
 };
 
-Obstacle *createObstacle(Vec2 position) {
+Obstacle *createObstacle(Vec2 position, ObstacleType type) {
     Obstacle *pObstacle = malloc(sizeof(Obstacle));
-    if (entityInitData(&(pObstacle->body), position, ENTITY_DEFAULT, HITBOX_HALF_BLOCK_BOTTOM)) { return NULL; }
+    pObstacle->hazardLevel = HAZARD_NONE;
+    pObstacle->type = type;
+    switch (pObstacle->type) {
+        case OBSTACLE_SPIKE:
+            if (entityInitData(&(pObstacle->body), position, ENTITY_DEFAULT, HITBOX_HALF_BLOCK_BOTTOM)) { return NULL; }
+            pObstacle->body.source.x = 0;
+            pObstacle->body.source.y = 0;
+            pObstacle->hazardLevel = HAZARD_LETHAL;
+            break;
+        case OBSTACLE_CHECKPOINT:
+            if (entityInitData(&(pObstacle->body), position, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+            break;
+        default:
+            printf("Error: Unknown ObstacleType %d", type);
+            return NULL;
+    }
 
     return pObstacle;
+}
+
+HazardLevel obstacleIsHazardous(Obstacle const *pObstacle) {
+    return pObstacle->hazardLevel;
 }
 
 Entity obstacleGetBody(Obstacle const *pObstacle) {

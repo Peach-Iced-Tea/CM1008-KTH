@@ -1,10 +1,9 @@
 #pragma once
 #include "entity.h"
-#include "checkpoint.h"
 #include "obstacle.h"
 
 typedef enum ArrayType {
-    ARRAY_ENTITIES, ARRAY_HITBOXES, ARRAY_CHECKPOINTS, ARRAY_OBSTACLES
+    ARRAY_ENTITIES, ARRAY_HITBOXES, ARRAY_OBSTACLES
 } ArrayType;
 
 typedef struct dynamicArray DynamicArray;

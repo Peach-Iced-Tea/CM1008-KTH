@@ -7,7 +7,6 @@
 #include "entity.h"
 #include "camera.h"
 #include "mapParser.h"
-#include "tongue.h"
 
 typedef enum RenderType {
     RENDER_PLAYER1, RENDER_PLAYER2, RENDER_TONGUE,

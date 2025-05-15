@@ -13,7 +13,6 @@
 #include "menu.h"
 #include "mapParser.h"
 #include "mouse.h"
-#include "checkpoint.h"
 #include "obstacle.h"
 
 typedef struct {

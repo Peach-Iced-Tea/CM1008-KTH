@@ -86,9 +86,6 @@ $(OBJDIR)/networkData.o: $(LIBSRC)/networkData.c $(LIBINC)/networkData.h
 $(OBJDIR)/mapParser.o: $(LIBSRC)/mapParser.c $(LIBINC)/mapParser.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-$(OBJDIR)/checkpoint.o: $(LIBSRC)/checkpoint.c $(LIBINC)/checkpoint.h
-	$(CC) $(CFLAGS) -o $@ $<
-
 $(OBJDIR)/obstacle.o: $(LIBSRC)/obstacle.c $(LIBINC)/obstacle.h
 	$(CC) $(CFLAGS) -o $@ $<
 

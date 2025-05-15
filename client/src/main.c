@@ -60,7 +60,7 @@ int initGame(Game *pGame) {
     pGame->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
     if (pGame->pObstacles == NULL) { return 1; }
 
-    pGame->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
+    pGame->pCheckpoints = createDynamicArray(ARRAY_OBSTACLES);
     if (pGame->pCheckpoints == NULL) { return 1; }
 
     Vec2 tmp;
@@ -82,21 +82,21 @@ int initGame(Game *pGame) {
             float posY = (i / mapWidth) * tileSize;
             tmp = createVector(posX, posY);
 
-            if (arrayAddObject(pGame->pObstacles, createObstacle(tmp))) { return 1; }
+            if (arrayAddObject(pGame->pObstacles, createObstacle(tmp, OBSTACLE_SPIKE))) { return 1; }
         }
         else if(check == 2) {
             float posX = (i % mapWidth) * tileSize;
             float posY = (i / mapWidth) * tileSize;
             tmp = createVector(posX, posY);
 
-            if (arrayAddObject(pGame->pCheckpoints, createCheckpoint(tmp))) { return 1; }
+            if (arrayAddObject(pGame->pCheckpoints, createObstacle(tmp, OBSTACLE_CHECKPOINT))) { return 1; }
         }
     }
 
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
     if (pGame->pCrosshair == NULL) { return 1; }
 
-    pGame->lastCheckpoint = -1;
+    pGame->lastCheckpoint = 0;
 
     return 0;
 }
@@ -110,17 +110,19 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
     }
 
     for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
-        if (playerCheckCollision(pPlayer, checkpointGetHitbox(arrayGetObject(pGame->pCheckpoints, i)), false)) {
+        if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pGame->pCheckpoints, i)), false)) {
             pGame->lastCheckpoint = i;
         }
     }
 
     for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {
         if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pGame->pObstacles, i)), false)) {
-            playerSetState(pPlayer, IDLE);
-            Vec2 tmp = checkpointGetPosition(arrayGetObject(pGame->pCheckpoints, pGame->lastCheckpoint));
-            tmp.y -= 32;
-            playerSetPosition(pPlayer, tmp);
+            if (obstacleIsHazardous(arrayGetObject(pGame->pObstacles, i)) == HAZARD_LETHAL) {
+                playerSetState(pPlayer, IDLE);
+                Vec2 tmp = obstacleGetPosition(arrayGetObject(pGame->pCheckpoints, pGame->lastCheckpoint));
+                tmp.y -= 32;
+                playerSetPosition(pPlayer, tmp);
+            }
         }
     }
 
@@ -142,7 +144,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     windowRenderMapLayer(pGame->pWindow, pGame->pMap);
 
     for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
-        windowRenderObject(pGame->pWindow, checkpointGetBody(arrayGetObject(pGame->pCheckpoints, i)), RENDER_CHECKPOINT);
+        windowRenderObject(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pCheckpoints, i)), RENDER_CHECKPOINT);
     }
 
     for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {

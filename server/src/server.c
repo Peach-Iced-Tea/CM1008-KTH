@@ -23,7 +23,7 @@ int initServer(Server *pServer) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         pServer->players[i] = createPlayer(createVector(PLAYER_START_X+48*i, PLAYER_START_Y), i);
         if (pServer->players[i] == NULL) { return 1; }
-        pServer->lastCheckpoint[i] = -1;
+        pServer->lastCheckpoint[i] = 0;
     }
     printf("Created %d player(s)\n", MAX_PLAYERS);
 
@@ -80,8 +80,8 @@ int initServer(Server *pServer) {
     printf("Initiated DynamicArray of type (Obstacle)\n");
     if (pServer->pObstacles == NULL) { return 1; }
     
-    pServer->pCheckpoints = createDynamicArray(ARRAY_CHECKPOINTS);
-    printf("Initiated DynamicArray of type (Checkpoint)\n");
+    pServer->pCheckpoints = createDynamicArray(ARRAY_OBSTACLES);
+    printf("Initiated DynamicArray of type (Obstacle)\n");
     if (pServer->pCheckpoints == NULL) { return 1; }
 
     for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 2); i++) {
@@ -91,14 +91,14 @@ int initServer(Server *pServer) {
             float posY = (i / mapWidth) * tileSize;
             tmp = createVector(posX, posY);
 
-            if (arrayAddObject(pServer->pObstacles, createObstacle(tmp))) { return 1; }
+            if (arrayAddObject(pServer->pObstacles, createObstacle(tmp, OBSTACLE_SPIKE))) { return 1; }
         }
         else if (check == 2) {
             float posX = (i % mapWidth) * tileSize;
             float posY = (i / mapWidth) * tileSize;
             tmp = createVector(posX, posY);
 
-            if (arrayAddObject(pServer->pCheckpoints, createCheckpoint(tmp))) { return 1; }
+            if (arrayAddObject(pServer->pCheckpoints, createObstacle(tmp, OBSTACLE_CHECKPOINT))) { return 1; }
         }
     }
     
@@ -135,7 +135,7 @@ void sendDataToClients(Server *pServer) {
 
 void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playerID, float const timestep) {
     for (int i = 0; i < arrayGetSize(pServer->pCheckpoints); i++) {
-        if (playerCheckCollision(pPlayer, checkpointGetHitbox(arrayGetObject(pServer->pCheckpoints, i)), false)) {
+        if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pServer->pCheckpoints, i)), false)) {
             pServer->lastCheckpoint[playerID] = i;
         }
     }
@@ -143,7 +143,7 @@ void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playe
     for (int i = 0; i < arrayGetSize(pServer->pObstacles); i++) {
         if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pServer->pObstacles, i)), false)) {
             playerSetState(pPlayer, IDLE);
-            Vec2 tmp = checkpointGetPosition(arrayGetObject(pServer->pCheckpoints, pServer->lastCheckpoint[playerID]));
+            Vec2 tmp = obstacleGetPosition(arrayGetObject(pServer->pCheckpoints, pServer->lastCheckpoint[playerID]));
             tmp.y -= 32;
             playerSetPosition(pPlayer, tmp);
         }
