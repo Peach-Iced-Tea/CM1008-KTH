@@ -91,6 +91,13 @@ int initGame(Game *pGame) {
 
             if (arrayAddObject(pGame->pCheckpoints, createCheckpoint(tmp))) { return 1; }
         }
+        else if(check == 3) {
+            float posX = (i % mapWidth) * tileSize;
+            float posY = (i / mapWidth) * tileSize;
+            tmp = createVector(posX, posY);
+
+            if (entityInitData(&(pGame->end), tmp, ENTITY_END, HITBOX_END)) { return 1; }
+        }
     }
 
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
@@ -304,6 +311,10 @@ int main(int argv, char** args) {
                     gameState = GAME_CLOSING;
                     continue;
                 }
+                if(playerCheckCollision(pPlayer, game.end.pHitbox, false)) {
+                    gameState = GAME_WON;
+                    continue;
+                }
 
                 playerHandleInput(pPlayer, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
@@ -335,6 +346,18 @@ int main(int argv, char** args) {
                 cameraUpdate(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
                 crosshairSetBorders(game.pCrosshair, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
                 updateDisplay(&game, mousePosition);
+                
+                break;
+            case GAME_WON:
+                if (checkUserInput(game.pInput) == 0) {
+                    gameState = GAME_CLOSING;
+                    continue;
+                }
+                
+                Vec2 displayMiddle = createVector(windowGetWidth(game.pWindow)*0.5f, windowGetHeight(game.pWindow)*0.5f);
+                windowRenderText(game.pWindow, "Game Won!", displayMiddle.x, displayMiddle.y - 50);
+                windowRenderText(game.pWindow, "ESC to exit", displayMiddle.x, displayMiddle.y + 50);
+                windowDisplayFrame(game.pWindow);
                 
                 break;
             case GAME_CLOSING:

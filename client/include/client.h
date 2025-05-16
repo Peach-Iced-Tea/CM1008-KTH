@@ -7,7 +7,8 @@
 
 #define GAME_CONNECTING 0
 #define GAME_RUNNING 1
-#define GAME_CLOSING 2
+#define GAME_WON 2
+#define GAME_CLOSING 3
 
 typedef struct client Client;
 

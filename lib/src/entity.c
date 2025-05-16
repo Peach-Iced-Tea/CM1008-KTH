@@ -69,6 +69,15 @@ Hitbox *createHalfBlockHitboxHorizontal(Vec2 const position, float w, float h, H
     return pHitbox;
 }
 
+Hitbox *createEndHitbox(Vec2 const position, float w, float h) {
+    Hitbox *pHitbox = malloc(sizeof(Hitbox));
+    w *= 3.5f;
+    h *= 3.5f;
+    pHitbox->position = createVector(position.x+w, position.y+h);
+    pHitbox->halfSize = createVector(w, h);
+    return pHitbox;
+}
+
 Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType) {
     Hitbox *pHitbox = NULL;
     switch (hitboxType) {
@@ -86,6 +95,8 @@ Hitbox *createHitbox(Vec2 const position, float w, float h, int hitboxType) {
         case HITBOX_HALF_BLOCK_RIGHT:
             pHitbox = createHalfBlockHitboxHorizontal(position, w, h, hitboxType);
             break;
+        case HITBOX_END:
+            pHitbox = createEndHitbox(position, w, h);
         case HITBOX_NONE:
             break;
     }
@@ -115,6 +126,9 @@ int entityInitData(Entity *pEntity, Vec2 position, int entityType, int hitboxTyp
             pEntity->frame.w = 12.0f;
             pEntity->frame.h = 12.0f;
             break;
+        case ENTITY_END:
+            pEntity->frame.w = 32.0f;
+            pEntity->frame.h = 32.0f;
     }
 
     pEntity->source.x = ENTITY_DEFAULT_SOURCE_X;
