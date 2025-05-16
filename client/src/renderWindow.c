@@ -219,6 +219,7 @@ void windowRenderText(RenderWindow *pWindow, char const textToRender[], int x, i
     SDL_QueryTexture(pTexture, NULL, NULL, &dst.w, &dst.h);
     dst.x = x-dst.w*0.5f;
     dst.y = y-dst.h*0.5f;
+    SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
     SDL_RenderCopy(pWindow->pRenderer, pTexture, NULL, &dst);
     return;
 }

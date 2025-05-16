@@ -28,4 +28,5 @@ typedef struct {
     DynamicArray *pObstacles;
     Crosshair *pCrosshair;
     int lastCheckpoint;
+    Entity end;
 } Game;
