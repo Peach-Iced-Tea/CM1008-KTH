@@ -22,10 +22,10 @@ typedef enum CameraError {
 
 typedef struct camera Camera;
 
-#define MAX_ZOOM_IN 2.5f
-#define MAX_ZOOM_OUT 1.2f
-#define REFERENCE_WIDTH 1920
-#define REFERENCE_HEIGHT 1080
+#define MAX_ZOOM_IN 1.0f
+#define MAX_ZOOM_OUT 1.5f
+#define REFERENCE_WIDTH 736
+#define REFERENCE_HEIGHT 414
 
 /*
 Create a Camera with the current resolution of the game window.

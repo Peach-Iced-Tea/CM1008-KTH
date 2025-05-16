@@ -199,6 +199,7 @@ void windowRenderHitbox(RenderWindow *pWindow, Hitbox const *pHitbox) {
 }
 
 void windowRenderMenu(RenderWindow *pWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
+    SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
     for (int i = 0; i < nrOfButtons; i++) {
         SDL_Rect src = menuButtons[i];
         SDL_Rect dst = menuPosition[i];
@@ -206,6 +207,7 @@ void windowRenderMenu(RenderWindow *pWindow, SDL_Texture *pTexture, SDL_Rect men
         SDL_RenderCopy(pWindow->pRenderer, pTexture, &src, &dst);
     }
     
+    SDL_RenderSetLogicalSize(pWindow->pRenderer, cameraGetWidth(pWindow->pCamera), cameraGetHeight(pWindow->pCamera));
     return;
 }
 
@@ -229,6 +231,7 @@ void windowRenderText(RenderWindow *pWindow, char const textToRender[], int x, i
     dst.y = y-dst.h*0.5f;
     SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
     SDL_RenderCopy(pWindow->pRenderer, pTexture, NULL, &dst);
+    SDL_RenderSetLogicalSize(pWindow->pRenderer, cameraGetWidth(pWindow->pCamera), cameraGetHeight(pWindow->pCamera));
     return;
 }
 
@@ -240,8 +243,9 @@ void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType r
 
     SDL_FRect dst = entity.frame;
     SDL_Rect src = entity.source;
-    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
+    if (!cameraEntityIsVisible(pWindow->pCamera, dst)) { return; }
 
+    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
     SDL_Texture *pTexture = windowGetTexture(pWindow->textures, renderType);
     if (pTexture == NULL) { return; }
 
@@ -282,6 +286,7 @@ void windowRenderMapLayer(RenderWindow *pWindow, ClientMap *pMap) {
             cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
 
             SDL_RenderCopyF(pWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
+            pWindow->nrOfRenderedEntites++;
         }
     }
 }
@@ -294,6 +299,7 @@ void windowClearFrame(RenderWindow *pWindow) {
 
 void windowDisplayFrame(RenderWindow *pWindow) {
     SDL_RenderPresent(pWindow->pRenderer);
+    //printf("rendererdEntities: %d\n", pWindow->nrOfRenderedEntites);
     return;
 }
 

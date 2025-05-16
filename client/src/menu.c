@@ -35,12 +35,6 @@ Menu *createMenu(SDL_Renderer *pRenderer) {
 void createMenuButtons(Menu *pMenu, SDL_Rect offsetInfo, Vec2 displayMiddle, RenderWindow *pWindow) {
     if (pMenu->nrOfButtons > MAX_MENU_BUTTONS) { return; }
 
-    float extraScale = (float)windowGetWidth(pWindow)/REFERENCE_WIDTH;
-    float extraScaleH = (float)windowGetHeight(pWindow)/REFERENCE_HEIGHT;
-    if (extraScaleH < extraScale) {
-        extraScale = extraScaleH;
-    }
-
     int startingPoint = 0;
     for (int i = 0; i < pMenu->nrOfButtons; i++) {
         if (i == 0) {
@@ -52,8 +46,8 @@ void createMenuButtons(Menu *pMenu, SDL_Rect offsetInfo, Vec2 displayMiddle, Ren
         pMenu->menuButtons[i].w = offsetInfo.w;
         pMenu->menuButtons[i].h = offsetInfo.h;
 
-        pMenu->menuPositions[i].w = offsetInfo.w*MENU_SCALER*extraScale;
-        pMenu->menuPositions[i].h = offsetInfo.h*MENU_SCALER*extraScale;
+        pMenu->menuPositions[i].w = offsetInfo.w*MENU_SCALER;
+        pMenu->menuPositions[i].h = offsetInfo.h*MENU_SCALER;
         pMenu->menuPositions[i].x = displayMiddle.x-pMenu->menuPositions[i].w*0.5f;
         pMenu->menuPositions[i].y = startingPoint+(startingPoint*2*i)-pMenu->menuPositions[i].h*0.5f;
     }
