@@ -6,41 +6,38 @@
 #include <libxml2/libxml/tree.h>
 #include <libxml2/libxml/parser.h>
 
-#include "vmath.h"
+#include "entity.h"
 //#include "levelHandling.h"
 
 #define MAX_LAYERS 3
 
+typedef enum LayerType {
+    LAYER_HITBOXES, LAYER_TILE_TEXTURES, LAYER_OBSTACLES
+} LayerType;
 
 typedef struct tileset Tileset;
 typedef struct map Map;
 
+Tileset *createTileset();
 
-Tileset *createTileset(SDL_Renderer *renderer);
+Map *createMap();
 
-Map *createMap(SDL_Renderer *renderer);
+void mapLoadTileset(Tileset *devTiles, const char *filePath);
 
-void mapLoadTileset(Tileset *devTiles, const char *filename);
+void mapLoadDataFromFile(Map *map, const char *filePath);
 
-void mapLoadDataFromFile(Map *map, const char *path);
+xmlChar *mapGetColumns(Tileset const *tileset);
 
+int mapGetWidth(Map const *map);
 
-void mapSetTileSheetPosition(Map *map, int x, int y);
+Tileset *mapGetTileset(Map const *map);
 
-SDL_Texture *mapGetTileTextures(Tileset *tileset);
+size_t mapGetLayerSize(Map const *map, int index);
 
-xmlChar *mapGetColumns(Tileset *tileset);
-
-int mapGetWidth(Map *map);
-
-Tileset *mapGetTileset(Map *map);
-
-size_t mapGetLayerSize(Map *map, int index);
-
-int mapGetLayerData(Map *map, int layer, int index);
-
-SDL_Rect mapGetTileSheetPosition(Map *map);
+int mapGetLayerData(Map const *map, int layer, int index);
 
 Vec2 mapGetSize(Map const *map);
+
+bool mapGetTileInfo(Map const *map, int index, Entity *tileToFill);
 
 void destroyMap(Map *map);

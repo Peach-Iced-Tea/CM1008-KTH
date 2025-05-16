@@ -6,8 +6,6 @@ struct tileset{
     xmlChar *columns;
     xmlChar *width;
     xmlChar *height;
-
-    SDL_Texture *tileSheet;
 };
 
 struct map {
@@ -16,39 +14,23 @@ struct map {
     int width, height;                  //Width and Height of the entire "Map"
     Vec2 mapSize;
     int tileWidth, tileHeight;
-
-    Tileset *layerTiles;                //The corresponding Tileset For now a struct thatcontains the .png
-    SDL_Rect tileSheetPosition;         //The position in the tileset (currently not sure if this is actially needed)
+    Tileset *layerTiles;
 };
 
-Tileset *createTileset(SDL_Renderer *pRenderer) {
+Tileset *createTileset() {
     Tileset *pTileset = malloc(sizeof(Tileset));
-    if (pRenderer == NULL) { return NULL; }
-
     pTileset->imgRef = NULL;
     pTileset->tilecount = NULL;
     pTileset->columns = NULL;
     pTileset->width = NULL;
     pTileset->height = NULL;
 
-    pTileset->tileSheet = IMG_LoadTexture(pRenderer, "lib/resources/mapData/mountainTrumps.png");
-    if (pTileset->tileSheet == NULL) {
-        printf("Error: %s\n", SDL_GetError());
-        return NULL;
-    }
-
     return pTileset;
 }
 
-Map *createMap(SDL_Renderer *pRenderer) {
+Map *createMap() {
     Map *pMap = malloc(sizeof(Map));
-
-    if (pRenderer == NULL) {
-        pMap->layerTiles = NULL;
-    }
-    else {
-        pMap->layerTiles = createTileset(pRenderer);
-    }
+    pMap->layerTiles = createTileset();
 
     for (int i = 0; i < MAX_LAYERS; i++) {
         pMap->layerData[i] = NULL;
@@ -62,19 +44,14 @@ Map *createMap(SDL_Renderer *pRenderer) {
     pMap->mapSize = createVector(0.0f, 0.0f);
     pMap->tileWidth = 0;
     pMap->tileHeight = 0;
-
-    pMap->tileSheetPosition.w = 32;
-    pMap->tileSheetPosition.h = 32;
-    pMap->tileSheetPosition.x = 0;
-    pMap->tileSheetPosition.y = 0;
     return pMap;
 }
 
 
-void mapLoadTileset(Tileset *devTiles, const char *filename) {
-    xmlDoc *doc = xmlReadFile(filename, NULL, 0);
+void mapLoadTileset(Tileset *devTiles, const char *pFilePath) {
+    xmlDoc *doc = xmlReadFile(pFilePath, NULL, 0);
     if (!doc) {
-        fprintf(stderr, "Failed to parse %s\n", filename);
+        fprintf(stderr, "Failed to parse %s\n", pFilePath);
         return;
     }
 
@@ -102,10 +79,9 @@ void mapLoadTileset(Tileset *devTiles, const char *filename) {
     xmlFreeDoc(doc);
 }
 
-void mapLoadDataFromFile(Map *pMap, const char *path) {
+void mapLoadDataFromFile(Map *pMap, const char *pFilePath) {
     json_error_t error;
-    json_t *root = json_load_file(path, 0, &error);
-
+    json_t *root = json_load_file(pFilePath, 0, &error);
     if (!root) {
         fprintf(stderr, "Error loading TMJ: %s (line %d)\n", error.text, error.line);
         return;
@@ -113,8 +89,8 @@ void mapLoadDataFromFile(Map *pMap, const char *path) {
 
 	pMap->width = json_integer_value(json_object_get(root, "width"));
 	pMap->height = json_integer_value(json_object_get(root, "height"));
-    pMap->tileWidth = json_integer_value(json_object_get(root, "tileWidth"));
-	pMap->tileHeight = json_integer_value(json_object_get(root, "tileHeight"));
+    pMap->tileWidth = json_integer_value(json_object_get(root, "tilewidth"));
+	pMap->tileHeight = json_integer_value(json_object_get(root, "tileheight"));
 
     json_t *layers = json_object_get(root, "layers");
 
@@ -147,51 +123,55 @@ void mapLoadDataFromFile(Map *pMap, const char *path) {
     json_decref(root);
 }
 
-void mapSetTileSheetPosition(Map *pMap, int x, int y) {
-    pMap->tileSheetPosition.x = x;
-    pMap->tileSheetPosition.y = y;
-}
-
-SDL_Texture *mapGetTileTextures(Tileset *pTileset) {
-    return pTileset->tileSheet;
-}
-
-xmlChar *mapGetColumns(Tileset *pTileset) {
+xmlChar *mapGetColumns(Tileset const *pTileset) {
     return pTileset->columns;
 }
 
-int mapGetWidth(Map *pMap) {
+int mapGetWidth(Map const *pMap) {
     return pMap->width;
 }
 
-Tileset *mapGetTileset(Map *pMap) {
+Tileset *mapGetTileset(Map const *pMap) {
     return pMap->layerTiles;
 }
 
-size_t mapGetLayerSize(Map *pMap, int layer) {
+size_t mapGetLayerSize(Map const *pMap, int layer) {
     return pMap->layerSize[layer];
 }
 
-int mapGetLayerData(Map *pMap, int layer, int index) {
+int mapGetLayerData(Map const *pMap, int layer, int index) {
     return pMap->layerData[layer][index];
-}
-
-SDL_Rect mapGetTileSheetPosition(Map *pMap) {
-    return pMap->tileSheetPosition;
 }
 
 Vec2 mapGetSize(Map const *pMap) {
     return pMap->mapSize;
 }
 
+bool mapGetTileInfo(Map const *pMap, int index, Entity *pTileToFill) {
+    int gid = mapGetLayerData(pMap, LAYER_TILE_TEXTURES, index) - 15;
+
+    if (gid > 0) {
+        int columns = atoi((char *)mapGetColumns(mapGetTileset(pMap)));
+        pTileToFill->source.x = (gid % columns) * 32;
+        pTileToFill->source.y = (gid / columns) * 32;
+        pTileToFill->source.w = pMap->tileWidth;
+        pTileToFill->source.h = pMap->tileHeight;
+
+        pTileToFill->frame.x = (index % pMap->width) * pMap->tileWidth;
+        pTileToFill->frame.y = (index / pMap->width) * pMap->tileHeight;
+        pTileToFill->frame.w = pMap->tileWidth;
+        pTileToFill->frame.h = pMap->tileHeight;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void destroyMap(Map *pMap) {
     if (pMap == NULL) { return; }
 
-    if (pMap->layerTiles) {
-        SDL_DestroyTexture(pMap->layerTiles->tileSheet);
-        free(pMap->layerTiles);
-    }
-
+    free(pMap->layerTiles);
     for (int i = 0; i < MAX_LAYERS; i++) {
         if (pMap->layerData[i]) { free(pMap->layerData[i]); }
     }

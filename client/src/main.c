@@ -47,11 +47,12 @@ int initGame(Game *pGame) {
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
 
-    pGame->pMap = createMap(windowGetRenderer(pGame->pWindow));
+    pGame->pMap = createMap();
     if (pGame->pMap == NULL) { return 1; }
 
     mapLoadDataFromFile(pGame->pMap, "lib/resources/mapData/map.tmj");
     mapLoadTileset(mapGetTileset(pGame->pMap), "lib/resources/mapData/mountainTrumps.tsx");
+    windowLoadMapTileset(pGame->pWindow, "lib/resources/mapData/mountainTrumps.png");
     int mapWidth = mapGetWidth(pGame->pMap);
     int tileSize = 32;
 
@@ -165,7 +166,13 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     windowClearFrame(pGame->pWindow);
 
-    windowRenderMapLayer(pGame->pWindow, pGame->pMap);
+    Entity entity;
+    entityInitData(&entity, createVector(0.0f, 0.0f), ENTITY_DEFAULT, HITBOX_NONE);
+    for (int i = 0; i < mapGetLayerSize(pGame->pMap, LAYER_TILE_TEXTURES); i++) {
+        if (mapGetTileInfo(pGame->pMap, i, &entity)) {
+            windowRenderObject(pGame->pWindow, entity, RENDER_MAP);
+        }
+    }
 
     for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
         Entity body = obstacleGetBody(arrayGetObject(pGame->pCheckpoints, i));

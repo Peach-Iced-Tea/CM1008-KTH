@@ -11,6 +11,7 @@ typedef struct textures {
     SDL_Texture *pCrosshair;
     SDL_Texture *pObstacles;
     SDL_Texture *pPlatform;
+    SDL_Texture *pMapTileset;
 } Textures;
 
 struct renderWindow {
@@ -58,6 +59,7 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
+    pTextures->pMapTileset = NULL;
 
     return 0;
 }
@@ -94,6 +96,16 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
     SDL_SetWindowIcon(pWindow->pWindow, IMG_Load("lib/resources/gameIcon.png"));
 
     return pWindow;
+}
+
+int windowLoadMapTileset(RenderWindow *pWindow, char const *pFilePath) {
+    pWindow->textures.pMapTileset = IMG_LoadTexture(pWindow->pRenderer, pFilePath);
+    if (pWindow->textures.pMapTileset == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    return 0;
 }
 
 void toggleFullscreen(RenderWindow *pWindow) {
@@ -167,6 +179,8 @@ SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
             return textures.pObstacles;
         case RENDER_PLATFORM:
             return textures.pPlatform;
+        case RENDER_MAP:
+            return textures.pMapTileset;
     }
 
     return NULL;
@@ -255,42 +269,6 @@ void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType r
     return;
 }
 
-void windowRenderMapLayer(RenderWindow *pWindow, Map *pMap) {
-    if (pWindow->pCamera == NULL) {
-        printf("Error: RenderWindow is missing Camera\n");
-        return;
-    }
-
-    int mapWidth = mapGetWidth(pMap);
-    int tileSize = 32;
-
-    for (size_t i = 0; i < mapGetLayerSize(pMap, 1); i++) {
-
-        int gid = mapGetLayerData(pMap, 1, i) - 15;
-
-        if (gid >= 0) {
-            int columns = atoi((char *)mapGetColumns(mapGetTileset(pMap)));
-            
-            int tileX = (gid % columns) * 32;
-            int tileY = (gid / columns) * 32;
-
-            mapSetTileSheetPosition(pMap, tileX, tileY);
-
-            int screenX = (i % mapWidth) * tileSize;
-            int screenY = (i / mapWidth) * tileSize;
-
-            SDL_Rect src = mapGetTileSheetPosition(pMap);
-
-            SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
-
-            cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
-
-            SDL_RenderCopyF(pWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
-            pWindow->nrOfRenderedEntites++;
-        }
-    }
-}
-
 void windowClearFrame(RenderWindow *pWindow) {
     SDL_RenderClear(pWindow->pRenderer);
     pWindow->nrOfRenderedEntites = 0;
@@ -299,7 +277,6 @@ void windowClearFrame(RenderWindow *pWindow) {
 
 void windowDisplayFrame(RenderWindow *pWindow) {
     SDL_RenderPresent(pWindow->pRenderer);
-    //printf("rendererdEntities: %d\n", pWindow->nrOfRenderedEntites);
     return;
 }
 

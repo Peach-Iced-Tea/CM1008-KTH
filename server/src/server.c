@@ -28,7 +28,7 @@ int initServer(Server *pServer) {
     }
     printf("Created %d player(s)\n", MAX_PLAYERS);
 
-    pServer->pMap = createMap(NULL);
+    pServer->pMap = createMap();
     if (pServer->pMap == NULL) { return 1; }
     mapLoadDataFromFile(pServer->pMap, "lib/resources/mapData/map.tmj");
     printf("Initiated map\n");
