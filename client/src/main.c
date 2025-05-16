@@ -94,7 +94,7 @@ int initGame(Game *pGame) {
         }
     }
 
-    pGame->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 7, PLATFORM_CONVEX);
+    pGame->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 5, PLATFORM_FLAT);
     if (pGame->pPlatform == NULL) { return 1; }
 
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
