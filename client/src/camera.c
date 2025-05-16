@@ -120,6 +120,19 @@ void cameraTrackTarget(Camera *pCamera, Vec2 referencePosition) {
 
     if (pCamera->tracker.timer > 0) {
         vectorAdd(&pCamera->position, pCamera->position, pCamera->velocity);
+        if (pCamera->position.x-pCamera->logicalWidth*0.5f < 0.0f) {
+            pCamera->position.x = pCamera->logicalWidth*0.5f;
+        }
+        else if (pCamera->position.x+pCamera->logicalWidth*0.5f > pCamera->mapSize.x) {
+            pCamera->position.x = pCamera->mapSize.x - pCamera->logicalWidth*0.5f;
+        }
+
+        if (pCamera->position.y-pCamera->logicalHeight*0.5f < 0.0f) {
+            pCamera->position.y = pCamera->logicalHeight*0.5f;
+        }
+        else if (pCamera->position.y+pCamera->logicalHeight*0.5f > pCamera->mapSize.y) {
+            pCamera->position.y = pCamera->mapSize.y - pCamera->logicalHeight*0.5f;
+        }
         pCamera->tracker.timer--;
 
         if (pCamera->tracker.timer == 0) {
@@ -256,8 +269,8 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
     if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
     else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
 
-    pCamera->logicalWidth = round(pCamera->display.width / zoomScale);
-    pCamera->logicalHeight = round(pCamera->display.height / zoomScale);
+    pCamera->logicalWidth *= zoomScale;
+    pCamera->logicalHeight *= zoomScale;
     pCamera->currentZoom = zoomScale;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
     return 0;
