@@ -7,17 +7,16 @@
 #include "input.h"
 
 /*
-SCALING: The camera will use two Entities as reference points and stay in the middle of them while scaling the zoom level automatically.
+FIXED: The camera is set to a specific position and will not move unless manually done.
 TRACKING_T1: The camera will track the first Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
 TRACKING_T2: The camera will track the second Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
-FIXED: The camera is set to a specific position and will not move unless manually done.
 */
 typedef enum CameraMode {
-    SCALING, TRACKING_T1, TRACKING_T2, FIXED
+    FIXED, TRACKING_T1, TRACKING_T2
 } CameraMode;
 
 typedef enum CameraError {
-    IS_NULL = 1, MISSING_RENDERER, MISSING_TARGETS, MISSING_TARGET1, MISSING_TARGET2
+    IS_NULL = 1, MISSING_RENDERER, MISSING_TARGET1, MISSING_TARGET2
 } CameraError;
 
 typedef struct camera Camera;
@@ -37,7 +36,7 @@ Handles key inputs related to the functions of the Camera data type.
 
 Such as setting what mode the given Camera should be set to.
 */
-void cameraHandleInput(Camera *camera, Input const *inputs);
+void cameraHandleInput(Camera *camera, Input const *input);
 
 /*
 Update the position as well as the zoom level of the given Camera.
@@ -89,9 +88,7 @@ Returns the absolute position of the mouse cursor in the game world.
 Vec2 cameraGetMousePosition(Camera const *camera);
 
 /*
-Get the global scale used to make the rendered view consistent across resolutions.
-*/
-float cameraGetGlobalScale(Camera const *camera);
+Fills the given in-parameters with the logical width and height respectively if not NULL.
 
 /*
 Returns the logical width of the given Camera.
