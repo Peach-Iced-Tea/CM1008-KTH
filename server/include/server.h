@@ -6,6 +6,7 @@
 #include "player.h"
 #include "utils.h"
 #include "mapParser.h"
+#include "platform.h"
 
 typedef struct {
     int nrOfPlayers;
@@ -20,5 +21,6 @@ typedef struct {
     DynamicArray *pHitforms;
     DynamicArray *pCheckpoints;
     DynamicArray *pObstacles;
+    MovablePlatform *pPlatform;
     int lastCheckpoint[MAX_PLAYERS];
 } Server;

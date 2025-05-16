@@ -14,6 +14,7 @@
 #include "mapParser.h"
 #include "mouse.h"
 #include "obstacle.h"
+#include "platform.h"
 
 typedef struct {
     RenderWindow *pWindow;
@@ -26,6 +27,7 @@ typedef struct {
     DynamicArray *pHitforms;
     DynamicArray *pCheckpoints;
     DynamicArray *pObstacles;
+    MovablePlatform *pPlatform;
     Crosshair *pCrosshair;
     int lastCheckpoint;
     Entity end;

@@ -12,6 +12,7 @@ void cleanUp(Game *pGame) {
     if (pGame->pHitforms) { destroyDynamicArray(pGame->pHitforms); }
     if (pGame->pCheckpoints) { destroyDynamicArray(pGame->pCheckpoints); }
     if (pGame->pObstacles) { destroyDynamicArray(pGame->pObstacles); }
+    if (pGame->pPlatform) { destroyPlatform(pGame->pPlatform); }
     if (pGame->pMenu) { destroyMenu(pGame->pMenu); }
     if (pGame->pClient) { destroyClient(pGame->pClient); }
     if (pGame->pMap) { destroyMap(pGame->pMap); }
@@ -34,7 +35,7 @@ int initGame(Game *pGame) {
         if (pGame->players[i] == NULL) { return 1; }
     }
 
-    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, windowGetRenderer(pGame->pWindow), SCALING);
+    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, windowGetRenderer(pGame->pWindow), TRACKING_T1);
     if (pGame->pCamera == NULL) { return 1; }
 
     pGame->pInput = createInputTracker();
@@ -100,6 +101,9 @@ int initGame(Game *pGame) {
         }
     }
 
+    pGame->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 5, PLATFORM_FLAT);
+    if (pGame->pPlatform == NULL) { return 1; }
+
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
     if (pGame->pCrosshair == NULL) { return 1; }
 
@@ -133,7 +137,20 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
         }
     }
 
-    bool standingOnPlatform = false;
+    bool movingPlatform = false;
+    for (int i = 0; i < platformGetSize(pGame->pPlatform); i++) {
+        if (playerCheckCollision(pPlayer, platformGetHitbox(pGame->pPlatform, i), true) == OBJECT_IS_NORTH) {
+            movingPlatform = true;
+        }
+    }
+
+    if (movingPlatform) {
+        Vec2 currentPosition = playerGetInfo(pPlayer).position;
+        vectorAdd(&currentPosition, currentPosition, platformGetVelocity(pGame->pPlatform));
+        playerSetPosition(pPlayer, currentPosition);
+    }
+
+    bool standingOnPlatform = movingPlatform;
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
         if (playerCheckCollision(pPlayer, arrayGetObject(pGame->pHitforms, i), true) == OBJECT_IS_NORTH) {
             standingOnPlatform = true;
@@ -159,6 +176,10 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
 
     for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {
         windowRenderObject(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pObstacles, i)), RENDER_OBSTACLE);
+    }
+
+    for (int i = 0; i < platformGetSize(pGame->pPlatform); i++) {
+        windowRenderObject(pGame->pWindow, platformGetBody(pGame->pPlatform, i), RENDER_PLATFORM);
     }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -200,6 +221,12 @@ void handleTick(Game *pGame, Player *pTeammate) {
             if (payload.entities[i].entityID == 0) {
                 //logic for moving Entity on both screens
             }
+        }
+
+        if (clientGetLastServerTick(pGame->pClient) < payload.serverTick){
+            int missingTicks = payload.serverTick - clientGetLastServerTick(pGame->pClient);
+            platformMove(pGame->pPlatform);
+            clientSetLastServerTick(pGame->pClient, payload.serverTick);
         }
 
         for (int i = 0; i < MAX_PLAYERS; i++) {

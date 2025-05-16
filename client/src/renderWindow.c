@@ -10,6 +10,7 @@ typedef struct textures {
     SDL_Texture *pTongue;
     SDL_Texture *pCrosshair;
     SDL_Texture *pObstacles;
+    SDL_Texture *pPlatform;
 } Textures;
 
 struct renderWindow {
@@ -49,6 +50,11 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
     }
     pTextures->pObstacles = IMG_LoadTexture(pRenderer, "lib/resources/obstacles.png");
     if (pTextures->pObstacles == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    pTextures->pPlatform = IMG_LoadTexture(pRenderer, "lib/resources/player1.png");
+    if (pTextures->pPlatform == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
@@ -159,6 +165,8 @@ SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
             return textures.pCrosshair;
         case RENDER_OBSTACLE:
             return textures.pObstacles;
+        case RENDER_PLATFORM:
+            return textures.pPlatform;
     }
 
     return NULL;
