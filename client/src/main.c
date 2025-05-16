@@ -47,11 +47,11 @@ int initGame(Game *pGame) {
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
 
-    pGame->pMap = createClientMap(windowGetRenderer(pGame->pWindow));
+    pGame->pMap = createMap(windowGetRenderer(pGame->pWindow));
     if (pGame->pMap == NULL) { return 1; }
 
-    mapLoadClient("lib/resources/mapData/map.tmj", pGame->pMap);
-    mapLoadTileset("lib/resources/mapData/mountainTrumps.tsx", mapGetTileset(pGame->pMap));
+    mapLoadDataFromFile(pGame->pMap, "lib/resources/mapData/map.tmj");
+    mapLoadTileset(mapGetTileset(pGame->pMap), "lib/resources/mapData/mountainTrumps.tsx");
     int mapWidth = mapGetWidth(pGame->pMap);
     int tileSize = 32;
 
@@ -314,6 +314,7 @@ int main(int argv, char** args) {
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
     windowSetCamera(game.pWindow, game.pCamera);
+    cameraSetMapSize(game.pCamera, mapGetSize(game.pMap));
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;

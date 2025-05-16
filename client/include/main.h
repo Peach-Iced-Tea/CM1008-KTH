@@ -23,7 +23,7 @@ typedef struct {
     Input *pInput;
     Menu *pMenu;
     Client *pClient;
-    ClientMap *pMap;
+    Map *pMap;
     DynamicArray *pHitforms;
     DynamicArray *pCheckpoints;
     DynamicArray *pObstacles;

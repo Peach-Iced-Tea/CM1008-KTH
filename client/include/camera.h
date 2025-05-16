@@ -79,6 +79,11 @@ and a lower zoomScale means that the Camera is further away.
 int cameraSetZoom(Camera *camera, float zoomScale);
 
 /*
+Set the map dimensions that the given Camera can move around within.
+*/
+int cameraSetMapSize(Camera *camera, Vec2 mapSize);
+
+/*
 Returns the absolute position of the mouse cursor in the game world.
 */
 Vec2 cameraGetMousePosition(Camera const *camera);

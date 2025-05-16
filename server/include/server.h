@@ -17,7 +17,7 @@ typedef struct {
     UDPpacket *pPacket;
     IPaddress clients[MAX_PLAYERS];
     int currentTick;
-    ServerMap *pMap;
+    Map *pMap;
     DynamicArray *pHitforms;
     DynamicArray *pCheckpoints;
     DynamicArray *pObstacles;

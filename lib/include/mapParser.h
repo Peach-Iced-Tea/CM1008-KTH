@@ -6,54 +6,41 @@
 #include <libxml2/libxml/tree.h>
 #include <libxml2/libxml/parser.h>
 
+#include "vmath.h"
 //#include "levelHandling.h"
 
 #define MAX_LAYERS 3
 
 
 typedef struct tileset Tileset;
-typedef struct clientMap ClientMap;
-typedef struct serverMap ServerMap;
+typedef struct map Map;
 
 
 Tileset *createTileset(SDL_Renderer *renderer);
 
-ClientMap *createClientMap(SDL_Renderer *renderer);
+Map *createMap(SDL_Renderer *renderer);
 
-ServerMap *createServerMap();
+void mapLoadTileset(Tileset *devTiles, const char *filename);
 
-
-void mapLoadTileset(const char *filename, Tileset *devTiles);
-
-void mapLoadClient(const char *path, ClientMap *map);
-
-void mapLoadServer(const char *path, ServerMap *map);
+void mapLoadDataFromFile(Map *map, const char *path);
 
 
-void mapSetTileSheetPosition(ClientMap *map, int x, int y);
+void mapSetTileSheetPosition(Map *map, int x, int y);
 
 SDL_Texture *mapGetTileTextures(Tileset *tileset);
 
 xmlChar *mapGetColumns(Tileset *tileset);
 
-int mapGetWidth(ClientMap *map);
+int mapGetWidth(Map *map);
 
-Tileset *mapGetTileset(ClientMap *map);
+Tileset *mapGetTileset(Map *map);
 
-size_t mapGetLayerSize(ClientMap *map, int index);
+size_t mapGetLayerSize(Map *map, int index);
 
-int mapGetLayerData(ClientMap *map, int layer, int index);
+int mapGetLayerData(Map *map, int layer, int index);
 
-SDL_Rect mapGetTileSheetPosition(ClientMap *map);
+SDL_Rect mapGetTileSheetPosition(Map *map);
 
-void destroyMap(ClientMap *map);
+Vec2 mapGetSize(Map const *map);
 
-//---------------Server-------------------------
-
-int mapGetWidth_Server(ServerMap *map);
-
-size_t mapGetLayerSize_Server(ServerMap *map, int layer);
-
-int mapGetLayerData_Server(ServerMap *map, int layer, int index);
-
-void destroyMap_Server(ServerMap *map);
+void destroyMap(Map *map);

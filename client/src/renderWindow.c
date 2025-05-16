@@ -255,7 +255,7 @@ void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType r
     return;
 }
 
-void windowRenderMapLayer(RenderWindow *pWindow, ClientMap *pMap) {
+void windowRenderMapLayer(RenderWindow *pWindow, Map *pMap) {
     if (pWindow->pCamera == NULL) {
         printf("Error: RenderWindow is missing Camera\n");
         return;

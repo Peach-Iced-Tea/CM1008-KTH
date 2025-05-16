@@ -51,7 +51,7 @@ void windowRenderObject(RenderWindow *renderWindow, Entity const entity, RenderT
 /*
 Renders an entire map given as a ClientMap.
 */
-void windowRenderMapLayer(RenderWindow *renderWindow, ClientMap *map);
+void windowRenderMapLayer(RenderWindow *renderWindow, Map *map);
 
 /*
 Clear the previous frame off of the given RenderWindow.

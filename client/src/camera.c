@@ -29,6 +29,7 @@ struct camera {
     SDL_Renderer *pRenderer;
     CameraMode mode;
     Tracker tracker;
+    Vec2 mapSize;
     float currentZoom;
 };
 
@@ -55,6 +56,7 @@ Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRend
     cameraSetMode(pCamera, cameraMode);
     pCamera->currentZoom = MAX_ZOOM_IN;
     pCamera->tracker.timer = TRACKING_TIMER;
+    pCamera->mapSize = createVector(0.0f, 0.0f);
 
     return pCamera;
 }
@@ -258,6 +260,15 @@ int cameraSetZoom(Camera *pCamera, float zoomScale) {
     pCamera->logicalHeight = round(pCamera->display.height / zoomScale);
     pCamera->currentZoom = zoomScale;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
+    return 0;
+}
+
+int cameraSetMapSize(Camera *pCamera, Vec2 mapSize) {
+    if (pCamera == NULL) { return IS_NULL; }
+
+    if (mapSize.x < 0.0f || mapSize.y < 0.0f) { return 2; }
+
+    pCamera->mapSize = mapSize;
     return 0;
 }
 

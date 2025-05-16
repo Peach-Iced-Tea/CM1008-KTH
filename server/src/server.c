@@ -12,7 +12,7 @@ void closeServer(Server *pServer) {
     if (pServer->pObstacles) { destroyDynamicArray(pServer->pObstacles); }
     if (pServer->pPlatform) { destroyPlatform(pServer->pPlatform); }
 
-    if (pServer->pMap) { destroyMap_Server(pServer->pMap); }
+    if (pServer->pMap) { destroyMap(pServer->pMap); }
 
     SDLNet_Quit();
     SDL_Quit();
@@ -28,12 +28,12 @@ int initServer(Server *pServer) {
     }
     printf("Created %d player(s)\n", MAX_PLAYERS);
 
-    pServer->pMap = createServerMap();
+    pServer->pMap = createMap(NULL);
     if (pServer->pMap == NULL) { return 1; }
-    mapLoadServer("lib/resources/mapData/map.tmj", pServer->pMap);
+    mapLoadDataFromFile(pServer->pMap, "lib/resources/mapData/map.tmj");
     printf("Initiated map\n");
 
-    int mapWidth = mapGetWidth_Server(pServer->pMap);
+    int mapWidth = mapGetWidth(pServer->pMap);
     int tileSize = 32;
 
     pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
@@ -41,8 +41,8 @@ int initServer(Server *pServer) {
     printf("Initiated DynamicArray of type (Hitbox)\n");
 
     Vec2 tmp;
-    for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 0); i++) {
-        int check = mapGetLayerData_Server(pServer->pMap, 0, i);
+    for (size_t i = 0; i < mapGetLayerSize(pServer->pMap, 0); i++) {
+        int check = mapGetLayerData(pServer->pMap, 0, i);
         if (check > 0) {
             float posX = (i % mapWidth) * tileSize;
             float posY = (i / mapWidth) * tileSize;
@@ -85,8 +85,8 @@ int initServer(Server *pServer) {
     printf("Initiated DynamicArray of type (Obstacle)\n");
     if (pServer->pCheckpoints == NULL) { return 1; }
 
-    for (size_t i = 0; i < mapGetLayerSize_Server(pServer->pMap, 2); i++) {
-        int check = mapGetLayerData_Server(pServer->pMap, 2, i);
+    for (size_t i = 0; i < mapGetLayerSize(pServer->pMap, 2); i++) {
+        int check = mapGetLayerData(pServer->pMap, 2, i);
         if (check == 1) {
             float posX = (i % mapWidth) * tileSize;
             float posY = (i / mapWidth) * tileSize;
