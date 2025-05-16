@@ -10,7 +10,7 @@
 
 typedef enum RenderType {
     RENDER_PLAYER1, RENDER_PLAYER2, RENDER_TONGUE,
-    RENDER_OBSTACLE, RENDER_CROSSHAIR
+    RENDER_OBSTACLE, RENDER_CROSSHAIR, RENDER_PLATFORM
 } RenderType;
 
 typedef struct renderWindow RenderWindow;

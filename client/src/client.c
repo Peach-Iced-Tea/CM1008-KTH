@@ -12,6 +12,7 @@ struct client {
     InputData inputBuffer[BUFFER_SIZE];
     StateData lastProcessedState;
     int currentTick;
+    int lastServerTick;
 };
 
 void initClientPayload(ClientPayload *pPayload) {
@@ -210,6 +211,11 @@ int clientCheckServerPayload(Client *pClient, StateData latestServerState) {
     return 0;
 }
 
+void clientSetLastServerTick(Client *pClient, int newTick) {
+    pClient->lastServerTick = newTick;
+    return;
+}
+
 InputData clientGetLatestInput(Client const *pClient) {
     int bufferIndex = pClient->currentTick % BUFFER_SIZE;
     return pClient->inputBuffer[bufferIndex];
@@ -222,6 +228,10 @@ StateData clientGetLatestState(Client const *pClient) {
 
 int clientGetPlayerID(Client const *pClient) {
     return pClient->payload.playerID;
+}
+
+int clientGetLastServerTick(Client const *pClient) {
+    return pClient->lastServerTick;
 }
 
 void destroyClient(Client *pClient) {

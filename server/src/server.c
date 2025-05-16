@@ -10,6 +10,7 @@ void closeServer(Server *pServer) {
     if (pServer->pHitforms) { destroyDynamicArray(pServer->pHitforms); }
     if (pServer->pCheckpoints) { destroyDynamicArray(pServer->pCheckpoints); }
     if (pServer->pObstacles) { destroyDynamicArray(pServer->pObstacles); }
+    if (pServer->pPlatform) { destroyPlatform(pServer->pPlatform); }
 
     if (pServer->pMap) { destroyMap_Server(pServer->pMap); }
 
@@ -101,9 +102,13 @@ int initServer(Server *pServer) {
             if (arrayAddObject(pServer->pCheckpoints, createObstacle(tmp, OBSTACLE_CHECKPOINT))) { return 1; }
         }
     }
-    
+
     printf("Created %ld obstacles\n", arrayGetSize(pServer->pObstacles));
     printf("Created %ld checkpoints\n", arrayGetSize(pServer->pCheckpoints));
+
+    pServer->pPlatform = createPlatform(createVector(768.0f, 2880.0f));
+    if (pServer->pPlatform == NULL) { return 1; }
+    printf("Created MovablePlatform\n");
 
     pServer->currentTick = 0;
 
@@ -123,6 +128,7 @@ bool addIP(IPaddress clients[], IPaddress newAddress, int *pNrOfClients) {
 
 void sendDataToClients(Server *pServer) {
     pServer->payload.serverState = pServer->state;
+    pServer->payload.serverTick = pServer->currentTick;
     for (int i = 0; i < pServer->nrOfPlayers; i++) {
         pServer->payload.playerID = i;
         memcpy(pServer->pPacket->data, &(pServer->payload), sizeof(ServerPayload));
@@ -134,6 +140,17 @@ void sendDataToClients(Server *pServer) {
 }
 
 void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playerID, float const timestep) {
+    playerUpdatePosition(pPlayer, timestep);
+    switch (playerGetInfo(pPlayer).state) {
+        case SHOOTING:
+            if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
+                playerSetState(pPlayer, ROTATING);
+                playerOverrideState(pTeammate, LOCKED);
+                playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
+            }
+            break;
+    }
+
     for (int i = 0; i < arrayGetSize(pServer->pCheckpoints); i++) {
         if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pServer->pCheckpoints, i)), false)) {
             pServer->lastCheckpoint[playerID] = i;
@@ -149,15 +166,17 @@ void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playe
         }
     }
 
-    playerUpdatePosition(pPlayer, timestep);
-    switch (playerGetInfo(pPlayer).state) {
-        case SHOOTING:
-            if (tongueCheckCollision(playerGetTongue(pPlayer), playerGetBody(pTeammate))) {
-                playerSetState(pPlayer, ROTATING);
-                playerOverrideState(pTeammate, LOCKED);
-                playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
-            }
-            break;
+    bool movingPlatform = false;
+    for (int i = 0; i < platformGetSize(pServer->pPlatform); i++) {
+        if (playerCheckCollision(pPlayer, platformGetHitbox(pServer->pPlatform, i), true) == OBJECT_IS_NORTH) {
+            movingPlatform = true;
+        }
+    }
+
+    if (movingPlatform) {
+        Vec2 currentPosition = playerGetInfo(pPlayer).position;
+        vectorAdd(&currentPosition, currentPosition, platformGetVelocity(pServer->pPlatform));
+        playerSetPosition(pPlayer, currentPosition);
     }
 
     bool standingOnPlatform = false;
@@ -288,6 +307,7 @@ int main(int argv, char** args) {
                         prepareStateData(&(server.payload.players[i]), server.players[i], -1);
                     }
                     
+                    platformMove(server.pPlatform);
                     sendDataToClients(&server);
                     while (SDLNet_UDP_Recv(server.socket, server.pPacket) == 1) {
                         memcpy(&clientPayload, server.pPacket->data, server.pPacket->len);
@@ -296,7 +316,9 @@ int main(int argv, char** args) {
                                 handleTick(&server, clientPayload, timestep);
                                 break;
                             case DISCONNECTED:
-                                handlePlayerDisconnect(&server, clientPayload);
+                                if (clientPayload.playerID != -1) {
+                                    handlePlayerDisconnect(&server, clientPayload);
+                                }
                                 break;
                         }
                     }

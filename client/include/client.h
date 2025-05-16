@@ -61,6 +61,11 @@ Check the given StateData to see if it differs from the prediction made by the c
 int clientCheckServerPayload(Client *client, StateData latestServerState);
 
 /*
+
+*/
+void clientSetLastServerTick(Client *client, int newTick);
+
+/*
 Get the latest InputData saved inside the input buffer.
 */
 InputData clientGetLatestInput(Client const *client);
@@ -74,6 +79,11 @@ StateData clientGetLatestState(Client const *client);
 Get the current ID of the Client.
 */
 int clientGetPlayerID(Client const *client);
+
+/*
+
+*/
+int clientGetLastServerTick(Client const *client);
 
 /*
 Use this function to destroy the given Client pointer and free up memory.
