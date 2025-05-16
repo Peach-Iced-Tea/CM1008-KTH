@@ -1,32 +1,66 @@
 #include "platform.h"
 
+#define PLATFORM_SPEED 2.0f
+#define MAX_PLATFORM_WIDTH 7
+#define MAX_PLATFORM_SIZE MAX_PLATFORM_WIDTH+(MAX_PLATFORM_WIDTH-2)
+
+typedef enum PlatformDirection {
+    PLATFORM_HORIZONTAL, PLATFORM_VERTICAL
+} PlatformDirection;
+
 struct movablePlatform {
-    Entity body[MAX_MOVE_PLATFORMS];
+    Entity body[MAX_PLATFORM_SIZE];
     Vec2 velocity;
     Vec2 relativePosition;
     int size;
     PlatformDirection direction;
+    PlatformType type;
 };
 
-MovablePlatform *createPlatform(Vec2 position) {
+MovablePlatform *createPlatform(Vec2 position, int width, PlatformType type) {
+    if (width > MAX_PLATFORM_WIDTH) { 
+        printf("Error: Given width %d exceeds maximum width of %d\n", width, MAX_PLATFORM_WIDTH);
+        return NULL;
+    }
+
     MovablePlatform *pPlatform = malloc(sizeof(MovablePlatform));
     Vec2 initPosition = createVector(position.x, position.y);
-    pPlatform->size = MAX_MOVE_PLATFORMS;
-    for (int i = 0; i < pPlatform->size; i++) {
-        if (i == 5) {
-            initPosition.x = position.x+32.0f;
-            initPosition.y += 32.0f;
-        }
+    pPlatform->size = width;
+    switch (type) {
+        case PLATFORM_FLAT:
+            for (int i = 0; i < pPlatform->size; i++) {
+                if (entityInitData(&(pPlatform->body[i]), initPosition, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+                initPosition.x += 32.0f;
+            }
+            break;
+        case PLATFORM_CONVEX:
+            if (pPlatform->size+(width-2) > MAX_PLATFORM_SIZE) { return NULL; }
 
-        if (entityInitData(&(pPlatform->body[i]), initPosition, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+            for (int i = 0; i < pPlatform->size; i++) {
+                if (entityInitData(&(pPlatform->body[i]), initPosition, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+                initPosition.x += 32.0f;
 
-        initPosition.x += 32.0f;
+                if (i == pPlatform->size-1) {
+                    initPosition.y += 32.0f;
+                    initPosition.x = position.x+32.0f;
+                    for (int j = 0; j < pPlatform->size-2; j++) {
+                        if (entityInitData(&(pPlatform->body[i+j+1]), initPosition, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+                        initPosition.x += 32.0f;
+                    }
+                }
+            }
+            pPlatform->size += width-2;
+            break;
+        default:
+            printf("Error: Unknown PlatformType %d", type);
+            return NULL;
     }
 
     pPlatform->velocity.x = PLATFORM_SPEED;
     pPlatform->velocity.y = 0.0f;
     pPlatform->relativePosition = createVector(0.0f, 0.0f);
-    pPlatform->direction = PLATFORM_RIGHT;
+    pPlatform->direction = PLATFORM_HORIZONTAL;
+    pPlatform->type = type;
 
     return pPlatform;
 }

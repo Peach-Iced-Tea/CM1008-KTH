@@ -2,17 +2,13 @@
 #include "entity.h"
 #include "vmath.h"
 
-#define MAX_MOVE_PLATFORMS 8
-#define PLATFORM_SPEED 2.0f
-#define MAX_PLATFORM_SIZE 16
-
-typedef enum PlatformDirection {
-    PLATFORM_LEFT, PLATFORM_RIGHT
-} PlatformDirection;
+typedef enum PlatformType {
+    PLATFORM_FLAT, PLATFORM_CONVEX
+} PlatformType;
 
 typedef struct movablePlatform MovablePlatform;
 
-MovablePlatform *createPlatform(Vec2 position);
+MovablePlatform *createPlatform(Vec2 position, int width, PlatformType type);
 
 void platformMove(MovablePlatform *platform);
 

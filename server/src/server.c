@@ -106,7 +106,7 @@ int initServer(Server *pServer) {
     printf("Created %ld obstacles\n", arrayGetSize(pServer->pObstacles));
     printf("Created %ld checkpoints\n", arrayGetSize(pServer->pCheckpoints));
 
-    pServer->pPlatform = createPlatform(createVector(768.0f, 2880.0f));
+    pServer->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 7, PLATFORM_CONVEX);
     if (pServer->pPlatform == NULL) { return 1; }
     printf("Created MovablePlatform\n");
 

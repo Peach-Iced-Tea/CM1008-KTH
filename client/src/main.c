@@ -35,7 +35,7 @@ int initGame(Game *pGame) {
         if (pGame->players[i] == NULL) { return 1; }
     }
 
-    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, windowGetRenderer(pGame->pWindow), SCALING);
+    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, windowGetRenderer(pGame->pWindow), TRACKING_T1);
     if (pGame->pCamera == NULL) { return 1; }
 
     pGame->pInput = createInputTracker();
@@ -94,7 +94,7 @@ int initGame(Game *pGame) {
         }
     }
 
-    pGame->pPlatform = createPlatform(createVector(768.0f, 2880.0f));
+    pGame->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 7, PLATFORM_CONVEX);
     if (pGame->pPlatform == NULL) { return 1; }
 
     pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
