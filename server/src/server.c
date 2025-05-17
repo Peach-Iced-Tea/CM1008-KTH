@@ -33,9 +33,6 @@ int initServer(Server *pServer) {
     mapLoadDataFromFile(pServer->pMap, MAP_DEMO);
     printf("Initiated map (folder: %s)\n", mapGetFolderPath(pServer->pMap));
 
-    int mapWidth = mapGetWidth(pServer->pMap);
-    int tileSize = 32;
-
     pServer->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if(pServer->pHitforms == NULL) { return 1; }
     printf("Initiated DynamicArray of type (Hitbox)\n");

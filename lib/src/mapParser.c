@@ -115,7 +115,7 @@ int mapLoadTileset(Tileset *pTileset) {
 
 int mapLoadDataFromFile(Map *pMap, MapIndex index) {
     json_error_t error;
-    char *pFilePath = mapGetFilePath(pMap->folderPath, index);;
+    char *pFilePath = mapGetFilePath(pMap->folderPath, index);
     json_t *root = json_load_file(pFilePath, 0, &error);
     if (!root) {
         fprintf(stderr, "Error loading TMJ: %s (line %d)\n", error.text, error.line);
