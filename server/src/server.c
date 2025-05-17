@@ -30,8 +30,8 @@ int initServer(Server *pServer) {
 
     pServer->pMap = createMap();
     if (pServer->pMap == NULL) { return 1; }
-    mapLoadDataFromFile(pServer->pMap, "lib/resources/mapData/map.tmj");
-    printf("Initiated map\n");
+    mapLoadDataFromFile(pServer->pMap, MAP_DEMO);
+    printf("Initiated map (folder: %s)\n", mapGetFolderPath(pServer->pMap));
 
     int mapWidth = mapGetWidth(pServer->pMap);
     int tileSize = 32;
@@ -40,18 +40,40 @@ int initServer(Server *pServer) {
     if(pServer->pHitforms == NULL) { return 1; }
     printf("Initiated DynamicArray of type (Hitbox)\n");
 
-    Vec2 tmp;
-    for (size_t i = 0; i < mapGetLayerSize(pServer->pMap, 0); i++) {
-        int check = mapGetLayerData(pServer->pMap, 0, i);
-        if (check > 0) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
+    pServer->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
+    if (pServer->pObstacles == NULL) { return 1; }
+    printf("Initiated DynamicArray of type (Obstacle)\n");
+    
+    pServer->pCheckpoints = createDynamicArray(ARRAY_OBSTACLES);
+    if (pServer->pCheckpoints == NULL) { return 1; }
+    printf("Initiated DynamicArray of type (Obstacle)\n");
 
-            if (arrayAddObject(pServer->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
+    Vec2 position;
+    for (int layer = 0; layer < mapGetLayerCount(pServer->pMap); layer++) {
+        for (int i = 0; i < mapGetLayerSize(pServer->pMap, layer); i++) {
+            int check = mapGetLayerData(pServer->pMap, layer, i, &position);
+            switch (layer) {
+                case LAYER_HITBOXES:
+                    int tileWidth = mapGetTileWidth(pServer->pMap);
+                    int tileHeight = mapGetTileHeight(pServer->pMap);
+                    if (check > 0) {
+                        if (arrayAddObject(pServer->pHitforms, createHitbox(position, tileWidth, tileHeight, HITBOX_FULL_BLOCK))) { return 1; }
+                    }
+                    break;
+                case LAYER_OBSTACLES:
+                    if (check == 1) {
+                        if (arrayAddObject(pServer->pObstacles, createObstacle(position, OBSTACLE_SPIKE))) { return 1; }
+                    }
+                    else if (check == 2) {
+                        if (arrayAddObject(pServer->pCheckpoints, createObstacle(position, OBSTACLE_CHECKPOINT))) { return 1; }
+                    }
+                    break;
+            }
         }
     }
     printf("Created %ld hitboxes from the map\n", arrayGetSize(pServer->pHitforms));
+    printf("Created %ld obstacles from the map\n", arrayGetSize(pServer->pObstacles));
+    printf("Created %ld checkpoints from the map\n", arrayGetSize(pServer->pCheckpoints));
 
     pServer->state = SERVER_WAITING;
     if (!(pServer->socket = SDLNet_UDP_Open(SERVER_PORT))) {
@@ -76,35 +98,6 @@ int initServer(Server *pServer) {
         prepareEntityData(&(pServer->payload.entities[i]), NULL, -1, 0);
     }
     printf("Prepared EntityData for movable entities\n");
-
-    pServer->pObstacles = createDynamicArray(ARRAY_OBSTACLES);
-    printf("Initiated DynamicArray of type (Obstacle)\n");
-    if (pServer->pObstacles == NULL) { return 1; }
-    
-    pServer->pCheckpoints = createDynamicArray(ARRAY_OBSTACLES);
-    printf("Initiated DynamicArray of type (Obstacle)\n");
-    if (pServer->pCheckpoints == NULL) { return 1; }
-
-    for (size_t i = 0; i < mapGetLayerSize(pServer->pMap, 2); i++) {
-        int check = mapGetLayerData(pServer->pMap, 2, i);
-        if (check == 1) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pServer->pObstacles, createObstacle(tmp, OBSTACLE_SPIKE))) { return 1; }
-        }
-        else if (check == 2) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pServer->pCheckpoints, createObstacle(tmp, OBSTACLE_CHECKPOINT))) { return 1; }
-        }
-    }
-
-    printf("Created %ld obstacles\n", arrayGetSize(pServer->pObstacles));
-    printf("Created %ld checkpoints\n", arrayGetSize(pServer->pCheckpoints));
 
     pServer->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 5, PLATFORM_FLAT);
     if (pServer->pPlatform == NULL) { return 1; }

@@ -11,6 +11,10 @@
 
 #define MAX_LAYERS 3
 
+typedef enum MapIndex {
+    MAP_DEMO
+} MapIndex;
+
 typedef enum LayerType {
     LAYER_HITBOXES, LAYER_TILE_TEXTURES, LAYER_OBSTACLES
 } LayerType;
@@ -22,21 +26,27 @@ Tileset *createTileset();
 
 Map *createMap();
 
-void mapLoadTileset(Tileset *devTiles, const char *filePath);
-
-void mapLoadDataFromFile(Map *map, const char *filePath);
+int mapLoadDataFromFile(Map *map, MapIndex index);
 
 xmlChar *mapGetColumns(Tileset const *tileset);
 
 int mapGetWidth(Map const *map);
 
-Tileset *mapGetTileset(Map const *map);
+char const *mapGetFolderPath(Map const *map);
+
+char const *mapGetTilesetPath(Map const *map);
+
+int mapGetLayerCount(Map const *map);
 
 size_t mapGetLayerSize(Map const *map, int index);
 
-int mapGetLayerData(Map const *map, int layer, int index);
+int mapGetLayerData(Map const *map, int layer, int index, Vec2 *position);
 
 Vec2 mapGetSize(Map const *map);
+
+int mapGetTileWidth(Map const *map);
+
+int mapGetTileHeight(Map const *map);
 
 bool mapGetTileInfo(Map const *map, int index, Entity *tileToFill);
 

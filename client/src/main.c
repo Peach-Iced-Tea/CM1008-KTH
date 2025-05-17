@@ -50,11 +50,8 @@ int initGame(Game *pGame) {
     pGame->pMap = createMap();
     if (pGame->pMap == NULL) { return 1; }
 
-    mapLoadDataFromFile(pGame->pMap, "lib/resources/mapData/map.tmj");
-    mapLoadTileset(mapGetTileset(pGame->pMap), "lib/resources/mapData/mountainTrumps.tsx");
-    windowLoadMapTileset(pGame->pWindow, "lib/resources/mapData/mountainTrumps.png");
-    int mapWidth = mapGetWidth(pGame->pMap);
-    int tileSize = 32;
+    if (mapLoadDataFromFile(pGame->pMap, MAP_DEMO)) { return 1; }
+    if (windowLoadMapTileset(pGame->pWindow, mapGetTilesetPath(pGame->pMap))) { return 1; }
 
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if (pGame->pHitforms == NULL) { return 1; }
@@ -65,40 +62,30 @@ int initGame(Game *pGame) {
     pGame->pCheckpoints = createDynamicArray(ARRAY_OBSTACLES);
     if (pGame->pCheckpoints == NULL) { return 1; }
 
-    Vec2 tmp;
-    for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {
-        int check = mapGetLayerData(pGame->pMap, 0, i);
-        if (check > 0) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pGame->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
-        }
-    }
-
-    for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 2); i++) {
-        int check = mapGetLayerData(pGame->pMap, 2, i);
-        if (check == 1) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pGame->pObstacles, createObstacle(tmp, OBSTACLE_SPIKE))) { return 1; }
-        }
-        else if(check == 2) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pGame->pCheckpoints, createObstacle(tmp, OBSTACLE_CHECKPOINT))) { return 1; }
-        }
-        else if(check == 3) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (entityInitData(&(pGame->end), tmp, ENTITY_END, HITBOX_END)) { return 1; }
+    Vec2 position;
+    for (int layer = 0; layer < mapGetLayerCount(pGame->pMap); layer++) {
+        for (int i = 0; i < mapGetLayerSize(pGame->pMap, layer); i++) {
+            int check = mapGetLayerData(pGame->pMap, layer, i, &position);
+            switch (layer) {
+                case LAYER_HITBOXES:
+                    int tileWidth = mapGetTileWidth(pGame->pMap);
+                    int tileHeight = mapGetTileHeight(pGame->pMap);
+                    if (check > 0) {
+                        if (arrayAddObject(pGame->pHitforms, createHitbox(position, tileWidth, tileHeight, HITBOX_FULL_BLOCK))) { return 1; }
+                    }
+                    break;
+                case LAYER_OBSTACLES:
+                    if (check == 1) {
+                        if (arrayAddObject(pGame->pObstacles, createObstacle(position, OBSTACLE_SPIKE))) { return 1; }
+                    }
+                    else if (check == 2) {
+                        if (arrayAddObject(pGame->pCheckpoints, createObstacle(position, OBSTACLE_CHECKPOINT))) { return 1; }
+                    }
+                    else if (check == 3) {
+                        if (entityInitData(&(pGame->end), position, ENTITY_END, HITBOX_END)) { return 1; }
+                    }
+                    break;
+            }
         }
     }
 
