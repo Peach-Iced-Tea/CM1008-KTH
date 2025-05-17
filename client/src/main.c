@@ -157,7 +157,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     entityInitData(&entity, createVector(0.0f, 0.0f), ENTITY_DEFAULT, HITBOX_NONE);
     for (int i = 0; i < mapGetLayerSize(pGame->pMap, LAYER_TILE_TEXTURES); i++) {
         if (mapGetTileInfo(pGame->pMap, i, &entity)) {
-            windowRenderObject(pGame->pWindow, entity, RENDER_MAP);
+            windowRenderEntity(pGame->pWindow, entity, RENDER_MAP);
         }
     }
 
@@ -165,15 +165,15 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
         Entity body = obstacleGetBody(arrayGetObject(pGame->pCheckpoints, i));
         if (i == pGame->lastCheckpoint) { body.source.x += 32; }
 
-        windowRenderObject(pGame->pWindow, body, RENDER_OBSTACLE);
+        windowRenderEntity(pGame->pWindow, body, RENDER_OBSTACLE);
     }
 
     for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {
-        windowRenderObject(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pObstacles, i)), RENDER_OBSTACLE);
+        windowRenderEntity(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pObstacles, i)), RENDER_OBSTACLE);
     }
 
     for (int i = 0; i < platformGetSize(pGame->pPlatform); i++) {
-        windowRenderObject(pGame->pWindow, platformGetBody(pGame->pPlatform, i), RENDER_PLATFORM);
+        windowRenderEntity(pGame->pWindow, platformGetBody(pGame->pPlatform, i), RENDER_PLATFORM);
     }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -181,18 +181,18 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
             case SHOOTING:
             case RELEASE:
             case ROTATING:
-                windowRenderObject(pGame->pWindow, tongueGetShaft(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
-                windowRenderObject(pGame->pWindow, tongueGetTip(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
+                windowRenderEntity(pGame->pWindow, tongueGetShaft(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
+                windowRenderEntity(pGame->pWindow, tongueGetTip(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
                 break;
         }
-        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);
+        windowRenderEntity(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);
     }
     
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i));
     }
 
-    windowRenderObject(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), RENDER_CROSSHAIR);
+    windowRenderEntity(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), RENDER_CROSSHAIR);
     windowDisplayFrame(pGame->pWindow);
     return;
 }

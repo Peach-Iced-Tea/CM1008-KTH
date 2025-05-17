@@ -72,6 +72,11 @@ Returns an int value based on where the Player is in relation to the Entity (ret
 int playerCheckCollision(Player *pPlayer, Hitbox *pObject, bool applyCollisionResponse);
 
 /*
+Calculates the angle between the player's middle point and the given reference position.
+*/
+void playerCalculateAngle(Player *pPlayer, Vec2 referencePosition);
+
+/*
 
 */
 void playerSetPosition(Player *player, Vec2 newPosition);

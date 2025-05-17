@@ -113,6 +113,8 @@ void toggleFullscreen(RenderWindow *pWindow) {
         case WINDOWED:
             SDL_SetWindowFullscreen(pWindow->pWindow, 0);
             SDL_SetWindowBordered(pWindow->pWindow, SDL_TRUE);
+            SDL_SetWindowSize(pWindow->pWindow, 1280, 720);
+            SDL_SetWindowPosition(pWindow->pWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
             printf("Window State: Windowed\n");
             break;
         case BORDERLESS:
@@ -121,6 +123,7 @@ void toggleFullscreen(RenderWindow *pWindow) {
             break;
         case FULLSCREEN:
             SDL_SetWindowFullscreen(pWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+            SDL_SetWindowSize(pWindow->pWindow, pWindow->width, pWindow->height);
             printf("Window State: Fullscreen\n");
             break;
         case EXCLUSIVE:
@@ -249,7 +252,7 @@ void windowRenderText(RenderWindow *pWindow, char const textToRender[], int x, i
     return;
 }
 
-void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType renderType) {
+void windowRenderEntity(RenderWindow *pWindow, Entity const entity, RenderType renderType) {
     if (pWindow->pCamera == NULL) {
         printf("Error: RenderWindow is missing Camera\n");
         return;

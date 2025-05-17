@@ -51,7 +51,7 @@ void windowRenderText(RenderWindow *renderWindow, char const textToRender[], int
 /*
 Renders the given Entity on the screen if it is visible inside the camera dimensions.
 */
-void windowRenderObject(RenderWindow *renderWindow, Entity const entity, RenderType renderType);
+void windowRenderEntity(RenderWindow *renderWindow, Entity const entity, RenderType renderType);
 
 /*
 Clear the previous frame off of the given RenderWindow.

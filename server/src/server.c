@@ -215,6 +215,7 @@ void handleTick(Server *pServer, ClientPayload payload, float const timestep) {
     }
 
     playerOverrideVelocity(pPlayer, payload.player.input, payload.player.rotateVelocity);
+    playerCalculateAngle(pPlayer, payload.player.mouseAim);
     playerUpdateAnimation(pPlayer);
     updatePlayer(pServer, pPlayer, pTeammate, payload.playerID, timestep);
 
