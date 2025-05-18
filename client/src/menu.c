@@ -78,6 +78,7 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
     offsetInfo.h = 16;
     pMenu->nrOfButtons = 2;
     createMenuButtons(pMenu, offsetInfo, displayMiddle, pWindow);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
 
     windowClearFrame(pWindow);
     for (int i = 0; i < pMenu->nrOfButtons; i++) {
@@ -147,6 +148,7 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
         }
     }
 
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     destroyInputTracker(pInput);
     return gameRunning;
 }

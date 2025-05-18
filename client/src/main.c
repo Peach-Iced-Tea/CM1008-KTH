@@ -6,7 +6,7 @@ void cleanUp(Game *pGame) {
         if (pGame->players[i]) { destroyPlayer(pGame->players[i]); }
     }
 
-    if (pGame->pCrosshair) { destroyCrosshair(pGame->pCrosshair); }
+    if (pGame->pMouse) { destroyMouse(pGame->pMouse); }
     if (pGame->pCamera) { destroyCamera(pGame->pCamera); }
     if (pGame->pWindow) { destroyRenderWindow(pGame->pWindow); }
     if (pGame->pHitforms) { destroyDynamicArray(pGame->pHitforms); }
@@ -92,8 +92,8 @@ int initGame(Game *pGame) {
     pGame->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 5, PLATFORM_FLAT);
     if (pGame->pPlatform == NULL) { return 1; }
 
-    pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
-    if (pGame->pCrosshair == NULL) { return 1; }
+    pGame->pMouse = createMouse(playerGetMidPoint(pGame->players[0]));
+    if (pGame->pMouse == NULL) { return 1; }
 
     pGame->lastCheckpoint = -1;
 
@@ -192,7 +192,7 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i));
     }
 
-    windowRenderEntity(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), RENDER_CROSSHAIR);
+    windowRenderEntity(pGame->pWindow, mouseGetBody(pGame->pMouse), RENDER_MOUSE);
     windowDisplayFrame(pGame->pWindow);
     return;
 }
@@ -347,14 +347,14 @@ int main(int argv, char** args) {
                 playerHandleInput(pPlayer, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
-                crosshairHandleInput(game.pCrosshair, game.pInput);
-                crosshairUpdatePosition(game.pCrosshair, cameraGetPosition(game.pCamera));
+                mouseHandleInput(game.pMouse, game.pInput);
+                mouseUpdatePosition(game.pMouse, cameraGetPosition(game.pCamera));
 
-                Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
+                Vec2 mousePosition = mouseGetPosition(game.pMouse);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
                 switch (playerGetInfo(pPlayer).state) {
                     case ROTATING:
-                        float targetAngle = vectorGetAngle(playerGetMidPoint(pPlayer), crosshairGetPosition(game.pCrosshair));
+                        float targetAngle = vectorGetAngle(playerGetMidPoint(pPlayer), mouseGetPosition(game.pMouse));
                         playerCalculateRotation(pPlayer, targetAngle);
                         break;
                 }
@@ -372,7 +372,7 @@ int main(int argv, char** args) {
                 }
         
                 cameraUpdate(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
-                crosshairSetBorders(game.pCrosshair, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
+                mouseSetBorders(game.pMouse, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
                 updateDisplay(&game, mousePosition);
                 
                 break;

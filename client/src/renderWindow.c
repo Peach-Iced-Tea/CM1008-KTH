@@ -8,7 +8,7 @@ typedef struct textures {
     SDL_Texture *pPlayer1;
     SDL_Texture *pPlayer2;
     SDL_Texture *pTongue;
-    SDL_Texture *pCrosshair;
+    SDL_Texture *pMouse;
     SDL_Texture *pObstacles;
     SDL_Texture *pPlatform;
     SDL_Texture *pMapTileset;
@@ -44,8 +44,8 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-    pTextures->pCrosshair = IMG_LoadTexture(pRenderer, "lib/resources/crosshair.png");
-    if (pTextures->pCrosshair == NULL) {
+    pTextures->pMouse = IMG_LoadTexture(pRenderer, "lib/resources/mouse.png");
+    if (pTextures->pMouse == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
@@ -115,6 +115,7 @@ void toggleFullscreen(RenderWindow *pWindow) {
             SDL_SetWindowBordered(pWindow->pWindow, SDL_TRUE);
             SDL_SetWindowSize(pWindow->pWindow, 1280, 720);
             SDL_SetWindowPosition(pWindow->pWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+            SDL_SetRelativeMouseMode(SDL_FALSE);
             printf("Window State: Windowed\n");
             break;
         case BORDERLESS:
@@ -124,6 +125,7 @@ void toggleFullscreen(RenderWindow *pWindow) {
         case FULLSCREEN:
             SDL_SetWindowFullscreen(pWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
             SDL_SetWindowSize(pWindow->pWindow, pWindow->width, pWindow->height);
+            SDL_SetRelativeMouseMode(SDL_TRUE);
             printf("Window State: Fullscreen\n");
             break;
         case EXCLUSIVE:
@@ -176,8 +178,8 @@ SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
             return textures.pPlayer2;
         case RENDER_TONGUE:
             return textures.pTongue;
-        case RENDER_CROSSHAIR:
-            return textures.pCrosshair;
+        case RENDER_MOUSE:
+            return textures.pMouse;
         case RENDER_OBSTACLE:
             return textures.pObstacles;
         case RENDER_PLATFORM:

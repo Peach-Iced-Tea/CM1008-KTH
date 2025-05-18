@@ -28,7 +28,7 @@ typedef struct {
     DynamicArray *pCheckpoints;
     DynamicArray *pObstacles;
     MovablePlatform *pPlatform;
-    Crosshair *pCrosshair;
+    Mouse *pMouse;
     int lastCheckpoint;
     Entity end;
 } Game;

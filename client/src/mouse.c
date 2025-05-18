@@ -1,8 +1,8 @@
 #include "mouse.h"
 
-#define CROSSHAIR_MAX_DISTANCE 160.0f
+#define Mouse_MAX_DISTANCE 160.0f
 
-struct crosshair {
+struct mouse {
     Entity body;
     Vec2 relativePosition;
     Vec2 velocity;
@@ -10,78 +10,78 @@ struct crosshair {
     bool lockPosition;
 };
 
-Crosshair *createCrosshair(Vec2 const position) {
-    Crosshair *pCrosshair = malloc(sizeof(Crosshair));
-    if (entityInitData(&(pCrosshair->body), position, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK)) { return NULL; }
+Mouse *createMouse(Vec2 const position) {
+    Mouse *pMouse = malloc(sizeof(Mouse));
+    if (entityInitData(&(pMouse->body), position, ENTITY_CROSSHAIR, HITBOX_FULL_BLOCK)) { return NULL; }
     
-    pCrosshair->relativePosition = createVector(0.0f, 0.0f);
-    pCrosshair->velocity = createVector(0.0f, 0.0f);
-    pCrosshair->borders = createVector(0.0f, 0.0f);
-    pCrosshair->lockPosition = false;
+    pMouse->relativePosition = createVector(0.0f, 0.0f);
+    pMouse->velocity = createVector(0.0f, 0.0f);
+    pMouse->borders = createVector(0.0f, 0.0f);
+    pMouse->lockPosition = false;
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    return pCrosshair;
+    return pMouse;
 }
 
-void crosshairHandleInput(Crosshair *pCrosshair, Input *pInput) {
-    pCrosshair->velocity = createVector((float)getMouseState(pInput, MOUSE_MOTION_X), (float)getMouseState(pInput, MOUSE_MOTION_Y));
-    vectorAdd(&(pCrosshair->relativePosition), pCrosshair->relativePosition, pCrosshair->velocity);
-    if (pCrosshair->relativePosition.x < -pCrosshair->borders.x) {
-        pCrosshair->relativePosition.x = -pCrosshair->borders.x;
+void mouseHandleInput(Mouse *pMouse, Input *pInput) {
+    pMouse->velocity = createVector((float)getMouseState(pInput, MOUSE_MOTION_X), (float)getMouseState(pInput, MOUSE_MOTION_Y));
+    vectorAdd(&(pMouse->relativePosition), pMouse->relativePosition, pMouse->velocity);
+    if (pMouse->relativePosition.x < -pMouse->borders.x) {
+        pMouse->relativePosition.x = -pMouse->borders.x;
     }
-    else if (pCrosshair->relativePosition.x > pCrosshair->borders.x-pCrosshair->body.frame.w) {
-        pCrosshair->relativePosition.x = pCrosshair->borders.x-pCrosshair->body.frame.w;
-    }
-
-    if (pCrosshair->relativePosition.y < -pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f) {
-        pCrosshair->relativePosition.y = -pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f;
-    }
-    else if (pCrosshair->relativePosition.y > pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f) {
-        pCrosshair->relativePosition.y = pCrosshair->borders.y-pCrosshair->body.frame.h*0.5f;
+    else if (pMouse->relativePosition.x > pMouse->borders.x-pMouse->body.frame.w) {
+        pMouse->relativePosition.x = pMouse->borders.x-pMouse->body.frame.w;
     }
 
-    pCrosshair->lockPosition = false;
-    if (pCrosshair->velocity.x == 0.0f && pCrosshair->velocity.y == 0.0f) { pCrosshair->lockPosition = true; }
+    if (pMouse->relativePosition.y < -pMouse->borders.y-pMouse->body.frame.h*0.5f) {
+        pMouse->relativePosition.y = -pMouse->borders.y-pMouse->body.frame.h*0.5f;
+    }
+    else if (pMouse->relativePosition.y > pMouse->borders.y-pMouse->body.frame.h*0.5f) {
+        pMouse->relativePosition.y = pMouse->borders.y-pMouse->body.frame.h*0.5f;
+    }
 
-    pCrosshair->body.source.x = 0;
-    pCrosshair->body.source.y = 0;
+    pMouse->lockPosition = false;
+    if (pMouse->velocity.x == 0.0f && pMouse->velocity.y == 0.0f) { pMouse->lockPosition = true; }
+
+    pMouse->body.source.x = 0;
+    pMouse->body.source.y = 0;
     if (getMouseState(pInput, MOUSE_LEFT)) {
-        pCrosshair->body.source.x += pCrosshair->body.source.w;
+        pMouse->body.source.x += pMouse->body.source.w;
     }
 
     if (getMouseState(pInput, MOUSE_RIGHT)) {
-        pCrosshair->body.source.y += pCrosshair->body.source.h;
+        pMouse->body.source.y += pMouse->body.source.h;
     }
 
     return;
 }
 
-void crosshairUpdatePosition(Crosshair *pCrosshair, Vec2 referencePosition) {
+void mouseUpdatePosition(Mouse *pMouse, Vec2 referencePosition) {
     Vec2 position;
-    vectorAdd(&position, referencePosition, pCrosshair->relativePosition);
-    entitySetPosition(&(pCrosshair->body), position);
+    vectorAdd(&position, referencePosition, pMouse->relativePosition);
+    entitySetPosition(&(pMouse->body), position);
     return;
 }
 
-void crosshairSetBorders(Crosshair *pCrosshair, float borderX, float borderY) {
-    pCrosshair->borders.x = borderX*0.5f;
-    pCrosshair->borders.y = borderY*0.5f - pCrosshair->body.frame.h*0.5f;
+void mouseSetBorders(Mouse *pMouse, float borderX, float borderY) {
+    pMouse->borders.x = borderX*0.5f;
+    pMouse->borders.y = borderY*0.5f - pMouse->body.frame.h*0.5f;
     return;
 }
 
-Entity crosshairGetBody(Crosshair const *pCrosshair) {
-    return pCrosshair->body;
+Entity mouseGetBody(Mouse const *pMouse) {
+    return pMouse->body;
 }
 
-Vec2 crosshairGetPosition(Crosshair const *pCrosshair) {
-    return entityGetMidPoint(pCrosshair->body);
+Vec2 mouseGetPosition(Mouse const *pMouse) {
+    return entityGetMidPoint(pMouse->body);
 }
 
-void destroyCrosshair(Crosshair *pCrosshair) {
-    if (pCrosshair == NULL) { return; }
+void destroyMouse(Mouse *pMouse) {
+    if (pMouse == NULL) { return; }
 
-    destroyHitbox(pCrosshair->body.pHitbox);
-    free(pCrosshair);
+    destroyHitbox(pMouse->body.pHitbox);
+    free(pMouse);
 
     return;
 }
