@@ -1,8 +1,8 @@
 #pragma once
 #include <stdbool.h>
 
-#include "entity.h"
 #include "vmath.h"
+#include "entity.h"
 #include "input.h"
 #include "tongue.h"
 
@@ -40,7 +40,7 @@ Such as moving the given Player left and right, as well as jumping.
 void playerHandleInput(Player *player, Input const *input);
 
 /*
-
+Update the current shown frame of the player based on the internal state of the given Player.
 */
 void playerUpdateAnimation(Player *player);
 
@@ -60,7 +60,7 @@ Unless it is in PlayerState 'ROTATING', in which case it will return a Vec2 cont
 void playerUpdatePosition(Player *player, float deltaTime);
 
 /*
-
+Determines how the player should move the object that it has grabbed based on the given target angle.
 */
 void playerCalculateRotation(Player *player, float targetAngle);
 
@@ -77,7 +77,7 @@ Calculates the angle between the player's middle point and the given reference p
 void playerCalculateAngle(Player *pPlayer, Vec2 referencePosition);
 
 /*
-
+Sets the position of the Player and all objects related to it with the values inside newPosition.
 */
 void playerSetPosition(Player *player, Vec2 newPosition);
 

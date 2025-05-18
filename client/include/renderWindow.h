@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "entity.h"
+#include "vmath.h"
 #include "camera.h"
 
 typedef enum RenderType {

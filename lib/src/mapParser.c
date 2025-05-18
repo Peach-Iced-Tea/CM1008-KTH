@@ -3,11 +3,11 @@
 #define MAX_PATH_LENGTH 64
 
 struct tileset {
-    xmlChar *imgRef;
-    xmlChar *tilecount;
-    xmlChar *columns;
-    xmlChar *width;
-    xmlChar *height;
+    char *source;
+    int tilecount;
+    int columns;
+    int width;
+    int height;
     char filePath[MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)];
 };
 
@@ -20,15 +20,16 @@ struct map {
     int tileWidth, tileHeight;
     Tileset *pTileset;
     char folderPath[MAX_PATH_LENGTH];
+    char tilesetPath[MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)];
 };
 
 Tileset *createTileset() {
     Tileset *pTileset = malloc(sizeof(Tileset));
-    pTileset->imgRef = NULL;
-    pTileset->tilecount = NULL;
-    pTileset->columns = NULL;
-    pTileset->width = NULL;
-    pTileset->height = NULL;
+    pTileset->source = NULL;
+    pTileset->tilecount = 0;
+    pTileset->columns = 0;
+    pTileset->width = 0;
+    pTileset->height = 0;
     pTileset->filePath[0] = '\0';
 
     return pTileset;
@@ -52,6 +53,7 @@ Map *createMap() {
     pMap->tileWidth = 0;
     pMap->tileHeight = 0;
     pMap->folderPath[0] = '\0';
+    pMap->tilesetPath[0] = '\0';
 
     return pMap;
 }
@@ -66,10 +68,10 @@ char *mapGetFilePath(char *pFolderPath, MapIndex index) {
     return "";
 }
 
-int mapLoadTileset(Tileset *pTileset) {
-    xmlDoc *doc = xmlReadFile(pTileset->filePath, NULL, 0);
+int mapLoadTileset(Tileset *pTileset, char *tilesetPath) {
+    xmlDoc *doc = xmlReadFile(tilesetPath, NULL, 0);
     if (!doc) {
-        fprintf(stderr, "Failed to parse %s\n", pTileset->filePath);
+        fprintf(stderr, "Failed to parse %s\n", tilesetPath);
         return 1;
     }
 
@@ -80,14 +82,13 @@ int mapLoadTileset(Tileset *pTileset) {
         return 1;
     }
 
-    pTileset->tilecount = xmlGetProp(root, (const xmlChar *)"tilecount");
-    if (pTileset->tilecount == NULL) {
-        return 1;
-    }
-    pTileset->columns = xmlGetProp(root, (const xmlChar *)"columns");
-    if (pTileset->columns == NULL) {
-        return 1;
-    }
+    xmlChar *tmp = xmlGetProp(root, (const xmlChar *)"tilecount");
+    if (tmp == NULL) { return 1; }
+    pTileset->tilecount = atoi((char *)tmp);
+
+    tmp = xmlGetProp(root, (const xmlChar *)"columns");
+    if (tmp == NULL) { return 1; }
+    pTileset->columns = atoi((char *)tmp);
 
     xmlNode *imageNode = root->children;
     while (imageNode && xmlStrcmp(imageNode->name, (const xmlChar *)"image") != 0) {
@@ -95,18 +96,17 @@ int mapLoadTileset(Tileset *pTileset) {
     }
 
     if (imageNode) {
-        pTileset->width = xmlGetProp(imageNode, (const xmlChar *)"width");
-        if (pTileset->width == NULL) {
-            return 1;
-        }
-        pTileset->height = xmlGetProp(imageNode, (const xmlChar *)"height");
-        if (pTileset->height == NULL) {
-            return 1;
-        }
-        pTileset->imgRef = xmlGetProp(imageNode, (const xmlChar *)"source");
-        if (pTileset->imgRef == NULL) {
-            return 1;
-        }
+        tmp = xmlGetProp(imageNode, (const xmlChar *)"width");
+        if (tmp == NULL) { return 1; }
+        pTileset->width = atoi((char *)tmp);
+
+        tmp = xmlGetProp(imageNode, (const xmlChar *)"height");
+        if (tmp == NULL) { return 1; }
+        pTileset->height = atoi((char *)tmp);
+
+        tmp = xmlGetProp(imageNode, (const xmlChar *)"source");
+        if (tmp == NULL) { return 1; }
+        pTileset->source = (char *)tmp;
     }
 
     xmlFreeDoc(doc);
@@ -167,28 +167,14 @@ int mapLoadDataFromFile(Map *pMap, MapIndex index) {
         strncpy(tilesetName, json_string_value(source), (MAX_PATH_LENGTH>>1)-1);
     }
 
+    strncpy(pMap->tilesetPath, pMap->folderPath, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
+    strncat(pMap->tilesetPath, tilesetName, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
+    if (mapLoadTileset(pMap->pTileset, pMap->tilesetPath)) { return 1; }
+
     strncpy(pMap->pTileset->filePath, pMap->folderPath, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
-    strncat(pMap->pTileset->filePath, tilesetName, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
-    if (mapLoadTileset(pMap->pTileset)) { return 1; }
-
-    for (int i = 0; i < 3; i++) {
-        if (i == 0) {
-            pMap->pTileset->filePath[i+(strlen(pMap->pTileset->filePath)-3)] = 'p';
-        }
-        else if (i == 1) {
-            pMap->pTileset->filePath[i+(strlen(pMap->pTileset->filePath)-3)] = 'n';
-        }
-        if (i == 2) {
-            pMap->pTileset->filePath[i+(strlen(pMap->pTileset->filePath)-3)] = 'g';
-        }
-    }
-
+    strncat(pMap->pTileset->filePath, pMap->pTileset->source, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
     json_decref(root);
     return 0;
-}
-
-xmlChar *mapGetColumns(Tileset const *pTileset) {
-    return pTileset->columns;
 }
 
 int mapGetWidth(Map const *pMap) {
@@ -236,7 +222,7 @@ bool mapGetTileInfo(Map const *pMap, int index, Entity *pTileToFill) {
     int gid = mapGetLayerData(pMap, LAYER_TILE_TEXTURES, index, NULL) - 15;
 
     if (gid > 0) {
-        int columns = atoi((char *)mapGetColumns(pMap->pTileset));
+        int columns = pMap->pTileset->columns;
         pTileToFill->source.x = (gid % columns) * 32;
         pTileToFill->source.y = (gid / columns) * 32;
         pTileToFill->source.w = pMap->tileWidth;

@@ -1,8 +1,8 @@
 #pragma once
 #include <stdbool.h>
 
-#include "entity.h"
 #include "vmath.h"
+#include "entity.h"
 
 typedef enum TongueState {
     NEUTRAL, EXTENDING, RETRACTING, HIT_ENTITY

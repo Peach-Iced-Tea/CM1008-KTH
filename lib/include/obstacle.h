@@ -1,4 +1,5 @@
 #pragma once
+#include "vmath.h"
 #include "entity.h"
 
 typedef enum ObstacleType {
