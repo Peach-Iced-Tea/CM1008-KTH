@@ -1,6 +1,6 @@
 #pragma once
-#include "entity.h"
 #include "vmath.h"
+#include "entity.h"
 
 typedef enum PlatformType {
     PLATFORM_FLAT, PLATFORM_CONVEX

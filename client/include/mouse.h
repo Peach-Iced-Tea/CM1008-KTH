@@ -1,39 +1,40 @@
 #pragma once
+#include "vmath.h"
 #include "entity.h"
 #include "input.h"
 
-typedef struct crosshair Crosshair;
+typedef struct mouse Mouse;
 
-Crosshair *createCrosshair(Vec2 const position);
-
-/*
-Handles the inputs related to the Crosshair.
-*/
-void crosshairHandleInput(Crosshair *crosshair, Input *input);
+Mouse *createMouse(Vec2 const position);
 
 /*
-Calling this function updates the current position of the Crosshair based on the referencePosition.
+Handles the inputs related to the Mouse.
 */
-void crosshairUpdatePosition(Crosshair *crosshair, Vec2 referencePosition);
+void mouseHandleInput(Mouse *Mouse, Input *input);
 
 /*
-Set the borders that the crosshair can move within relative to its referencePosition.
+Calling this function updates the current position of the Mouse based on the referencePosition.
 */
-void crosshairSetBorders(Crosshair *pCrosshair, float borderX, float borderY);
+void mouseUpdatePosition(Mouse *Mouse, Vec2 referencePosition);
 
 /*
-Get the body (Entity) of the given Crosshair.
+Set the borders that the Mouse can move within relative to its referencePosition.
 */
-Entity crosshairGetBody(Crosshair const *crosshair);
+void mouseSetBorders(Mouse *pMouse, float borderX, float borderY);
 
 /*
-Get the positional values of the given Crosshair.
-
-The returned values of the position are the middle point of the Crosshair.
+Get the body (Entity) of the given Mouse.
 */
-Vec2 crosshairGetPosition(Crosshair const *crosshair);
+Entity mouseGetBody(Mouse const *Mouse);
 
 /*
-Use this function to destroy the given Crosshair pointer and free up memory.
+Get the positional values of the given Mouse.
+
+The returned values of the position are the middle point of the Mouse.
 */
-void destroyCrosshair(Crosshair *crosshair);
+Vec2 mouseGetPosition(Mouse const *Mouse);
+
+/*
+Use this function to destroy the given Mouse pointer and free up memory.
+*/
+void destroyMouse(Mouse *Mouse);

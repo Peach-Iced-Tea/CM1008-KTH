@@ -6,7 +6,7 @@ void cleanUp(Game *pGame) {
         if (pGame->players[i]) { destroyPlayer(pGame->players[i]); }
     }
 
-    if (pGame->pCrosshair) { destroyCrosshair(pGame->pCrosshair); }
+    if (pGame->pMouse) { destroyMouse(pGame->pMouse); }
     if (pGame->pCamera) { destroyCamera(pGame->pCamera); }
     if (pGame->pWindow) { destroyRenderWindow(pGame->pWindow); }
     if (pGame->pHitforms) { destroyDynamicArray(pGame->pHitforms); }
@@ -47,13 +47,11 @@ int initGame(Game *pGame) {
     pGame->pClient = createClient(0);
     if (pGame->pClient == NULL) { return 1; }
 
-    pGame->pMap = createClientMap(windowGetRenderer(pGame->pWindow));
+    pGame->pMap = createMap();
     if (pGame->pMap == NULL) { return 1; }
 
-    mapLoadClient("lib/resources/mapData/map.tmj", pGame->pMap);
-    mapLoadTileset("lib/resources/mapData/mountainTrumps.tsx", mapGetTileset(pGame->pMap));
-    int mapWidth = mapGetWidth(pGame->pMap);
-    int tileSize = 32;
+    if (mapLoadDataFromFile(pGame->pMap, MAP_DEMO)) { return 1; }
+    if (windowLoadMapTileset(pGame->pWindow, mapGetTilesetPath(pGame->pMap))) { return 1; }
 
     pGame->pHitforms = createDynamicArray(ARRAY_HITBOXES);
     if (pGame->pHitforms == NULL) { return 1; }
@@ -64,48 +62,38 @@ int initGame(Game *pGame) {
     pGame->pCheckpoints = createDynamicArray(ARRAY_OBSTACLES);
     if (pGame->pCheckpoints == NULL) { return 1; }
 
-    Vec2 tmp;
-    for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 0); i++) {
-        int check = mapGetLayerData(pGame->pMap, 0, i);
-        if (check > 0) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pGame->pHitforms, createHitbox(tmp, tileSize, tileSize, HITBOX_FULL_BLOCK))) { return 1; }
-        }
-    }
-
-    for (size_t i = 0; i < mapGetLayerSize(pGame->pMap, 2); i++) {
-        int check = mapGetLayerData(pGame->pMap, 2, i);
-        if (check == 1) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pGame->pObstacles, createObstacle(tmp, OBSTACLE_SPIKE))) { return 1; }
-        }
-        else if(check == 2) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (arrayAddObject(pGame->pCheckpoints, createObstacle(tmp, OBSTACLE_CHECKPOINT))) { return 1; }
-        }
-        else if(check == 3) {
-            float posX = (i % mapWidth) * tileSize;
-            float posY = (i / mapWidth) * tileSize;
-            tmp = createVector(posX, posY);
-
-            if (entityInitData(&(pGame->end), tmp, ENTITY_END, HITBOX_END)) { return 1; }
+    Vec2 position;
+    for (int layer = 0; layer < mapGetLayerCount(pGame->pMap); layer++) {
+        for (int i = 0; i < mapGetLayerSize(pGame->pMap, layer); i++) {
+            int check = mapGetLayerData(pGame->pMap, layer, i, &position);
+            switch (layer) {
+                case LAYER_HITBOXES:
+                    int tileWidth = mapGetTileWidth(pGame->pMap);
+                    int tileHeight = mapGetTileHeight(pGame->pMap);
+                    if (check > 0) {
+                        if (arrayAddObject(pGame->pHitforms, createHitbox(position, tileWidth, tileHeight, HITBOX_FULL_BLOCK))) { return 1; }
+                    }
+                    break;
+                case LAYER_OBSTACLES:
+                    if (check == 1) {
+                        if (arrayAddObject(pGame->pObstacles, createObstacle(position, OBSTACLE_SPIKE))) { return 1; }
+                    }
+                    else if (check == 2) {
+                        if (arrayAddObject(pGame->pCheckpoints, createObstacle(position, OBSTACLE_CHECKPOINT))) { return 1; }
+                    }
+                    else if (check == 3) {
+                        if (entityInitData(&(pGame->end), position, ENTITY_END, HITBOX_END)) { return 1; }
+                    }
+                    break;
+            }
         }
     }
 
     pGame->pPlatform = createPlatform(createVector(768.0f, 2880.0f), 5, PLATFORM_FLAT);
     if (pGame->pPlatform == NULL) { return 1; }
 
-    pGame->pCrosshair = createCrosshair(playerGetMidPoint(pGame->players[0]));
-    if (pGame->pCrosshair == NULL) { return 1; }
+    pGame->pMouse = createMouse(playerGetMidPoint(pGame->players[0]));
+    if (pGame->pMouse == NULL) { return 1; }
 
     pGame->lastCheckpoint = -1;
 
@@ -130,9 +118,15 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
         if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pGame->pObstacles, i)), false)) {
             if (obstacleIsHazardous(arrayGetObject(pGame->pObstacles, i)) == HAZARD_LETHAL) {
                 playerSetState(pPlayer, IDLE);
-                Vec2 tmp = obstacleGetPosition(arrayGetObject(pGame->pCheckpoints, pGame->lastCheckpoint));
-                tmp.y -= 32;
-                playerSetPosition(pPlayer, tmp);
+                if (pGame->lastCheckpoint == -1) {
+                    Vec2 position = createVector(PLAYER_START_X, PLAYER_START_Y);
+                    playerSetPosition(pPlayer, position);
+                }
+                else {
+                    Vec2 position = obstacleGetPosition(arrayGetObject(pGame->pCheckpoints, pGame->lastCheckpoint));
+                    position.y -= playerGetBody(pPlayer).frame.h*0.5f;
+                    playerSetPosition(pPlayer, position);
+                }
             }
         }
     }
@@ -165,21 +159,27 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
     windowClearFrame(pGame->pWindow);
 
-    windowRenderMapLayer(pGame->pWindow, pGame->pMap);
+    Entity entity;
+    entityInitData(&entity, createVector(0.0f, 0.0f), ENTITY_DEFAULT, HITBOX_NONE);
+    for (int i = 0; i < mapGetLayerSize(pGame->pMap, LAYER_TILE_TEXTURES); i++) {
+        if (mapGetTileInfo(pGame->pMap, i, &entity)) {
+            windowRenderEntity(pGame->pWindow, entity, RENDER_MAP);
+        }
+    }
 
     for (int i = 0; i < arrayGetSize(pGame->pCheckpoints); i++) {
         Entity body = obstacleGetBody(arrayGetObject(pGame->pCheckpoints, i));
         if (i == pGame->lastCheckpoint) { body.source.x += 32; }
 
-        windowRenderObject(pGame->pWindow, body, RENDER_OBSTACLE);
+        windowRenderEntity(pGame->pWindow, body, RENDER_OBSTACLE);
     }
 
     for (int i = 0; i < arrayGetSize(pGame->pObstacles); i++) {
-        windowRenderObject(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pObstacles, i)), RENDER_OBSTACLE);
+        windowRenderEntity(pGame->pWindow, obstacleGetBody(arrayGetObject(pGame->pObstacles, i)), RENDER_OBSTACLE);
     }
 
     for (int i = 0; i < platformGetSize(pGame->pPlatform); i++) {
-        windowRenderObject(pGame->pWindow, platformGetBody(pGame->pPlatform, i), RENDER_PLATFORM);
+        windowRenderEntity(pGame->pWindow, platformGetBody(pGame->pPlatform, i), RENDER_PLATFORM);
     }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -187,18 +187,18 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
             case SHOOTING:
             case RELEASE:
             case ROTATING:
-                windowRenderObject(pGame->pWindow, tongueGetShaft(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
-                windowRenderObject(pGame->pWindow, tongueGetTip(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
+                windowRenderEntity(pGame->pWindow, tongueGetShaft(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
+                windowRenderEntity(pGame->pWindow, tongueGetTip(playerGetTongue(pGame->players[i])), RENDER_TONGUE);
                 break;
         }
-        windowRenderObject(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);
+        windowRenderEntity(pGame->pWindow, playerGetBody(pGame->players[i]), RENDER_PLAYER1+i);
     }
     
     for (int i = 0; i < arrayGetSize(pGame->pHitforms); i++) {
         windowRenderHitbox(pGame->pWindow, arrayGetObject(pGame->pHitforms, i));
     }
 
-    windowRenderObject(pGame->pWindow, crosshairGetBody(pGame->pCrosshair), RENDER_CROSSHAIR);
+    windowRenderEntity(pGame->pWindow, mouseGetBody(pGame->pMouse), RENDER_MOUSE);
     windowDisplayFrame(pGame->pWindow);
     return;
 }
@@ -314,6 +314,7 @@ int main(int argv, char** args) {
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
     windowSetCamera(game.pWindow, game.pCamera);
+    cameraSetMapSize(game.pCamera, mapGetSize(game.pMap));
 
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
@@ -352,14 +353,14 @@ int main(int argv, char** args) {
                 playerHandleInput(pPlayer, game.pInput);
                 cameraHandleInput(game.pCamera, game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
-                crosshairHandleInput(game.pCrosshair, game.pInput);
-                crosshairUpdatePosition(game.pCrosshair, cameraGetPosition(game.pCamera));
+                mouseHandleInput(game.pMouse, game.pInput);
+                mouseUpdatePosition(game.pMouse, cameraGetPosition(game.pCamera));
 
-                Vec2 mousePosition = crosshairGetPosition(game.pCrosshair);
+                Vec2 mousePosition = mouseGetPosition(game.pMouse);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
                 switch (playerGetInfo(pPlayer).state) {
                     case ROTATING:
-                        float targetAngle = vectorGetAngle(playerGetMidPoint(pPlayer), crosshairGetPosition(game.pCrosshair));
+                        float targetAngle = vectorGetAngle(playerGetMidPoint(pPlayer), mouseGetPosition(game.pMouse));
                         playerCalculateRotation(pPlayer, targetAngle);
                         break;
                 }
@@ -377,7 +378,7 @@ int main(int argv, char** args) {
                 }
         
                 cameraUpdate(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
-                crosshairSetBorders(game.pCrosshair, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
+                mouseSetBorders(game.pMouse, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
                 updateDisplay(&game, mousePosition);
                 
                 break;

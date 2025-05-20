@@ -23,12 +23,12 @@ typedef struct {
     Input *pInput;
     Menu *pMenu;
     Client *pClient;
-    ClientMap *pMap;
+    Map *pMap;
     DynamicArray *pHitforms;
     DynamicArray *pCheckpoints;
     DynamicArray *pObstacles;
     MovablePlatform *pPlatform;
-    Crosshair *pCrosshair;
+    Mouse *pMouse;
     int lastCheckpoint;
     Entity end;
 } Game;

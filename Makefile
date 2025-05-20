@@ -31,7 +31,7 @@ LIBOBJECTS = $(patsubst $(LIBSRC)/%.c, $(OBJDIR)/%.o, $(wildcard $(LIBSRC)/*.c))
 
 
 # Client source files
-$(TARGETCLIENT): $(CLIENTOBJECTS) $(LIBOBJECTS)
+$(TARGETCLIENT): $(DELOBJ) $(CLIENTOBJECTS) $(LIBOBJECTS)
 	$(CC) -o $(TARGETCLIENT).exe $(CLIENTOBJECTS) $(LIBOBJECTS) $(LDFLAGS)
 
 $(OBJDIR)/main.o: $(CLIENTSRC)/main.c $(CLIENTINC)/main.h
@@ -54,7 +54,7 @@ $(OBJDIR)/mouse.o: $(CLIENTSRC)/mouse.c $(CLIENTINC)/mouse.h
 
 
 # Server source files
-$(TARGETSERVER): $(SERVEROBJECTS) $(LIBOBJECTS)
+$(TARGETSERVER): $(DELOBJ) $(SERVEROBJECTS) $(LIBOBJECTS)
 	$(CC) -o $(TARGETSERVER).exe $(SERVEROBJECTS) $(LIBOBJECTS) $(LDFLAGS)
 
 $(OBJDIR)/server.o: $(SERVERSRC)/server.c $(SERVERINC)/server.h
@@ -95,7 +95,13 @@ $(OBJDIR)/platform.o: $(LIBSRC)/platform.c $(LIBINC)/platform.h
 $(OBJDIR)/animation.o: $(LIBSRC)/animation.c $(LIBINC)/animation.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-all: $(TARGETCLIENT) $(TARGETSERVER)
+$(DELOBJ):
+ifeq ($(wildcard ./obj/.),)
+	mkdir $(DELOBJ)
+endif
+
+
+all: $(TARGETCLIENT) $(TARGETSERVER) 
 
 
 clean:

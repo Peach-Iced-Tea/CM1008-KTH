@@ -402,6 +402,11 @@ int playerCheckCollision(Player *pPlayer, Hitbox *pObject, bool applyCollisionRe
     return collisionDetected;
 }
 
+void playerCalculateAngle(Player *pPlayer, Vec2 referencePosition) {
+    pPlayer->referenceAngle = vectorGetAngle(entityGetMidPoint(pPlayer->body), referencePosition);
+    return;
+}
+
 void playerSetPosition(Player *pPlayer, Vec2 newPosition) {
     entitySetPosition(&(pPlayer->body), newPosition);
     return;

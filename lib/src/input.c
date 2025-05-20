@@ -113,6 +113,18 @@ int keyInputs(SDL_Event event) {
         case SDL_SCANCODE_BACKSPACE:
             pressedKey = KEY_BACKSPACE;
             break;
+        case SDL_SCANCODE_UP:
+            pressedKey = KEY_UP;
+            break;
+        case SDL_SCANCODE_DOWN:
+            pressedKey = KEY_DOWN;
+            break;
+        case SDL_SCANCODE_LEFT:
+            pressedKey = KEY_LEFT;
+            break;
+        case SDL_SCANCODE_RIGHT:
+            pressedKey = KEY_RIGHT;
+            break;
     }
 
     return pressedKey;

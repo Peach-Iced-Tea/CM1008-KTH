@@ -2,30 +2,29 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-#include "entity.h"
 #include "vmath.h"
+#include "entity.h"
 #include "input.h"
 
 /*
-SCALING: The camera will use two Entities as reference points and stay in the middle of them while scaling the zoom level automatically.
-TRACKING_T1: The camera will track the first Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
-TRACKING_T2: The camera will track the second Entity given with cameraSetTargets(), zoom level can be manually set with cameraSetZoom().
 FIXED: The camera is set to a specific position and will not move unless manually done.
+TRACKING_T1: The camera will track the first Entity given with cameraUpdate(), zoom level can be manually set with cameraSetZoom().
+TRACKING_T2: The camera will track the second Entity given with cameraUpdate(), zoom level can be manually set with cameraSetZoom().
 */
 typedef enum CameraMode {
-    SCALING, TRACKING_T1, TRACKING_T2, FIXED
+    FIXED, TRACKING_T1, TRACKING_T2
 } CameraMode;
 
 typedef enum CameraError {
-    IS_NULL = 1, MISSING_RENDERER, MISSING_TARGETS, MISSING_TARGET1, MISSING_TARGET2
+    IS_NULL = 1, MISSING_RENDERER, MISSING_TARGET1, MISSING_TARGET2
 } CameraError;
 
 typedef struct camera Camera;
 
-#define MAX_ZOOM_IN 2.5f
-#define MAX_ZOOM_OUT 1.2f
-#define REFERENCE_WIDTH 1920
-#define REFERENCE_HEIGHT 1080
+#define MAX_ZOOM_IN 1.0f
+#define MAX_ZOOM_OUT 1.5f
+#define REFERENCE_WIDTH 736
+#define REFERENCE_HEIGHT 414
 
 /*
 Create a Camera with the current resolution of the game window.
@@ -37,7 +36,7 @@ Handles key inputs related to the functions of the Camera data type.
 
 Such as setting what mode the given Camera should be set to.
 */
-void cameraHandleInput(Camera *camera, Input const *inputs);
+void cameraHandleInput(Camera *camera, Input const *input);
 
 /*
 Update the position as well as the zoom level of the given Camera.
@@ -79,14 +78,17 @@ and a lower zoomScale means that the Camera is further away.
 int cameraSetZoom(Camera *camera, float zoomScale);
 
 /*
+Set the map dimensions that the given Camera can move around within.
+*/
+int cameraSetMapSize(Camera *camera, Vec2 mapSize);
+
+/*
 Returns the absolute position of the mouse cursor in the game world.
 */
 Vec2 cameraGetMousePosition(Camera const *camera);
 
 /*
-Get the global scale used to make the rendered view consistent across resolutions.
-*/
-float cameraGetGlobalScale(Camera const *camera);
+Fills the given in-parameters with the logical width and height respectively if not NULL.
 
 /*
 Returns the logical width of the given Camera.

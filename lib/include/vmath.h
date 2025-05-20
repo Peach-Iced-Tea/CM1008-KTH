@@ -35,5 +35,5 @@ void vectorMidPoint(Vec2 *vectorResult, Vec2 const vector1, Vec2 const vector2);
 // Get the angle between two vector positions.
 float vectorGetAngle(Vec2 const vector1, Vec2 const vector2);
 
-
+// Normalizes the given vector into a unit vector.
 void vectorNorm(Vec2 *vector);

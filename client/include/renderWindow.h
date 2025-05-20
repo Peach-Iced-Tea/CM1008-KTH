@@ -5,17 +5,23 @@
 #include <stdbool.h>
 
 #include "entity.h"
+#include "vmath.h"
 #include "camera.h"
-#include "mapParser.h"
 
 typedef enum RenderType {
     RENDER_PLAYER1, RENDER_PLAYER2, RENDER_TONGUE,
-    RENDER_OBSTACLE, RENDER_CROSSHAIR, RENDER_PLATFORM
+    RENDER_OBSTACLE, RENDER_MOUSE, RENDER_PLATFORM,
+    RENDER_MAP
 } RenderType;
 
 typedef struct renderWindow RenderWindow;
 
 RenderWindow *createRenderWindow(char const *title, int w, int h);
+
+/*
+Load a map tileset from the given file path.
+*/
+int windowLoadMapTileset(RenderWindow *renderWindow, char const *filePath);
 
 /*
 Handles key inputs related to the functions of the RenderWindow data type.
@@ -46,12 +52,7 @@ void windowRenderText(RenderWindow *renderWindow, char const textToRender[], int
 /*
 Renders the given Entity on the screen if it is visible inside the camera dimensions.
 */
-void windowRenderObject(RenderWindow *renderWindow, Entity const entity, RenderType renderType);
-
-/*
-Renders an entire map given as a ClientMap.
-*/
-void windowRenderMapLayer(RenderWindow *renderWindow, ClientMap *map);
+void windowRenderEntity(RenderWindow *renderWindow, Entity const entity, RenderType renderType);
 
 /*
 Clear the previous frame off of the given RenderWindow.

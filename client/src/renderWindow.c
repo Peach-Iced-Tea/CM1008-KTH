@@ -8,9 +8,10 @@ typedef struct textures {
     SDL_Texture *pPlayer1;
     SDL_Texture *pPlayer2;
     SDL_Texture *pTongue;
-    SDL_Texture *pCrosshair;
+    SDL_Texture *pMouse;
     SDL_Texture *pObstacles;
     SDL_Texture *pPlatform;
+    SDL_Texture *pMapTileset;
 } Textures;
 
 struct renderWindow {
@@ -43,8 +44,8 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-    pTextures->pCrosshair = IMG_LoadTexture(pRenderer, "lib/resources/crosshair.png");
-    if (pTextures->pCrosshair == NULL) {
+    pTextures->pMouse = IMG_LoadTexture(pRenderer, "lib/resources/mouse.png");
+    if (pTextures->pMouse == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
@@ -58,6 +59,7 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
+    pTextures->pMapTileset = NULL;
 
     return 0;
 }
@@ -96,11 +98,24 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
     return pWindow;
 }
 
+int windowLoadMapTileset(RenderWindow *pWindow, char const *pFilePath) {
+    pWindow->textures.pMapTileset = IMG_LoadTexture(pWindow->pRenderer, pFilePath);
+    if (pWindow->textures.pMapTileset == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    return 0;
+}
+
 void toggleFullscreen(RenderWindow *pWindow) {
     switch (pWindow->state) {
         case WINDOWED:
             SDL_SetWindowFullscreen(pWindow->pWindow, 0);
             SDL_SetWindowBordered(pWindow->pWindow, SDL_TRUE);
+            SDL_SetWindowSize(pWindow->pWindow, 1280, 720);
+            SDL_SetWindowPosition(pWindow->pWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+            SDL_SetRelativeMouseMode(SDL_FALSE);
             printf("Window State: Windowed\n");
             break;
         case BORDERLESS:
@@ -109,6 +124,8 @@ void toggleFullscreen(RenderWindow *pWindow) {
             break;
         case FULLSCREEN:
             SDL_SetWindowFullscreen(pWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+            SDL_SetWindowSize(pWindow->pWindow, pWindow->width, pWindow->height);
+            SDL_SetRelativeMouseMode(SDL_TRUE);
             printf("Window State: Fullscreen\n");
             break;
         case EXCLUSIVE:
@@ -161,12 +178,14 @@ SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
             return textures.pPlayer2;
         case RENDER_TONGUE:
             return textures.pTongue;
-        case RENDER_CROSSHAIR:
-            return textures.pCrosshair;
+        case RENDER_MOUSE:
+            return textures.pMouse;
         case RENDER_OBSTACLE:
             return textures.pObstacles;
         case RENDER_PLATFORM:
             return textures.pPlatform;
+        case RENDER_MAP:
+            return textures.pMapTileset;
     }
 
     return NULL;
@@ -199,6 +218,7 @@ void windowRenderHitbox(RenderWindow *pWindow, Hitbox const *pHitbox) {
 }
 
 void windowRenderMenu(RenderWindow *pWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
+    SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
     for (int i = 0; i < nrOfButtons; i++) {
         SDL_Rect src = menuButtons[i];
         SDL_Rect dst = menuPosition[i];
@@ -206,6 +226,7 @@ void windowRenderMenu(RenderWindow *pWindow, SDL_Texture *pTexture, SDL_Rect men
         SDL_RenderCopy(pWindow->pRenderer, pTexture, &src, &dst);
     }
     
+    SDL_RenderSetLogicalSize(pWindow->pRenderer, cameraGetWidth(pWindow->pCamera), cameraGetHeight(pWindow->pCamera));
     return;
 }
 
@@ -229,10 +250,11 @@ void windowRenderText(RenderWindow *pWindow, char const textToRender[], int x, i
     dst.y = y-dst.h*0.5f;
     SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
     SDL_RenderCopy(pWindow->pRenderer, pTexture, NULL, &dst);
+    SDL_RenderSetLogicalSize(pWindow->pRenderer, cameraGetWidth(pWindow->pCamera), cameraGetHeight(pWindow->pCamera));
     return;
 }
 
-void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType renderType) {
+void windowRenderEntity(RenderWindow *pWindow, Entity const entity, RenderType renderType) {
     if (pWindow->pCamera == NULL) {
         printf("Error: RenderWindow is missing Camera\n");
         return;
@@ -240,8 +262,9 @@ void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType r
 
     SDL_FRect dst = entity.frame;
     SDL_Rect src = entity.source;
-    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
+    if (!cameraEntityIsVisible(pWindow->pCamera, dst)) { return; }
 
+    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
     SDL_Texture *pTexture = windowGetTexture(pWindow->textures, renderType);
     if (pTexture == NULL) { return; }
 
@@ -249,41 +272,6 @@ void windowRenderObject(RenderWindow *pWindow, Entity const entity, RenderType r
     if (pWindow->renderHitboxes) { windowRenderHitbox(pWindow, entity.pHitbox); }
     pWindow->nrOfRenderedEntites++;
     return;
-}
-
-void windowRenderMapLayer(RenderWindow *pWindow, ClientMap *pMap) {
-    if (pWindow->pCamera == NULL) {
-        printf("Error: RenderWindow is missing Camera\n");
-        return;
-    }
-
-    int mapWidth = mapGetWidth(pMap);
-    int tileSize = 32;
-
-    for (size_t i = 0; i < mapGetLayerSize(pMap, 1); i++) {
-
-        int gid = mapGetLayerData(pMap, 1, i) - 15;
-
-        if (gid >= 0) {
-            int columns = atoi((char *)mapGetColumns(mapGetTileset(pMap)));
-            
-            int tileX = (gid % columns) * 32;
-            int tileY = (gid / columns) * 32;
-
-            mapSetTileSheetPosition(pMap, tileX, tileY);
-
-            int screenX = (i % mapWidth) * tileSize;
-            int screenY = (i / mapWidth) * tileSize;
-
-            SDL_Rect src = mapGetTileSheetPosition(pMap);
-
-            SDL_FRect dst = { (float)screenX, (float)screenY, tileSize, tileSize }; 
-
-            cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
-
-            SDL_RenderCopyF(pWindow->pRenderer, mapGetTileTextures(mapGetTileset(pMap)), &src, &dst);
-        }
-    }
 }
 
 void windowClearFrame(RenderWindow *pWindow) {

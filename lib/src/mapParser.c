@@ -1,46 +1,43 @@
 #include "mapParser.h"
 
-struct tileset{
-    xmlChar *imgRef;
-    xmlChar *tilecount;
-    xmlChar *columns;
-    xmlChar *width;
-    xmlChar *height;
+#define MAX_PATH_LENGTH 64
 
-    SDL_Texture *tileSheet;
+struct tileset {
+    char *source;
+    int tilecount;
+    int columns;
+    int width;
+    int height;
+    char filePath[MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)];
 };
 
-struct clientMap {
+struct map {
     int *layerData[MAX_LAYERS];         //Array of data, loaded from .tmj file
     size_t layerSize[MAX_LAYERS];       //Size of the array
+    int layerCount;
     int width, height;                  //Width and Height of the entire "Map"
-
-    Tileset *layerTiles;                //The corresponding Tileset For now a struct thatcontains the .png
-    SDL_Rect tileSheetPosition;         //The position in the tileset (currently not sure if this is actially needed)
+    Vec2 mapSize;
+    int tileWidth, tileHeight;
+    Tileset *pTileset;
+    char folderPath[MAX_PATH_LENGTH];
+    char tilesetPath[MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)];
 };
 
-Tileset *createTileset(SDL_Renderer *pRenderer) {
+Tileset *createTileset() {
     Tileset *pTileset = malloc(sizeof(Tileset));
-
-    pTileset->imgRef = NULL;
-    pTileset->tilecount = NULL;
-    pTileset->columns = NULL;
-    pTileset->width = NULL;
-    pTileset->height = NULL;
-
-    pTileset->tileSheet = IMG_LoadTexture(pRenderer, "lib/resources/mapData/mountainTrumps.png");
-    if (pTileset->tileSheet == NULL) {
-        printf("Error: %s\n", SDL_GetError());
-        return NULL;
-    }
+    pTileset->source = NULL;
+    pTileset->tilecount = 0;
+    pTileset->columns = 0;
+    pTileset->width = 0;
+    pTileset->height = 0;
+    pTileset->filePath[0] = '\0';
 
     return pTileset;
 }
 
-ClientMap *createClientMap(SDL_Renderer *pRenderer) {
-    ClientMap *pMap = malloc(sizeof(ClientMap));
-
-    pMap->layerTiles = createTileset(pRenderer);
+Map *createMap() {
+    Map *pMap = malloc(sizeof(Map));
+    pMap->pTileset = createTileset();
 
     for (int i = 0; i < MAX_LAYERS; i++) {
         pMap->layerData[i] = NULL;
@@ -49,33 +46,49 @@ ClientMap *createClientMap(SDL_Renderer *pRenderer) {
         pMap->layerSize[i] = 0;
     }
 
-    pMap->height = 0;
+    pMap->layerCount = 0;
     pMap->width = 0;
+    pMap->height = 0;
+    pMap->mapSize = createVector(0.0f, 0.0f);
+    pMap->tileWidth = 0;
+    pMap->tileHeight = 0;
+    pMap->folderPath[0] = '\0';
+    pMap->tilesetPath[0] = '\0';
 
-    pMap->tileSheetPosition.w = 32;
-    pMap->tileSheetPosition.h = 32;
-    pMap->tileSheetPosition.x = 0;
-    pMap->tileSheetPosition.y = 0;
     return pMap;
 }
 
+char *mapGetFilePath(char *pFolderPath, MapIndex index) {
+    switch (index) {
+        case MAP_DEMO:
+            strncat(pFolderPath, "lib/resources/mapData/demo/", MAX_PATH_LENGTH-1);
+            return "lib/resources/mapData/demo/map.tmj";
+    }
 
-void mapLoadTileset(const char *filename, Tileset *devTiles) {
-    xmlDoc *doc = xmlReadFile(filename, NULL, 0);
+    return "";
+}
+
+int mapLoadTileset(Tileset *pTileset, char *tilesetPath) {
+    xmlDoc *doc = xmlReadFile(tilesetPath, NULL, 0);
     if (!doc) {
-        fprintf(stderr, "Failed to parse %s\n", filename);
-        return;
+        fprintf(stderr, "Failed to parse %s\n", tilesetPath);
+        return 1;
     }
 
     xmlNode *root = xmlDocGetRootElement(doc);
     if (!root || xmlStrcmp(root->name, (const xmlChar *)"tileset") != 0) {
         fprintf(stderr, "Invalid root node\n");
         xmlFreeDoc(doc);
-        return;
+        return 1;
     }
 
-    devTiles->tilecount = xmlGetProp(root, (const xmlChar *)"tilecount");
-    devTiles->columns = xmlGetProp(root, (const xmlChar *)"columns");
+    xmlChar *tmp = xmlGetProp(root, (const xmlChar *)"tilecount");
+    if (tmp == NULL) { return 1; }
+    pTileset->tilecount = atoi((char *)tmp);
+
+    tmp = xmlGetProp(root, (const xmlChar *)"columns");
+    if (tmp == NULL) { return 1; }
+    pTileset->columns = atoi((char *)tmp);
 
     xmlNode *imageNode = root->children;
     while (imageNode && xmlStrcmp(imageNode->name, (const xmlChar *)"image") != 0) {
@@ -83,25 +96,36 @@ void mapLoadTileset(const char *filename, Tileset *devTiles) {
     }
 
     if (imageNode) {
-        devTiles->width = xmlGetProp(imageNode, (const xmlChar *)"width");
-        devTiles->height = xmlGetProp(imageNode, (const xmlChar *)"height");
-        devTiles->imgRef = xmlGetProp(imageNode, (const xmlChar *)"source");
+        tmp = xmlGetProp(imageNode, (const xmlChar *)"width");
+        if (tmp == NULL) { return 1; }
+        pTileset->width = atoi((char *)tmp);
+
+        tmp = xmlGetProp(imageNode, (const xmlChar *)"height");
+        if (tmp == NULL) { return 1; }
+        pTileset->height = atoi((char *)tmp);
+
+        tmp = xmlGetProp(imageNode, (const xmlChar *)"source");
+        if (tmp == NULL) { return 1; }
+        pTileset->source = (char *)tmp;
     }
 
     xmlFreeDoc(doc);
+    return 0;
 }
 
-void mapLoadClient(const char *path, ClientMap *pMap) {
+int mapLoadDataFromFile(Map *pMap, MapIndex index) {
     json_error_t error;
-    json_t *root = json_load_file(path, 0, &error);
-
+    char *pFilePath = mapGetFilePath(pMap->folderPath, index);
+    json_t *root = json_load_file(pFilePath, 0, &error);
     if (!root) {
         fprintf(stderr, "Error loading TMJ: %s (line %d)\n", error.text, error.line);
-        return;
+        return 1;
     }
 
 	pMap->width = json_integer_value(json_object_get(root, "width"));
 	pMap->height = json_integer_value(json_object_get(root, "height"));
+    pMap->tileWidth = json_integer_value(json_object_get(root, "tilewidth"));
+	pMap->tileHeight = json_integer_value(json_object_get(root, "tileheight"));
 
     json_t *layers = json_object_get(root, "layers");
 
@@ -118,114 +142,8 @@ void mapLoadClient(const char *path, ClientMap *pMap) {
         pMap->layerSize[i] = size;
         pMap->layerData[i] = malloc(sizeof(int) * size);  // allocate normal C array
 
-        for (size_t j = 0; j < size; j++) {
-            json_t *tile = json_array_get(data, j);
-            if (!json_is_integer(tile)) {
-                fprintf(stderr, "Invalid tile at %zu in layer %d\n", j, i);
-                pMap->layerData[i][j] = 0; // or handle error
-            } else {
-                pMap->layerData[i][j] = json_integer_value(tile);
-            }
-        }
-    }
-    json_decref(root);
-}
-
-void mapSetTileSheetPosition(ClientMap *pMap, int x, int y) {
-    pMap->tileSheetPosition.x = x;
-    pMap->tileSheetPosition.y = y;
-}
-
-SDL_Texture *mapGetTileTextures(Tileset *pTileset) {
-    return pTileset->tileSheet;
-}
-
-xmlChar *mapGetColumns(Tileset *pTileset) {
-    return pTileset->columns;
-}
-
-int mapGetWidth(ClientMap *pMap) {
-    return pMap->width;
-}
-
-Tileset *mapGetTileset(ClientMap *pMap) {
-    return pMap->layerTiles;
-}
-
-size_t mapGetLayerSize(ClientMap *pMap, int layer) {
-    return pMap->layerSize[layer];
-}
-
-int mapGetLayerData(ClientMap *pMap, int layer, int index) {
-    return pMap->layerData[layer][index];
-}
-
-SDL_Rect mapGetTileSheetPosition(ClientMap *pMap) {
-    return pMap->tileSheetPosition;
-}
-
-void destroyMap(ClientMap *pMap) {
-    if (pMap == NULL) { return; }
-
-    SDL_DestroyTexture(pMap->layerTiles->tileSheet);
-    free(pMap->layerTiles);
-    for (int i = 0; i < MAX_LAYERS; i++) {
-        if (pMap->layerData[i]) { free(pMap->layerData[i]); }
-    }
-    free(pMap);
-
-    return;
-}
-
-//-----------------Server:--------------------------
-
-struct serverMap {
-    int *layerData[MAX_LAYERS];         //Array of data, loaded from .tmj file
-    size_t layerSize[MAX_LAYERS];       //Size of the array
-    int width, height;                  //Width and Height of the entire "Map"   
-};
-
-ServerMap *createServerMap() {
-    ServerMap *pMap = malloc(sizeof(ServerMap));
-
-    for (int i = 0; i < MAX_LAYERS; i++) {
-        pMap->layerData[i] = NULL;
-    }
-    for (int i = 0; i < MAX_LAYERS; i++) {
-        pMap->layerSize[i] = 0;
-    }
-    pMap->height = 0;
-    pMap->width = 0;
-}
-
-void mapLoadServer(const char *path, ServerMap *pMap) {
-    json_error_t error;
-    json_t *root = json_load_file(path, 0, &error);
-
-    if (!root) {
-        fprintf(stderr, "Error loading TMJ: %s (line %d)\n", error.text, error.line);
-        return;
-    }
-
-	pMap->width = json_integer_value(json_object_get(root, "width"));
-	pMap->height = json_integer_value(json_object_get(root, "height"));
-
-
-    
-    json_t *layers = json_object_get(root, "layers");
-
-    for (int i = 0; i < MAX_LAYERS; i++) {
-        json_t *layer = json_array_get(layers, i);
-        json_t *data = json_object_get(layer, "data");
-
-        if (!json_is_array(data)) {
-            fprintf(stderr, "Layer %d data is not an array\n", i);
-            continue;
-        }
-
-        size_t size = json_array_size(data);
-        pMap->layerSize[i] = size;
-        pMap->layerData[i] = malloc(sizeof(int) * size);  // allocate normal C array
+        if (pMap->mapSize.x == 0.0f) { pMap->mapSize.x = (float)json_integer_value(json_object_get(layer, "width"))*32.0f; }
+	    if (pMap->mapSize.y == 0.0f) { pMap->mapSize.y = (float)json_integer_value(json_object_get(layer, "height"))*32.0f; }
 
         for (size_t j = 0; j < size; j++) {
             json_t *tile = json_array_get(data, j);
@@ -236,29 +154,99 @@ void mapLoadServer(const char *path, ServerMap *pMap) {
                 pMap->layerData[i][j] = json_integer_value(tile);
             }
         }
+
+        pMap->layerCount++;
     }
+
+    char tilesetName[MAX_PATH_LENGTH>>1];
+    json_t *tilesets = json_object_get(root, "tilesets");
+    for (int i = 0; i < 2; i++) {
+        json_t *tileset = json_array_get(tilesets, i);
+        json_t *source = json_object_get(tileset, "source");
+
+        strncpy(tilesetName, json_string_value(source), (MAX_PATH_LENGTH>>1)-1);
+    }
+
+    strncpy(pMap->tilesetPath, pMap->folderPath, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
+    strncat(pMap->tilesetPath, tilesetName, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
+    if (mapLoadTileset(pMap->pTileset, pMap->tilesetPath)) { return 1; }
+
+    strncpy(pMap->pTileset->filePath, pMap->folderPath, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
+    strncat(pMap->pTileset->filePath, pMap->pTileset->source, MAX_PATH_LENGTH+(MAX_PATH_LENGTH>>1)-1);
     json_decref(root);
+    return 0;
 }
 
-int mapGetWidth_Server(ServerMap *pMap) {
+int mapGetWidth(Map const *pMap) {
     return pMap->width;
 }
 
-size_t mapGetLayerSize_Server(ServerMap *pMap, int layer) {
+char const *mapGetFolderPath(Map const *pMap) {
+    return pMap->folderPath;
+}
+
+char const *mapGetTilesetPath(Map const *pMap) {
+    return pMap->pTileset->filePath;
+}
+
+int mapGetLayerCount(Map const *pMap) {
+    return pMap->layerCount;
+}
+
+size_t mapGetLayerSize(Map const *pMap, int layer) {
     return pMap->layerSize[layer];
 }
 
-int mapGetLayerData_Server(ServerMap *pMap, int layer, int index) {
+int mapGetLayerData(Map const *pMap, int layer, int index, Vec2 *pPosition) {
+    if (pPosition != NULL) {
+        pPosition->x = (index % pMap->width) * pMap->tileWidth;
+        pPosition->y = (index / pMap->width) * pMap->tileHeight;
+    }
+
     return pMap->layerData[layer][index];
 }
 
-void destroyMap_Server(ServerMap *pMap) {
+Vec2 mapGetSize(Map const *pMap) {
+    return pMap->mapSize;
+}
+
+int mapGetTileWidth(Map const *pMap) {
+    return pMap->tileWidth;
+}
+
+int mapGetTileHeight(Map const *pMap) {
+    return pMap->tileHeight;
+}
+
+bool mapGetTileInfo(Map const *pMap, int index, Entity *pTileToFill) {
+    int gid = mapGetLayerData(pMap, LAYER_TILE_TEXTURES, index, NULL) - 15;
+
+    if (gid > 0) {
+        int columns = pMap->pTileset->columns;
+        pTileToFill->source.x = (gid % columns) * 32;
+        pTileToFill->source.y = (gid / columns) * 32;
+        pTileToFill->source.w = pMap->tileWidth;
+        pTileToFill->source.h = pMap->tileHeight;
+
+        pTileToFill->frame.x = (index % pMap->width) * pMap->tileWidth;
+        pTileToFill->frame.y = (index / pMap->width) * pMap->tileHeight;
+        pTileToFill->frame.w = pMap->tileWidth;
+        pTileToFill->frame.h = pMap->tileHeight;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+void destroyMap(Map *pMap) {
     if (pMap == NULL) { return; }
 
+    free(pMap->pTileset);
     for (int i = 0; i < MAX_LAYERS; i++) {
         if (pMap->layerData[i]) { free(pMap->layerData[i]); }
     }
     free(pMap);
-    
+
     return;
 }
