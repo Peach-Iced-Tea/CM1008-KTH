@@ -92,6 +92,8 @@ $(OBJDIR)/obstacle.o: $(LIBSRC)/obstacle.c $(LIBINC)/obstacle.h
 $(OBJDIR)/platform.o: $(LIBSRC)/platform.c $(LIBINC)/platform.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+$(OBJDIR)/animation.o: $(LIBSRC)/animation.c $(LIBINC)/animation.h
+	$(CC) $(CFLAGS) -o $@ $<
 
 all: $(TARGETCLIENT) $(TARGETSERVER)
 
