@@ -62,7 +62,6 @@ float vectorGetAngle(Vec2 const vector1, Vec2 const vector2) {
     }
     //1st quadrant
     return atanf(dy/dx);
-   
 }
 
 void vectorNorm(Vec2 *vector) {

@@ -118,9 +118,9 @@ void updatePlayer(Game *pGame, Player *pPlayer, Player *pTeammate, float const t
         if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pGame->pObstacles, i)), false)) {
             if (obstacleIsHazardous(arrayGetObject(pGame->pObstacles, i)) == HAZARD_LETHAL) {
                 playerSetState(pPlayer, IDLE);
-                Vec2 tmp = obstacleGetPosition(arrayGetObject(pGame->pCheckpoints, pGame->lastCheckpoint));
-                tmp.y -= 32;
-                playerSetPosition(pPlayer, tmp);
+                Vec2 position = obstacleGetPosition(arrayGetObject(pGame->pCheckpoints, pGame->lastCheckpoint));
+                position.y -= playerGetBody(pPlayer).frame.h*0.5f;
+                playerSetPosition(pPlayer, position);
             }
         }
     }
