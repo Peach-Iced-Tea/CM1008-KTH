@@ -4,6 +4,7 @@
 #define TRACKING_MODIFIER 5 // This is used to make the camera movement less jumpy when tracking a target.
 #define CAMERA_OFFSET_X 32
 #define CAMERA_OFFSET_Y 72
+#define CAMERA_VELOCITY 4.0f
 
 typedef struct {
     int width;
@@ -68,6 +69,18 @@ void cameraHandleInput(Camera *pCamera, Input const *pInput) {
     if (getKeyState(pInput, KEY_ALT)) {
         if (getKeyState(pInput, KEY_COMMA)) { cameraSetZoom(pCamera, pCamera->currentZoom-0.010f); }
         if (getKeyState(pInput, KEY_PERIOD)) { cameraSetZoom(pCamera, pCamera->currentZoom+0.010f); }
+    }
+
+    switch (pCamera->mode) {
+        case FIXED:
+            Vec2 velocity;
+            if (getKeyState(pInput, KEY_UP)) { velocity.y = -CAMERA_VELOCITY; }
+            if (getKeyState(pInput, KEY_DOWN)) { velocity.y += CAMERA_VELOCITY; }
+            if (getKeyState(pInput, KEY_LEFT)) { velocity.x = -CAMERA_VELOCITY; }
+            if (getKeyState(pInput, KEY_RIGHT)) { velocity.x += CAMERA_VELOCITY; }
+
+            pCamera->velocity = velocity;
+            break;
     }
 
     return;
@@ -144,6 +157,20 @@ int cameraUpdate(Camera *pCamera, Entity const target1, Entity const target2) {
 
     switch (pCamera->mode) {
         case FIXED:
+            vectorAdd(&(pCamera->position), pCamera->position, pCamera->velocity);
+            if (pCamera->position.x-pCamera->logicalWidth*0.5f < 0.0f) {
+            pCamera->position.x = pCamera->logicalWidth*0.5f;
+            }
+            else if (pCamera->position.x+pCamera->logicalWidth*0.5f > pCamera->mapSize.x) {
+                pCamera->position.x = pCamera->mapSize.x - pCamera->logicalWidth*0.5f;
+            }
+
+            if (pCamera->position.y-pCamera->logicalHeight*0.5f < 0.0f) {
+                pCamera->position.y = pCamera->logicalHeight*0.5f;
+            }
+            else if (pCamera->position.y+pCamera->logicalHeight*0.5f > pCamera->mapSize.y) {
+                pCamera->position.y = pCamera->mapSize.y - pCamera->logicalHeight*0.5f;
+            }
             break;
         case TRACKING_T1:
             cameraTrackTarget(pCamera, entityGetMidPoint(target1));

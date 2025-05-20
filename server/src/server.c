@@ -150,9 +150,15 @@ void updatePlayer(Server *pServer, Player *pPlayer, Player *pTeammate, int playe
     for (int i = 0; i < arrayGetSize(pServer->pObstacles); i++) {
         if (playerCheckCollision(pPlayer, obstacleGetHitbox(arrayGetObject(pServer->pObstacles, i)), false)) {
             playerSetState(pPlayer, IDLE);
-            Vec2 tmp = obstacleGetPosition(arrayGetObject(pServer->pCheckpoints, pServer->lastCheckpoint[playerID]));
-            tmp.y -= 32;
-            playerSetPosition(pPlayer, tmp);
+            if (pServer->lastCheckpoint[playerID] == -1) {
+                Vec2 position = createVector(PLAYER_START_X, PLAYER_START_Y);
+                playerSetPosition(pPlayer, position);
+            }
+            else {
+                Vec2 position = obstacleGetPosition(arrayGetObject(pServer->pCheckpoints, pServer->lastCheckpoint[playerID]));
+                position.y -= playerGetBody(pPlayer).frame.h*0.5f;
+                playerSetPosition(pPlayer, position);
+            }
         }
     }
 
