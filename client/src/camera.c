@@ -39,8 +39,6 @@ Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRend
     pCamera->position = createVector(0.0f, 0.0f);
     pCamera->velocity = createVector(0.0f, 0.0f);
 
-    pCamera->display.width = width;
-    pCamera->display.height = height;
     pCamera->display.refreshRate = refreshRate;
     pCamera->display.aspectRatio = (float)width/height;
     pCamera->logicalWidth = REFERENCE_WIDTH;
@@ -52,6 +50,8 @@ Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRend
         pCamera->logicalHeight = REFERENCE_WIDTH / pCamera->display.aspectRatio;
     }
 
+    pCamera->display.width = pCamera->logicalWidth;
+    pCamera->display.height = pCamera->logicalHeight;
     pCamera->pRenderer = pRenderer;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
     cameraSetMode(pCamera, cameraMode);
@@ -78,6 +78,9 @@ void cameraHandleInput(Camera *pCamera, Input const *pInput) {
             if (getKeyState(pInput, KEY_DOWN)) { velocity.y += CAMERA_VELOCITY; }
             if (getKeyState(pInput, KEY_LEFT)) { velocity.x = -CAMERA_VELOCITY; }
             if (getKeyState(pInput, KEY_RIGHT)) { velocity.x += CAMERA_VELOCITY; }
+
+            if (getKeyState(pInput, KEY_LSHIFT)) { vectorScale(&velocity, 2.5f); }
+            if (getKeyState(pInput, KEY_LCTRL)) { vectorScale(&velocity, 1.0f/CAMERA_VELOCITY); }
 
             pCamera->velocity = velocity;
             break;
@@ -260,11 +263,11 @@ int cameraSetMode(Camera *pCamera, int newMode) {
 int cameraSetZoom(Camera *pCamera, float zoomScale) {
     if (pCamera == NULL) { return IS_NULL; }
 
-    if (zoomScale > MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
-    else if (zoomScale < MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
+    if (zoomScale < MAX_ZOOM_IN) { zoomScale = MAX_ZOOM_IN; }
+    else if (zoomScale > MAX_ZOOM_OUT) { zoomScale = MAX_ZOOM_OUT; }
 
-    pCamera->logicalWidth *= zoomScale;
-    pCamera->logicalHeight *= zoomScale;
+    pCamera->logicalWidth = zoomScale * pCamera->display.width;
+    pCamera->logicalHeight = zoomScale * pCamera->display.height;
     pCamera->currentZoom = zoomScale;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
     return 0;
