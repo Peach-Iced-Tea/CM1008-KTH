@@ -1,7 +1,7 @@
 #include "renderWindow.h"
 
 typedef enum {
-    WINDOWED, BORDERLESS, FULLSCREEN, EXCLUSIVE, ALT_TABBED
+    WINDOWED, FULLSCREEN, EXCLUSIVE, ALT_TABBED
 } WindowState;
 
 typedef struct textures {
@@ -54,7 +54,7 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-    pTextures->pPlatform = IMG_LoadTexture(pRenderer, "lib/resources/player1.png");
+    pTextures->pPlatform = IMG_LoadTexture(pRenderer, "lib/resources/movingPlatform.png");
     if (pTextures->pPlatform == NULL) {
         printf("Error: %s\n", SDL_GetError());
         return 1;
@@ -117,10 +117,6 @@ void toggleFullscreen(RenderWindow *pWindow) {
             SDL_SetWindowPosition(pWindow->pWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
             SDL_SetRelativeMouseMode(SDL_FALSE);
             printf("Window State: Windowed\n");
-            break;
-        case BORDERLESS:
-            SDL_SetWindowBordered(pWindow->pWindow, SDL_FALSE);
-            printf("Window State: Borderless\n");
             break;
         case FULLSCREEN:
             SDL_SetWindowFullscreen(pWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);

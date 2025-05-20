@@ -30,6 +30,13 @@ MovablePlatform *createPlatform(Vec2 position, int width, PlatformType type) {
         case PLATFORM_FLAT:
             for (int i = 0; i < pPlatform->size; i++) {
                 if (entityInitData(&(pPlatform->body[i]), initPosition, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+
+                if (i > 0 && i < pPlatform->size-1) {
+                    pPlatform->body[i].source.x = 32;
+                }
+                else if (i == pPlatform->size-1) {
+                    pPlatform->body[i].source.x = 64;
+                }
                 initPosition.x += 32.0f;
             }
             break;
@@ -38,13 +45,26 @@ MovablePlatform *createPlatform(Vec2 position, int width, PlatformType type) {
 
             for (int i = 0; i < pPlatform->size; i++) {
                 if (entityInitData(&(pPlatform->body[i]), initPosition, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+
+                if (i > 0 && i < pPlatform->size-1) {
+                    pPlatform->body[i].source.x = 32;
+                }
+
                 initPosition.x += 32.0f;
 
                 if (i == pPlatform->size-1) {
+                    pPlatform->body[i].source.x = 64;
                     initPosition.y += 32.0f;
                     initPosition.x = position.x+32.0f;
                     for (int j = 0; j < pPlatform->size-2; j++) {
                         if (entityInitData(&(pPlatform->body[i+j+1]), initPosition, ENTITY_DEFAULT, HITBOX_FULL_BLOCK)) { return NULL; }
+
+                        if (j > 0 && j < pPlatform->size-3) {
+                            pPlatform->body[i+j+1].source.x = 32;
+                        }
+                        else if (j == pPlatform->size-3) {
+                            pPlatform->body[i+j+1].source.x = 64;
+                        }
                         initPosition.x += 32.0f;
                     }
                 }
