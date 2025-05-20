@@ -89,6 +89,8 @@ $(OBJDIR)/mapParser.o: $(LIBSRC)/mapParser.c $(LIBINC)/mapParser.h
 $(OBJDIR)/obstacle.o: $(LIBSRC)/obstacle.c $(LIBINC)/obstacle.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+$(OBJDIR)/animation.o: $(LIBSRC)/animation.c $(LIBINC)/animation.h
+	$(CC) $(CFLAGS) -o $@ $<
 
 all: $(TARGETCLIENT) $(TARGETSERVER)
 

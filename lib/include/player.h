@@ -5,6 +5,7 @@
 #include "vmath.h"
 #include "input.h"
 #include "tongue.h"
+#include "animation.h"
 
 #define PLAYER_1 0
 #define PLAYER_2 1

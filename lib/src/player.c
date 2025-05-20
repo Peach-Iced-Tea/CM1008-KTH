@@ -30,6 +30,7 @@ struct player {
     float referenceAngle;
     float targetAngle;
     Entity *pGrabbedEntity;
+    int animationTimer;
 };
 
 void initActionLock(ActionLock *pLock) {
@@ -58,6 +59,8 @@ Player *createPlayer(Vec2 position, int id) {
     pPlayer->targetAngle = 0.0f;
 
     pPlayer->pGrabbedEntity = NULL;
+    
+    pPlayer->animationTimer = 0;
     return pPlayer;
 }
 
@@ -156,20 +159,27 @@ void playerUpdateAnimation(Player *pPlayer) {
     SDL_Rect animation;
     animation.x = 0;
     animation.y = 0;
-    animation.w = pPlayer->body.source.w;
-    animation.h = pPlayer->body.source.h;
-    if (pPlayer->velocity.x < 0.0f) {
-        animation.x = 32;
-    }
-    else if (pPlayer->velocity.x == 0.0f) {
-        animation.x = pPlayer->body.source.x;
-    }
+    animation.w = playerGetBody(pPlayer).source.h;
+    animation.h = playerGetBody(pPlayer).source.w;
 
-    switch (pPlayer->state) {
+
+    float angle = playerGetInfo(pPlayer).tongueAngle;
+    
+/*     if (playerGetInfo(pPlayer).velocity.x < 0.0f) {
+        animation.x = 32;
+    } */
+  /*   else if (playerGetInfo(pPlayer).velocity.x == 0.0f) {
+        animation.x = playerGetBody(pPlayer).source.x;
+    }
+ */
+    switch (playerGetInfo(pPlayer).state) {
         case IDLE:
-        case RUNNING:
         case FLYING:
             animation.y = 0;
+            break;
+        case RUNNING:
+            animation.y = pPlayer->body.source.y;
+            animationUpdateRunning(&animation, &(pPlayer->animationTimer));
             break;
         case FALLING:
             animation.y = 64;
@@ -179,46 +189,24 @@ void playerUpdateAnimation(Player *pPlayer) {
             break;
         case SHOOTING:
         case ROTATING:
-            if ((2 * M_PI - (M_PI / 12.0f)) < pPlayer->referenceAngle) {
-                animation.x = 64;
-                animation.y = 32;
+            if (animationUpdateRotation(&animation, angle)) {
+                pPlayer->body.flip = SDL_FLIP_HORIZONTAL;
             }
-            else if (pPlayer->referenceAngle < (M_PI / 12.0f)) {
-                animation.x = 64;
-                animation.y = 32;
+            else {
+                pPlayer->body.flip = SDL_FLIP_NONE;
             }
-            else if ((M_PI / 12.0f) < pPlayer->referenceAngle && pPlayer->referenceAngle < ((M_PI / 2.0f) - (M_PI / 12.0f))) {
-                animation.x = 64;
-                animation.y = 64;
-            }
-            else if (((M_PI / 2.0f) - (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < ((M_PI / 2.0f) + (M_PI / 12.0f))) {
-                animation.x = 64;
-                animation.y = 96;
-            }
-            else if (((M_PI / 2.0f) + (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (M_PI - (M_PI / 12.0f))) {
-                animation.x = 96;
-                animation.y = 64;
-            }
-            else if ((M_PI - (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (M_PI + (M_PI / 12.0f))) {
-                animation.x = 96;
-                animation.y = 32;
-            }
-            else if ((M_PI + (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (((3 * M_PI) / 2.0f) - (M_PI / 12.0f))) {
-                animation.x = 96;
-                animation.y = 0;
-            }
-            else if ((((3 * M_PI) / 2.0f) - (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (((3 * M_PI) / 2.0f) + (M_PI / 12.0f))) {
-                animation.x = 96;
-                animation.y = 96;
-            }
-            else if ((((3 * M_PI) / 2.0f) + (M_PI / 12.0f)) < pPlayer->referenceAngle && pPlayer->referenceAngle < (M_PI * 2.0f - (M_PI / 12.0f))) {
-                animation.x = 64;
-                animation.y = 0;
-            }
+            
             break;
     }
+    if (playerGetInfo(pPlayer).velocity.x < 0.0f) {
+        pPlayer->body.flip = SDL_FLIP_HORIZONTAL;
+    }
+    else if (playerGetInfo(pPlayer).velocity.x > 0.0f) {
+        pPlayer->body.flip = SDL_FLIP_NONE;
+    }
 
-    entitySetSource(&(pPlayer->body), animation);
+    pPlayer->body.source = animation;
+
     return;
 }
 
