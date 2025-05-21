@@ -23,8 +23,6 @@ struct renderWindow {
     WindowState lastState;
     Textures textures;
     Camera *pCamera;
-    int width;
-    int height;
     bool renderHitboxes;
     int nrOfRenderedEntites;    // Used for debugging purposes.
 };
@@ -70,7 +68,7 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
     return 0;
 }
 
-RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
+RenderWindow *createRenderWindow(const char* pTitle) {
     RenderWindow *pWindow = malloc(sizeof(RenderWindow));
     pWindow->pWindow = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_FULLSCREEN_DESKTOP);
     if (!pWindow->pWindow) {
@@ -95,9 +93,7 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
 
     if (loadTextures(&(pWindow->textures), pWindow->pRenderer)) { return NULL; }
 
-    pWindow->pCamera = NULL;
-    pWindow->width = w;
-    pWindow->height = h;
+    pWindow->pCamera = createCamera(pWindow->pRenderer, TRACKING_T1);
     pWindow->renderHitboxes = false;
     SDL_SetWindowIcon(pWindow->pWindow, IMG_Load("lib/resources/gameIcon.png"));
 
@@ -119,14 +115,12 @@ void toggleFullscreen(RenderWindow *pWindow) {
         case WINDOWED:
             SDL_SetWindowFullscreen(pWindow->pWindow, 0);
             SDL_SetWindowBordered(pWindow->pWindow, SDL_TRUE);
-            SDL_SetWindowSize(pWindow->pWindow, 1280, 720);
             SDL_SetWindowPosition(pWindow->pWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
             SDL_SetRelativeMouseMode(SDL_FALSE);
             printf("Window State: Windowed\n");
             break;
         case FULLSCREEN:
             SDL_SetWindowFullscreen(pWindow->pWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-            SDL_SetWindowSize(pWindow->pWindow, pWindow->width, pWindow->height);
             SDL_SetRelativeMouseMode(SDL_TRUE);
             printf("Window State: Fullscreen\n");
             break;
@@ -221,12 +215,12 @@ void windowRenderHitbox(RenderWindow *pWindow, Hitbox const *pHitbox) {
     return;
 }
 
-void windowRenderMenu(RenderWindow const *pWindow, SDL_Texture *pTexture, Entity const *menuButtons, int nrOfButtons) {
+void windowRenderMenu(RenderWindow const *pWindow, SDL_Texture *pMenuTexture, Entity const *menuButtons, int nrOfButtons) {
     for (int i = 0; i < nrOfButtons; i++) {
         SDL_Rect src = menuButtons[i].source;
         SDL_FRect dst = menuButtons[i].frame;
 
-        SDL_RenderCopyF(pWindow->pRenderer, pTexture, &src, &dst);
+        SDL_RenderCopyF(pWindow->pRenderer, pMenuTexture, &src, &dst);
     }
     
     return;
@@ -318,14 +312,6 @@ SDL_Renderer *windowGetRenderer(RenderWindow const *pWindow) {
     return pWindow->pRenderer;
 }
 
-int windowGetWidth(RenderWindow const *pWindow) {
-    return pWindow->width;
-}
-
-int windowGetHeight(RenderWindow const *pWindow) {
-    return pWindow->height;
-}
-
 Camera *windowGetCamera(RenderWindow const *pWindow) {
     return pWindow->pCamera;
 }
@@ -335,6 +321,8 @@ void destroyRenderWindow(RenderWindow *pWindow) {
     
     SDL_DestroyWindow(pWindow->pWindow);
     SDL_DestroyRenderer(pWindow->pRenderer);
+    if (pWindow->pCamera) { destroyCamera(pWindow->pCamera); }
+    
     free(pWindow);
     return;
 }

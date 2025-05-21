@@ -29,7 +29,7 @@ typedef struct camera Camera;
 /*
 Create a Camera with the current resolution of the game window.
 */
-Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *renderer, int cameraMode);
+Camera *createCamera(SDL_Renderer *renderer, int cameraMode);
 
 /*
 Handles key inputs related to the functions of the Camera data type.

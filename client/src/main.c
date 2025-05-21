@@ -7,7 +7,6 @@ void cleanUp(Game *pGame) {
     }
 
     if (pGame->pMouse) { destroyMouse(pGame->pMouse); }
-    if (pGame->pCamera) { destroyCamera(pGame->pCamera); }
     if (pGame->pWindow) { destroyRenderWindow(pGame->pWindow); }
     if (pGame->pHitforms) { destroyDynamicArray(pGame->pHitforms); }
     if (pGame->pCheckpoints) { destroyDynamicArray(pGame->pCheckpoints); }
@@ -23,12 +22,7 @@ void cleanUp(Game *pGame) {
 }
 
 int initGame(Game *pGame) {
-    // Get information about the main display, such as pixel width and pixel height.
-    SDL_DisplayMode mainDisplay;
-    SDL_GetDesktopDisplayMode(0, &mainDisplay);
-    printf("width: %d, height: %d\n", mainDisplay.w, mainDisplay.h);
-
-    pGame->pWindow = createRenderWindow("Hoppless", mainDisplay.w, mainDisplay.h);
+    pGame->pWindow = createRenderWindow("Hoppless");
     if (pGame->pWindow == NULL) { return 1; }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -36,13 +30,10 @@ int initGame(Game *pGame) {
         if (pGame->players[i] == NULL) { return 1; }
     }
 
-    pGame->pCamera = createCamera(mainDisplay.w, mainDisplay.h, mainDisplay.refresh_rate, windowGetRenderer(pGame->pWindow), TRACKING_T1);
-    if (pGame->pCamera == NULL) { return 1; }
-
     pGame->pInput = createInputTracker();
     if (pGame->pInput == NULL) { return 1; }
 
-    pGame->pMenu = createMenu(windowGetRenderer(pGame->pWindow), pGame->pCamera);
+    pGame->pMenu = createMenu(windowGetRenderer(pGame->pWindow), windowGetCamera(pGame->pWindow));
     if (pGame->pMenu == NULL) { return 1; }
 
     pGame->pClient = createClient(0);
@@ -204,63 +195,6 @@ void updateDisplay(Game *pGame, Vec2 mousePosition) {
     return;
 }
 
-void handleTick(Game *pGame, Player *pTeammate) {
-    Player *pPlayer = pGame->players[clientGetPlayerID(pGame->pClient)];
-    playerUpdateAnimation(pPlayer);
-    playerUpdateState(pPlayer);
-
-    InputData input;
-    prepareInputData(&input, pPlayer, 0);
-    clientAddInputToBuffer(pGame->pClient, input);
-    clientSendPacket(pGame->pClient);
-
-    ServerPayload payload;
-    while (clientReceivePacket(pGame->pClient, &payload)) {
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            if (payload.entities[i].entityID == -1) { continue; }
-
-            if (payload.entities[i].entityID == 0) {
-                //logic for moving Entity on both screens
-            }
-        }
-
-        if (clientGetLastServerTick(pGame->pClient) < payload.serverTick){
-            int missingTicks = payload.serverTick - clientGetLastServerTick(pGame->pClient);
-            platformMove(pGame->pPlatform);
-            clientSetLastServerTick(pGame->pClient, payload.serverTick);
-        }
-
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            if (i == clientGetPlayerID(pGame->pClient)) {
-                if (payload.players[i].state != LOCKED) {
-                    if (playerGetInfo(pPlayer).state == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
-                    if (payload.players[i].state == ROTATING) {
-                        playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
-                        playerOverrideState(pPlayer, payload.players[i].state);
-                    }
-
-                    if (clientCheckServerPayload(pGame->pClient, payload.players[i])) {
-                        clientHandleServerReconciliation(pGame->pClient, pPlayer, pGame->pHitforms);
-                    }
-                }
-                else {
-                    playerOverrideState(pGame->players[i], payload.players[i].state);
-                    playerSetPosition(pGame->players[i], payload.players[i].position);
-                }
-            }
-            else {
-                playerSetPosition(pGame->players[i], payload.players[i].position);
-                tongueSetPosition(playerGetTongue(pGame->players[i]), payload.players[i].tonguePosition);
-                tongueCalculateShaft(playerGetTongue(pGame->players[i]), entityGetMidPoint(playerGetBody(pGame->players[i])), payload.players[i].tonguePosition);
-                playerOverrideState(pGame->players[i], payload.players[i].state);
-                playerSetSheetPosition(pGame->players[i], payload.players[i].sheetPosition, payload.players[i].sheetFlip);
-            }
-        }
-    }
-
-    return;
-}
-
 bool initiateConnection(Game *pGame) {
     bool gameRunning = true;
     char serverAddress[IP_MAX_LENGTH];
@@ -314,9 +248,9 @@ int main(int argv, char** args) {
 
     Player *pPlayer = game.players[0];
     Player *pTeammate = game.players[1];
-    windowSetCamera(game.pWindow, game.pCamera);
-    cameraSetMapSize(game.pCamera, mapGetSize(game.pMap));
+    cameraSetMapSize(windowGetCamera(game.pWindow), mapGetSize(game.pMap));
 
+    bool endScreenIsDisplayed = false;
     int gameState = GAME_CONNECTING;
     bool gameRunning = true;
     while (gameRunning) {
@@ -352,10 +286,10 @@ int main(int argv, char** args) {
                 }
 
                 playerHandleInput(pPlayer, game.pInput);
-                cameraHandleInput(game.pCamera, game.pInput);
+                cameraHandleInput(windowGetCamera(game.pWindow), game.pInput);
                 windowHandleInput(game.pWindow, game.pInput);
                 mouseHandleInput(game.pMouse, game.pInput);
-                mouseUpdatePosition(game.pMouse, cameraGetPosition(game.pCamera));
+                mouseUpdatePosition(game.pMouse, cameraGetPosition(windowGetCamera(game.pWindow)));
 
                 Vec2 mousePosition = mouseGetPosition(game.pMouse);
                 tongueSetMousePosition(playerGetTongue(pPlayer), mousePosition);
@@ -369,7 +303,11 @@ int main(int argv, char** args) {
                 while (accumulator >= timestep) {
                     // Add physics related calculations here...
                     inputHoldTimer(game.pInput);
-                    handleTick(&game, pTeammate);
+                    playerUpdateAnimation(pPlayer);
+                    playerUpdateState(pPlayer);
+                    int missingTicks = clientHandleTick(game.pClient, pPlayer, pTeammate, game.pHitforms);
+                    for (int i = 0; i < missingTicks; i++) { platformMove(game.pPlatform); }
+
                     updatePlayer(&game, pPlayer, pTeammate, timestep);
                     StateData state;
                     prepareStateData(&state, pPlayer, 0);
@@ -378,8 +316,8 @@ int main(int argv, char** args) {
                     accumulator -= timestep;
                 }
         
-                cameraUpdate(game.pCamera, playerGetBody(pPlayer), playerGetBody(pTeammate));
-                mouseSetBorders(game.pMouse, (float)cameraGetWidth(game.pCamera), (float)cameraGetHeight(game.pCamera));
+                cameraUpdate(windowGetCamera(game.pWindow), playerGetBody(pPlayer), playerGetBody(pTeammate));
+                mouseSetBorders(game.pMouse, (float)cameraGetWidth(windowGetCamera(game.pWindow)), (float)cameraGetHeight(windowGetCamera(game.pWindow)));
                 updateDisplay(&game, mousePosition);
                 
                 break;
@@ -389,10 +327,12 @@ int main(int argv, char** args) {
                     continue;
                 }
                 
-                Vec2 displayMiddle = createVector(windowGetWidth(game.pWindow)*0.5f, windowGetHeight(game.pWindow)*0.5f);
-                windowRenderText(game.pWindow, "Game Won!", 0.5f, 0.45f);
-                windowRenderText(game.pWindow, "ESC to exit", 0.5f, 0.55f);
-                windowDisplayFrame(game.pWindow);
+                if (!endScreenIsDisplayed) {
+                    windowRenderText(game.pWindow, "Game Won!", 0.5f, 0.45f);
+                    windowRenderText(game.pWindow, "ESC to exit", 0.5f, 0.55f);
+                    windowDisplayFrame(game.pWindow);
+                    endScreenIsDisplayed = true;
+                }
                 
                 break;
             case GAME_CLOSING:

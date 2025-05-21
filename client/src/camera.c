@@ -35,13 +35,15 @@ struct camera {
     float currentZoom;
 };
 
-Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRenderer, int cameraMode) {
+Camera *createCamera(SDL_Renderer *pRenderer, int cameraMode) {
+    SDL_DisplayMode mainDisplay;
+    SDL_GetDesktopDisplayMode(0, &mainDisplay);
     Camera *pCamera = malloc(sizeof(Camera));
     pCamera->position = createVector(0.0f, 0.0f);
     pCamera->velocity = createVector(0.0f, 0.0f);
 
-    pCamera->display.refreshRate = refreshRate;
-    pCamera->display.aspectRatio = (float)width/height;
+    pCamera->display.refreshRate = mainDisplay.refresh_rate;
+    pCamera->display.aspectRatio = (float)mainDisplay.w/mainDisplay.h;
     pCamera->logicalWidth = REFERENCE_WIDTH;
     pCamera->logicalHeight = REFERENCE_HEIGHT;
     if (pCamera->display.aspectRatio > REFERENCE_WIDTH/REFERENCE_HEIGHT) {
@@ -53,7 +55,7 @@ Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRend
 
     pCamera->display.width = pCamera->logicalWidth;
     pCamera->display.height = pCamera->logicalHeight;
-    pCamera->display.scale = (float)width/pCamera->logicalWidth;
+    pCamera->display.scale = (float)mainDisplay.w/pCamera->logicalWidth;
     pCamera->pRenderer = pRenderer;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
     cameraSetMode(pCamera, cameraMode);

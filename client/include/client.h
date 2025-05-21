@@ -64,6 +64,11 @@ int clientCheckServerPayload(Client *client, StateData latestServerState);
 /*
 
 */
+int clientHandleTick(Client *client, Player *player, Player *teammate, DynamicArray *hitforms);
+
+/*
+
+*/
 void clientSetLastServerTick(Client *client, int newTick);
 
 /*

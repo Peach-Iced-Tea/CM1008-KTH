@@ -41,6 +41,7 @@ Client *createClient(int port) {
 
     SDLNet_ResolveHost(&(pClient->serverAddress), "127.0.0.1", SERVER_PORT);
     pClient->currentTick = 0;
+    pClient->lastServerTick = -1;
 
     return pClient;
 }
@@ -209,6 +210,59 @@ int clientCheckServerPayload(Client *pClient, StateData latestServerState) {
     }
 
     return 0;
+}
+
+int clientHandleTick(Client *pClient, Player *pPlayer, Player *pTeammate, DynamicArray *pHitforms) {
+    InputData input;
+    prepareInputData(&input, pPlayer, 0);
+    clientAddInputToBuffer(pClient, input);
+    clientSendPacket(pClient);
+
+    int missingTicks = 0;
+    ServerPayload payload;
+    while (clientReceivePacket(pClient, &payload)) {
+        for (int i = 0; i < MAX_PLAYERS; i++) {
+            if (payload.entities[i].entityID == -1) { continue; }
+
+            if (payload.entities[i].entityID == 0) {
+                //logic for moving Entity on both screens
+            }
+        }
+
+        if (pClient->lastServerTick < payload.serverTick) {
+            missingTicks += payload.serverTick - pClient->lastServerTick;
+            pClient->lastServerTick = payload.serverTick;
+        }
+
+        for (int i = 0; i < MAX_PLAYERS; i++) {
+            if (i == pClient->payload.playerID) {
+                if (payload.players[i].state != LOCKED) {
+                    if (playerGetInfo(pPlayer).state == LOCKED) { playerOverrideState(pPlayer, payload.players[i].state); }
+                    if (payload.players[i].state == ROTATING) {
+                        playerSetGrabbedEntity(pPlayer, NULL, pTeammate);
+                        playerOverrideState(pPlayer, payload.players[i].state);
+                    }
+
+                    if (clientCheckServerPayload(pClient, payload.players[i])) {
+                        clientHandleServerReconciliation(pClient, pPlayer, pHitforms);
+                    }
+                }
+                else {
+                    playerOverrideState(pPlayer, payload.players[i].state);
+                    playerSetPosition(pPlayer, payload.players[i].position);
+                }
+            }
+            else {
+                playerSetPosition(pTeammate, payload.players[i].position);
+                tongueSetPosition(playerGetTongue(pTeammate), payload.players[i].tonguePosition);
+                tongueCalculateShaft(playerGetTongue(pTeammate), entityGetMidPoint(playerGetBody(pTeammate)), payload.players[i].tonguePosition);
+                playerOverrideState(pTeammate, payload.players[i].state);
+                playerSetSheetPosition(pTeammate, payload.players[i].sheetPosition, payload.players[i].sheetFlip);
+            }
+        }
+    }
+
+    return missingTicks;
 }
 
 void clientSetLastServerTick(Client *pClient, int newTick) {

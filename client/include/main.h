@@ -18,7 +18,6 @@
 
 typedef struct {
     RenderWindow *pWindow;
-    Camera *pCamera;
     Player *players[MAX_PLAYERS];
     Input *pInput;
     Menu *pMenu;

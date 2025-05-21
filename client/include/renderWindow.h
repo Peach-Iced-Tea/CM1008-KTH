@@ -16,7 +16,7 @@ typedef enum RenderType {
 
 typedef struct renderWindow RenderWindow;
 
-RenderWindow *createRenderWindow(char const *title, int w, int h);
+RenderWindow *createRenderWindow(char const *title);
 
 /*
 Load a map tileset from the given file path.
@@ -40,12 +40,13 @@ void windowRenderHitbox(RenderWindow *renderWindow, Hitbox const *hitbox);
 /*
 Renders a menu with a specified amount of buttons, expects the position and source to be given for each button.
 */
-void windowRenderMenu(RenderWindow const *renderWindow, SDL_Texture *texture, Entity const *menuButtons, int nrOfButtons);
+void windowRenderMenu(RenderWindow const *renderWindow, SDL_Texture *menuTexture, Entity const *menuButtons, int nrOfButtons);
 
 /*
 Renders the given text on the screen in the color white.
 
-The position given with x and y represents the middle point of the text.
+Width and height modifiers positions the text based on the current resolution.
+A value of 0.5f for widthModifier and heightModifier would mean placing the text in the middle of the window.
 */
 void windowRenderText(RenderWindow *renderWindow, char const textToRender[], float widthModifier, float heightModifier);
 
@@ -80,16 +81,6 @@ void windowSetCamera(RenderWindow *window, Camera *camera);
 Get the SDL_Renderer* from the given RenderWindow.
 */
 SDL_Renderer *windowGetRenderer(RenderWindow const *renderWindow);
-
-/*
-Get the full window width of the given RenderWindow.
-*/
-int windowGetWidth(RenderWindow const *renderWindow);
-
-/*
-Get the full window height of the given RenderWindow.
-*/
-int windowGetHeight(RenderWindow const *renderWindow);
 
 /*
 Get the camera currently tied to the given RenderWindow.
