@@ -115,6 +115,11 @@ Returns the current mode that the given Camera is set to.
 CameraMode cameraGetMode(Camera const *camera);
 
 /*
+
+*/
+float cameraGetDisplayScale(Camera const *camera);
+
+/*
 Use this function to destroy the given Camera pointer and free up memory.
 */
 void destroyCamera(Camera *camera);

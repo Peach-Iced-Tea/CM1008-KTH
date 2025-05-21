@@ -40,14 +40,14 @@ void windowRenderHitbox(RenderWindow *renderWindow, Hitbox const *hitbox);
 /*
 Renders a menu with a specified amount of buttons, expects the position and source to be given for each button.
 */
-void windowRenderMenu(RenderWindow *renderWindow, SDL_Texture *texture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons);
+void windowRenderMenu(RenderWindow const *renderWindow, SDL_Texture *texture, Entity const *menuButtons, int nrOfButtons);
 
 /*
 Renders the given text on the screen in the color white.
 
 The position given with x and y represents the middle point of the text.
 */
-void windowRenderText(RenderWindow *renderWindow, char const textToRender[], int x, int y);
+void windowRenderText(RenderWindow *renderWindow, char const textToRender[], float widthModifier, float heightModifier);
 
 /*
 Renders the given Entity on the screen if it is visible inside the camera dimensions.
@@ -90,6 +90,11 @@ int windowGetWidth(RenderWindow const *renderWindow);
 Get the full window height of the given RenderWindow.
 */
 int windowGetHeight(RenderWindow const *renderWindow);
+
+/*
+Get the camera currently tied to the given RenderWindow.
+*/
+Camera *windowGetCamera(RenderWindow const *renderWindow);
 
 /*
 Use this function to destroy the given RenderWindow pointer and free up memory.

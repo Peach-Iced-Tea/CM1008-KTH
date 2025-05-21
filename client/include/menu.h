@@ -11,7 +11,7 @@
 
 typedef struct menu Menu;
 
-Menu *createMenu(SDL_Renderer *renderer);
+Menu *createMenu(SDL_Renderer *renderer, Camera const *pCamera);
 
 /*
 Displays the main menu of the game, and waits for user input.

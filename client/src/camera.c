@@ -11,6 +11,7 @@ typedef struct {
     int height;
     int refreshRate;
     float aspectRatio;
+    float scale;
 } Display;
 
 typedef struct {
@@ -52,6 +53,7 @@ Camera *createCamera(int width, int height, int refreshRate, SDL_Renderer *pRend
 
     pCamera->display.width = pCamera->logicalWidth;
     pCamera->display.height = pCamera->logicalHeight;
+    pCamera->display.scale = (float)width/pCamera->logicalWidth;
     pCamera->pRenderer = pRenderer;
     SDL_RenderSetLogicalSize(pCamera->pRenderer, pCamera->logicalWidth, pCamera->logicalHeight);
     cameraSetMode(pCamera, cameraMode);
@@ -286,8 +288,8 @@ Vec2 cameraGetMousePosition(Camera const *pCamera) {
     Vec2 mousePosition = createVector(0.0f, 0.0f);
     int x, y;
     SDL_GetMouseState(&x, &y);
-    float cameraOffsetX = ((float)x - (float)pCamera->display.width*0.5f)/(pCamera->currentZoom);
-    float cameraOffsetY = ((float)y - (float)pCamera->display.height*0.5f)/(pCamera->currentZoom);
+    float cameraOffsetX = ((float)x / pCamera->display.scale) - (float)pCamera->logicalWidth*0.5f;
+    float cameraOffsetY = ((float)y / pCamera->display.scale) - (float)pCamera->logicalHeight*0.5f;
     float offsetY = pCamera->tracker.offsetY;
     mousePosition.x = pCamera->position.x + cameraOffsetX;
     mousePosition.y = pCamera->position.y + cameraOffsetY;
@@ -317,6 +319,10 @@ CameraMode cameraGetMode(Camera const *pCamera) {
     if (pCamera == NULL) { return IS_NULL; }
 
     return pCamera->mode;
+}
+
+float cameraGetDisplayScale(Camera const *pCamera) {
+    return pCamera->display.scale;
 }
 
 void destroyCamera(Camera *pCamera) {

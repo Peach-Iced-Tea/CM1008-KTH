@@ -72,7 +72,7 @@ int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
 
 RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
     RenderWindow *pWindow = malloc(sizeof(RenderWindow));
-    pWindow->pWindow = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    pWindow->pWindow = SDL_CreateWindow(pTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_FULLSCREEN_DESKTOP);
     if (!pWindow->pWindow) {
         printf("Error: %s\n", SDL_GetError());
         return NULL;
@@ -84,7 +84,7 @@ RenderWindow *createRenderWindow(const char* pTitle, int w, int h) {
         return NULL;
     }
 
-    pWindow->pFont = TTF_OpenFont("lib/resources/arial.ttf", 100);
+    pWindow->pFont = TTF_OpenFont("lib/resources/arial.ttf", 800);
     if (!pWindow->pFont) {
         printf("Error: %s\n", TTF_GetError());
         return NULL;
@@ -221,26 +221,18 @@ void windowRenderHitbox(RenderWindow *pWindow, Hitbox const *pHitbox) {
     return;
 }
 
-void windowRenderMenu(RenderWindow *pWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
-    SDL_Rect dst;
-    dst.w = 192*4;
-    dst.h = 128*4;
-    dst.x = pWindow->width*0.5f-dst.w*0.5f;
-    dst.y = 0;
-    SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
-    SDL_RenderCopy(pWindow->pRenderer, pWindow->textures.pLogo, NULL, &dst);
+void windowRenderMenu(RenderWindow const *pWindow, SDL_Texture *pTexture, Entity const *menuButtons, int nrOfButtons) {
     for (int i = 0; i < nrOfButtons; i++) {
-        SDL_Rect src = menuButtons[i];
-        dst = menuPosition[i];
+        SDL_Rect src = menuButtons[i].source;
+        SDL_FRect dst = menuButtons[i].frame;
 
-        SDL_RenderCopy(pWindow->pRenderer, pTexture, &src, &dst);
+        SDL_RenderCopyF(pWindow->pRenderer, pTexture, &src, &dst);
     }
     
-    SDL_RenderSetLogicalSize(pWindow->pRenderer, cameraGetWidth(pWindow->pCamera), cameraGetHeight(pWindow->pCamera));
     return;
 }
 
-void windowRenderText(RenderWindow *pWindow, char const textToRender[], int x, int y) {
+void windowRenderText(RenderWindow *pWindow, char const textToRender[], float widthModifier, float heightModifier) {
     SDL_Color color = { 255, 255, 255 };
     SDL_Surface *pSurface = TTF_RenderText_Solid(pWindow->pFont, textToRender, color);
     if (pSurface == NULL) {
@@ -256,11 +248,11 @@ void windowRenderText(RenderWindow *pWindow, char const textToRender[], int x, i
 
     SDL_Rect dst;
     SDL_QueryTexture(pTexture, NULL, NULL, &dst.w, &dst.h);
-    dst.x = x-dst.w*0.5f;
-    dst.y = y-dst.h*0.5f;
-    SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
+    dst.w *= 0.05f;
+    dst.h *= 0.05f;
+    dst.x = cameraGetWidth(pWindow->pCamera)*widthModifier-dst.w*0.5f;
+    dst.y = cameraGetHeight(pWindow->pCamera)*heightModifier-dst.h*0.5f;
     SDL_RenderCopy(pWindow->pRenderer, pTexture, NULL, &dst);
-    SDL_RenderSetLogicalSize(pWindow->pRenderer, cameraGetWidth(pWindow->pCamera), cameraGetHeight(pWindow->pCamera));
     return;
 }
 
@@ -272,9 +264,14 @@ void windowRenderEntity(RenderWindow *pWindow, Entity const entity, RenderType r
 
     SDL_FRect dst = entity.frame;
     SDL_Rect src = entity.source;
-    if (!cameraEntityIsVisible(pWindow->pCamera, dst)) { return; }
+    switch (renderType) {
+        case RENDER_LOGO:
+            break;
+        default:
+            if (!cameraEntityIsVisible(pWindow->pCamera, dst)) { return; }
+            cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
+    }
 
-    cameraAdjustToViewport(pWindow->pCamera, &dst, NULL);
     SDL_Texture *pTexture = windowGetTexture(pWindow->textures, renderType);
     if (pTexture == NULL) { return; }
 
@@ -327,6 +324,10 @@ int windowGetWidth(RenderWindow const *pWindow) {
 
 int windowGetHeight(RenderWindow const *pWindow) {
     return pWindow->height;
+}
+
+Camera *windowGetCamera(RenderWindow const *pWindow) {
+    return pWindow->pCamera;
 }
 
 void destroyRenderWindow(RenderWindow *pWindow) {

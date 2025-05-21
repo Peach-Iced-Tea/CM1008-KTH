@@ -26,6 +26,7 @@ int initGame(Game *pGame) {
     // Get information about the main display, such as pixel width and pixel height.
     SDL_DisplayMode mainDisplay;
     SDL_GetDesktopDisplayMode(0, &mainDisplay);
+    printf("width: %d, height: %d\n", mainDisplay.w, mainDisplay.h);
 
     pGame->pWindow = createRenderWindow("Hoppless", mainDisplay.w, mainDisplay.h);
     if (pGame->pWindow == NULL) { return 1; }
@@ -41,7 +42,7 @@ int initGame(Game *pGame) {
     pGame->pInput = createInputTracker();
     if (pGame->pInput == NULL) { return 1; }
 
-    pGame->pMenu = createMenu(windowGetRenderer(pGame->pWindow));
+    pGame->pMenu = createMenu(windowGetRenderer(pGame->pWindow), pGame->pCamera);
     if (pGame->pMenu == NULL) { return 1; }
 
     pGame->pClient = createClient(0);
@@ -267,13 +268,13 @@ bool initiateConnection(Game *pGame) {
     if (!gameRunning) { return gameRunning; }
 
     windowClearFrame(pGame->pWindow);
-    windowRenderText(pGame->pWindow, "Connecting to server...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
+    windowRenderText(pGame->pWindow, "Connecting to server...", 0.5f, 0.5f);
     windowDisplayFrame(pGame->pWindow);
     gameRunning = clientConnectToServer(pGame->pClient, serverAddress);
     if (!gameRunning) { return gameRunning; }
 
     windowClearFrame(pGame->pWindow);
-    windowRenderText(pGame->pWindow, "Waiting for other players...", windowGetWidth(pGame->pWindow)*0.5f, windowGetHeight(pGame->pWindow)*0.5f);
+    windowRenderText(pGame->pWindow, "Waiting for other players...", 0.5f, 0.5f);
     windowDisplayFrame(pGame->pWindow);
     gameRunning = clientWaitForServer(pGame->pClient);
     if (!gameRunning) { return gameRunning; }
@@ -389,8 +390,8 @@ int main(int argv, char** args) {
                 }
                 
                 Vec2 displayMiddle = createVector(windowGetWidth(game.pWindow)*0.5f, windowGetHeight(game.pWindow)*0.5f);
-                windowRenderText(game.pWindow, "Game Won!", displayMiddle.x, displayMiddle.y - 50);
-                windowRenderText(game.pWindow, "ESC to exit", displayMiddle.x, displayMiddle.y + 50);
+                windowRenderText(game.pWindow, "Game Won!", 0.5f, 0.45f);
+                windowRenderText(game.pWindow, "ESC to exit", 0.5f, 0.55f);
                 windowDisplayFrame(game.pWindow);
                 
                 break;
