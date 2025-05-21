@@ -45,8 +45,8 @@ Client *createClient(int port) {
     return pClient;
 }
 
-bool clientConnectToServer(Client *pClient, IPaddress serverAddress) {
-    pClient->serverAddress = serverAddress;
+bool clientConnectToServer(Client *pClient, char *pServerAddress) {
+    SDLNet_ResolveHost(&(pClient->serverAddress), pServerAddress, SERVER_PORT);
     clientSendPacket(pClient);
 
     Input *pInput = createInputTracker();

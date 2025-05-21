@@ -5,6 +5,7 @@ typedef enum {
 } WindowState;
 
 typedef struct textures {
+    SDL_Texture *pLogo;
     SDL_Texture *pPlayer1;
     SDL_Texture *pPlayer2;
     SDL_Texture *pTongue;
@@ -29,6 +30,11 @@ struct renderWindow {
 };
 
 int loadTextures(Textures *pTextures, SDL_Renderer *pRenderer) {
+    pTextures->pLogo = IMG_LoadTexture(pRenderer, "lib/resources/logo.png");
+    if (pTextures->pLogo == NULL) {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
     pTextures->pPlayer1 = IMG_LoadTexture(pRenderer, "lib/resources/spriteSheetPlayer.png");
     if (pTextures->pPlayer1 == NULL) {
         printf("Error: %s\n", SDL_GetError());
@@ -168,6 +174,8 @@ void windowHandleInput(RenderWindow *pWindow, Input const *pInput) {
 
 SDL_Texture *windowGetTexture(Textures textures, RenderType renderType) {
     switch (renderType) {
+        case RENDER_LOGO:
+            return textures.pLogo;
         case RENDER_PLAYER1:
             return textures.pPlayer1;
         case RENDER_PLAYER2:
@@ -214,10 +222,16 @@ void windowRenderHitbox(RenderWindow *pWindow, Hitbox const *pHitbox) {
 }
 
 void windowRenderMenu(RenderWindow *pWindow, SDL_Texture *pTexture, SDL_Rect menuButtons[], SDL_Rect menuPosition[], int nrOfButtons) {
+    SDL_Rect dst;
+    dst.w = 192*4;
+    dst.h = 128*4;
+    dst.x = pWindow->width*0.5f-dst.w*0.5f;
+    dst.y = 0;
     SDL_RenderSetLogicalSize(pWindow->pRenderer, pWindow->width, pWindow->height);
+    SDL_RenderCopy(pWindow->pRenderer, pWindow->textures.pLogo, NULL, &dst);
     for (int i = 0; i < nrOfButtons; i++) {
         SDL_Rect src = menuButtons[i];
-        SDL_Rect dst = menuPosition[i];
+        dst = menuPosition[i];
 
         SDL_RenderCopy(pWindow->pRenderer, pTexture, &src, &dst);
     }

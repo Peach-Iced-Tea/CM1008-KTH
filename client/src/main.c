@@ -262,8 +262,8 @@ void handleTick(Game *pGame, Player *pTeammate) {
 
 bool initiateConnection(Game *pGame) {
     bool gameRunning = true;
-    IPaddress serverAddress;
-    gameRunning = mainMenu(pGame->pMenu, pGame->pWindow, &serverAddress);
+    char serverAddress[IP_MAX_LENGTH];
+    gameRunning = mainMenu(pGame->pMenu, pGame->pWindow, serverAddress);
     if (!gameRunning) { return gameRunning; }
 
     windowClearFrame(pGame->pWindow);

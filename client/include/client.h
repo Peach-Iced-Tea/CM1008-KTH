@@ -19,7 +19,7 @@ Sends a packet to the server with the address given inside serverAddress.
 
 Waits for a response from the server for a set amount of time before timing out.
 */
-bool clientConnectToServer(Client *client, IPaddress serverAddress);
+bool clientConnectToServer(Client *client, char *pServerAddress);
 
 /*
 Sends a packet to the server telling it that the server is going to disconnect.

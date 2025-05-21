@@ -1,8 +1,7 @@
 #include "menu.h"
 
-#define IP_MAX_LENGTH 16
 #define MAX_MENU_BUTTONS 12
-#define MENU_SCALER 10
+#define MENU_SCALER 8
 
 struct menu {
     SDL_Texture *pMenuTexture;
@@ -35,6 +34,7 @@ Menu *createMenu(SDL_Renderer *pRenderer) {
 void createMenuButtons(Menu *pMenu, SDL_Rect offsetInfo, Vec2 displayMiddle, RenderWindow *pWindow) {
     if (pMenu->nrOfButtons > MAX_MENU_BUTTONS) { return; }
 
+
     int startingPoint = 0;
     for (int i = 0; i < pMenu->nrOfButtons; i++) {
         if (i == 0) {
@@ -49,7 +49,7 @@ void createMenuButtons(Menu *pMenu, SDL_Rect offsetInfo, Vec2 displayMiddle, Ren
         pMenu->menuPositions[i].w = offsetInfo.w*MENU_SCALER;
         pMenu->menuPositions[i].h = offsetInfo.h*MENU_SCALER;
         pMenu->menuPositions[i].x = displayMiddle.x-pMenu->menuPositions[i].w*0.5f;
-        pMenu->menuPositions[i].y = startingPoint+(startingPoint*2*i)-pMenu->menuPositions[i].h*0.5f;
+        pMenu->menuPositions[i].y = startingPoint+(startingPoint*2*i)-pMenu->menuPositions[i].h*0.5f + 384;
     }
 
     return;
@@ -69,8 +69,8 @@ int checkButtonIntersection(SDL_Rect menuPosition[], int nrOfButtons) {
 }
 
 
-bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
-    Vec2 displayMiddle = createVector(windowGetWidth(pWindow)*0.5f, windowGetHeight(pWindow)*0.5f);
+bool mainMenu(Menu *pMenu, RenderWindow *pWindow, char *pServerAddress) {
+    Vec2 displayMiddle = createVector(windowGetWidth(pWindow)*0.5f, (windowGetHeight(pWindow)-512)*0.5f);
     SDL_Rect offsetInfo;
     offsetInfo.x = 0;
     offsetInfo.y = 16;
@@ -89,7 +89,6 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
     int connectionState = 0;
     int currentPosition = -1;
     int hover = 0;
-    char ipAddress[IP_MAX_LENGTH];
     Input *pInput = createInputTracker();
     SDL_Point mouseState;
 
@@ -102,7 +101,7 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
         hover = checkButtonIntersection(pMenu->menuPositions, pMenu->nrOfButtons);
 
         if ((getKeyState(pInput, KEY_H) == KEY_STATE_DOWN && currentPosition == -1) || (hover == 1 && getMouseState(pInput, MOUSE_LEFT) == KEY_STATE_DOWN)) {
-            SDLNet_ResolveHost(pServerAddress, "127.0.0.1", SERVER_PORT);
+            strncpy(pServerAddress, "127.0.0.1", IP_MAX_LENGTH);
             menuRunning = false;
         }
         else if ((getKeyState(pInput, KEY_J) == KEY_STATE_DOWN) || (hover == 2 && getMouseState(pInput, MOUSE_LEFT) == KEY_STATE_DOWN)) {
@@ -113,28 +112,27 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
             if (currentPosition < IP_MAX_LENGTH-1) {
                 for (int i = KEY_0; i <= KEY_9; i++) {
                     if (getKeyState(pInput, i) == KEY_STATE_DOWN) {
-                        ipAddress[currentPosition++] = i+48;
-                        ipAddress[currentPosition] = '\0';
+                        pServerAddress[currentPosition++] = i+48;
+                        pServerAddress[currentPosition] = '\0';
                     }
                 }
 
                 if (getKeyState(pInput, KEY_PERIOD) == KEY_STATE_DOWN) {
-                    ipAddress[currentPosition++] = '.';
-                    ipAddress[currentPosition] = '\0';
+                    pServerAddress[currentPosition++] = '.';
+                    pServerAddress[currentPosition] = '\0';
                 }
             }
 
             if (getKeyState(pInput, KEY_BACKSPACE) == KEY_STATE_DOWN) {
                 if (currentPosition > 0) {
                     currentPosition--;
-                    ipAddress[currentPosition] = '\0';
+                    pServerAddress[currentPosition] = '\0';
                 }
             }
 
             if (getKeyState(pInput, KEY_RETURN) == KEY_STATE_DOWN) {
                 if (currentPosition >= 7) {
-                    ipAddress[currentPosition] = '\0';
-                    SDLNet_ResolveHost(pServerAddress, ipAddress, SERVER_PORT);
+                    pServerAddress[currentPosition] = '\0';
                     menuRunning = false;
                 }
             }
@@ -142,7 +140,7 @@ bool mainMenu(Menu *pMenu, RenderWindow *pWindow, IPaddress *pServerAddress) {
             inputHoldTimer(pInput);
             windowClearFrame(pWindow);
             if (currentPosition > 0) {
-                windowRenderText(pWindow, ipAddress, displayMiddle.x, displayMiddle.y);
+                windowRenderText(pWindow, pServerAddress, displayMiddle.x, displayMiddle.y);
             }
             windowDisplayFrame(pWindow);
         }
