@@ -22,7 +22,7 @@ else
 endif
 
 CFLAGS = -g $(INCLUDE) -c
-TARGETCLIENT = hopless
+TARGETCLIENT = hoppless
 TARGETSERVER = server
 
 CLIENTOBJECTS = $(patsubst $(CLIENTSRC)/%.c, $(OBJDIR)/%.o, $(wildcard $(CLIENTSRC)/*.c))

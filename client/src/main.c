@@ -27,7 +27,7 @@ int initGame(Game *pGame) {
     SDL_DisplayMode mainDisplay;
     SDL_GetDesktopDisplayMode(0, &mainDisplay);
 
-    pGame->pWindow = createRenderWindow("Hopless", mainDisplay.w, mainDisplay.h);
+    pGame->pWindow = createRenderWindow("Hoppless", mainDisplay.w, mainDisplay.h);
     if (pGame->pWindow == NULL) { return 1; }
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
