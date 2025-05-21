@@ -94,7 +94,7 @@ bool playerSetState(Player *player, int newState);
 Set the current sheet position of the given Player.
 This should most likely only be called when the server wants to override info.
 */
-bool playerSetSheetPosition(Player *player, Vec2 const newPosition);
+bool playerSetSheetPosition(Player *player, Vec2 const newPosition, SDL_RendererFlip const newFlip);
 
 /*
 If the Player has hit an object with its tongue then the object should be passed into this function.

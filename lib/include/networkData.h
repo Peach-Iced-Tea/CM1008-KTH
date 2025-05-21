@@ -22,6 +22,7 @@ typedef struct {
     Vec2 position;
     Vec2 tonguePosition;
     Vec2 sheetPosition;
+    int sheetFlip;
     int state;
     int tick;
 } StateData;

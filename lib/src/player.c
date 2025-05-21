@@ -444,11 +444,12 @@ bool playerSetState(Player *pPlayer, int newState) {
     return stateWasChanged;
 }
 
-bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition) {
+bool playerSetSheetPosition(Player *pPlayer, Vec2 const newPosition, SDL_RendererFlip const newFlip) {
     if (newPosition.x < 0.0f || newPosition.y < 0.0f) { return false; }
 
     pPlayer->body.source.x = newPosition.x;
     pPlayer->body.source.y = newPosition.y;
+    pPlayer->body.flip = newFlip;
     return true;
 }
 

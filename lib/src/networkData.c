@@ -16,6 +16,7 @@ void prepareStateData(StateData *pData, Player const *pPlayer, int tick) {
     pData->state = info.state;
     pData->sheetPosition.x = info.sheetPosition.x;
     pData->sheetPosition.y = info.sheetPosition.y;
+    pData->sheetFlip = playerGetBody(pPlayer).flip;
     if (tick >= 0) {
         pData->tick = tick;
     }
